@@ -82,19 +82,38 @@ dat <- plyr::join_all(
 colnames(dat)
 ```
 
+***
+
 # All RI-CLPM models 
 
-| Model       | Description                                                                                                                   | 
-| ----------- | ----------------------------------------------------------------------------------------------------------------------------- |
-|    RICLPM   |  Basic RI-CLPM model using combined parent and teacher raings for AD and SI, and total inattentive and hyperacitivty scores   |
-|      CLPM   |  Basic CLPM model using combined parent and teacher raings for AD and SI, and total inattentive and hyperacitivty scores      |
-|   RICLPM1   |  RICLPM but with unconstrained factor loadings for the random intercepts                                                      |
-|   RICLPM2   |  RICLPM but with fixed autoregressive and cross-lagged relations over time                                                    |
-|   RICLPM2a  |  RICLPM but with fixed ADHD autoregressive over time                                                                          |
-|   RICLPM2b  |  RICLPM but with fixed social isolation autoregressive over time                                                              |
-|   RICLPM2c  |  RICLPM but with fixed ADHD to social isolation cross-lagged relations over time                                              |
-|   RICLPM2d  |  RICLPM but with fixed all cross-lagged relations over time                                                                   |
-|   RICLPM3   |  RICLPM but with constrained grand means for AD and SI                                                                        |
+| Model           | Description                                                                                                                      | 
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------  |
+|    RICLPM       |  Basic RI-CLPM model using combined parent and teacher ratings for AD and SI, and **total ADHD** scores                          |
+|      CLPM       |  Basic CLPM model using combined parent and teacher ratings for AD and SI, and total inattentive and hyperacitivty scores        |
+|   RICLPM1       |  RICLPM but with unconstrained factor loadings for the random intercepts                                                         |
+|   RICLPM2       |  RICLPM but with fixed autoregressive and cross-lagged relations over time                                                       |
+|   RICLPM2a      |  RICLPM but with fixed ADHD autoregressive over time                                                                             |
+|   RICLPM2b      |  RICLPM but with fixed social isolation autoregressive over time                                                                 |
+|   RICLPM2c      |  RICLPM but with fixed ADHD to social isolation cross-lagged relations over time                                                 |
+|   RICLPM2d      |  RICLPM but with fixed all cross-lagged relations over time                                                                      |
+|   RICLPM3       |  RICLPM but with constrained grand means for AD and SI                                                                           |
+|   RICLPM_hyp    |  Basic RI-CLPM model using combined parent and teacher ratings for AD and SI, and **hyperacitivty** scores                       |
+|   RICLPM_hyp1   |  RICLPM_hyp but with unconstrained factor loadings for the random intercepts                                                     |
+|   RICLPM_hyp2   |  RICLPM_hyp but with fixed autoregressive and cross-lagged relations over time                                                   |
+|   RICLPM_hyp2a  |  RICLPM_hyp but with fixed ADHD autoregressive over time                                                                         |
+|   RICLPM_hyp2b  |  RICLPM_hyp but with fixed social isolation autoregressive over time                                                             |
+|   RICLPM_hyp2c  |  RICLPM_hyp but with fixed ADHD to social isolation cross-lagged relations over time                                             |
+|   RICLPM_hyp2d  |  RICLPM_hyp but with fixed all cross-lagged relations over time                                                                  |
+|   RICLPM_hyp3   |  RICLPM_hyp but with constrained grand means for AD and SI                                                                       |
+|   RICLPM_inat   |  Basic RI-CLPM model using combined parent and teacher ratings for AD and SI, and **inattention** scores                         |
+|   RICLPM_inat1  |  RICLPM_inat but with unconstrained factor loadings for the random intercepts                                                    |
+|   RICLPM_inat2  |  RICLPM_inat but with fixed autoregressive and cross-lagged relations over time                                                  |
+|   RICLPM_inat2a |  RICLPM_inat but with fixed ADHD autoregressive over time                                                                        |
+|   RICLPM_inat2b |  RICLPM_inat but with fixed social isolation autoregressive over time                                                            |
+|   RICLPM_inat2c |  RICLPM_inat but with fixed ADHD to social isolation cross-lagged relations over time                                            |
+|   RICLPM_inat2d |  RICLPM_inat but with fixed all cross-lagged relations over time                                                                 |
+|   RICLPM_inat3  |  RICLPM_inat but with constrained grand means for AD and SI                                                                      |
+|   RICLPM_multi  |  RI-CLPM model using latent factors for parent and teacher ratings for AD and SI, and **total ADHD** scores                      |                                              
 
 ***
 
@@ -1934,19 +1953,399 @@ If the grand means cannot be constrained to be invariant over time, this implies
 ***
 
 # Multiple reporter {.tabset .tabset-fade}
-Use the tabs below to navigate to the model specification of a multiple indicator RI-CLPM, 5 waves and 3 indicators for each variable at each wave. The five steps correspond to:
 
-- Step 1: the configural model
+From [Mulder and Hamaker (2021)](https://www.tandfonline.com/doi/full/10.1080/10705511.2020.1784738): We include multiple indicators for each of the constructs (mother and teacher), while formulating the dynamics over time between the latent variables. There are two ways in which this can be done. First, a random intercept can be included for each indicator and these random intercepts are allowed to be correlated with each other. In addition, a common factor of the multiple indicators is included per occasion to capture the common within-unit variability over time. Second, the random intercepts can be included at the latent level as shown in the bottom panel of (e.g., Seddig, 2020). There is a common factor for each construct at each occasion, which is then being further decomposed into a time-invariant part captured by the random intercept, and a time-varying part that is used to model the within-unit dynamics. *These two approaches are nested with
+the second being a special case of the first.*
+
+To allow for a meaningful comparison of factors over time, the factor loadings should be time-invariant, such that there is **(at least)** weak factorial invariance over time (Meredith, 1993;
+Millsap, 2011). If we are unable to establish this invariance, it implies that the constructs that we try to measure are interpreted differently over time, and it is difficult to make meaningful comparisons between the constructs measured at different occasions. The below steps need to be considered to establish longitudinal measurement invariance, and detail how the decomposition into within-unit and between-unit variance can be obtained in the context of multiple indicators.
+
+- Step 1: the configural model (RICLPM_multi_S1)
 - Step 2: weak factorial invariance 
 - Step 3: strong factorial invariance
 - Step 3a (Extra): strong factorial invariance with factor loadings equal to the within-person factor loadings 
 - Step 4: the latent RI-CLPM
 
-## Step 1
-When we have three indicators $X$, measured at five waves, we specify three random intercepts to capture the trait-like part of each indicator, that is, `RIX1 =~ 1*x11 1*x21 ...`, `RIX2 =~ 1*x121 1*x22@1 ...`, and `RIX3 =~ 1*x13 1*x23 ...`. In addition, we specify five within-unit components that capture the state-like part at each wave, using `WFX1 =~ x11 x12 x13; WFX2 =~ x21 x22 x23; ...`.
+![Multiple indicator model from Mulder and Hamaker (2021)](/Users/katiethompson/Documents/PhD/LISS-DTP_Louise_and_Tim/Social isolation heritability_Paper 2/data_analysis/scripts/scripts_github/multi_model.jpeg)
 
-At the latent within-unit level, we specify the dynamic model in Mplus using `WFX2 ~ WFY1 + WFX1; WFX3 ~ WFY2 + WFX2; ...`. In addition, we allow the within-person factors at the first wave, and their residuals at subsequent waves to be correlated within each wave, `WFX1 ~~ WFY1; WFX2 ~~ WFY2; ...`. The six random intercepts are allowed to be freely correlated with each other through `RIX1 + RIX2 + ... ~~ RIX1 + RIX2 + ...`. 
+## Step 1 (RICLPM_multi_S1) 
 
+We have two indicators $X$, measured at four waves, we specify two random intercepts to capture the trait-like part of each indicator, that is, `RIX1 =~ 1*x11 1*x21 ...`, and `RIX2 =~ 1*x121 1*x22@1 ...`. In addition, we specify four within-unit components that capture the state-like part at each wave, using `WFX1 =~ x11 x12 x13; WFX2 =~ x21 x22 x23; ...`.
+
+At the latent within-unit level, we specify the dynamic model using `WFX2 ~ WFY1 + WFX1; WFX3 ~ WFY2 + WFX2; ...`. In addition, we allow the within-person factors at the first wave, and their residuals at subsequent waves to be correlated within each wave, `WFX1 ~~ WFY1; WFX2 ~~ WFY2; ...`. The four random intercepts are allowed to be freely correlated with each other through `RIX1 + RIX2 + ... ~~ RIX1 + RIX2 + ...`. 
+
+```{r specify RICLPM_multi_S1}
+RICLPM_multi_S1 <- '
+  
+  ################
+  # BETWEEN PART #
+  ################
+  
+  # Create between factors (random intercepts) for each indicator (mother/teacher) separately
+  RIadm =~ 1*tadhdem5 + 1*tadhdem7 + 1*tadhdem10 + 1*tadhdem12
+  RIadt =~ 1*tadhdet5 + 1*tadhdet7 + 1*tadhdet10 + 1*tadhdet12
+  
+  RIsim =~ 1*isolation_mother_05 + 1*isolation_mother_07 + 1*isolation_mother_10 + 1*isolation_mother_12
+  RIsit =~ 1*isolation_teacher_05 + 1*isolation_teacher_07 + 1*isolation_teacher_10 + 1*isolation_teacher_12
+  
+  ##################################
+  # WITHIN PART: MEASUREMENT MODEL #
+  ##################################
+  
+  # Factor models for adhd at 4 waves
+  WFad5 =~ tadhdem5 + tadhdet5 
+  WFad7 =~ tadhdem7 + tadhdet7 
+  WFad10 =~ tadhdem10 + tadhdet10
+  WFad12 =~ tadhdem12 + tadhdet12 
+  
+  # Factor models for social isolation at 4 waves
+  WFsi5 =~ isolation_mother_05 + isolation_teacher_05 
+  WFsi7 =~ isolation_mother_07 + isolation_teacher_07
+  WFsi10 =~ isolation_mother_10 + isolation_teacher_10
+  WFsi12 =~ isolation_mother_12 + isolation_teacher_12
+  
+  #########################
+  # WITHIN PART: DYNAMICS #
+  #########################
+  
+  # Specify the lagged effects between the within-person centered latent variables
+  WFad7 + WFsi7 ~ WFad5 + WFsi5
+  WFad10 + WFsi10 ~ WFad7 + WFsi7
+  WFad12 + WFsi12 ~ WFad10 + WFsi10
+  
+  # Estimate the correlations within the same wave
+  WFad5 ~~ WFsi5
+  WFad7 ~~ WFsi7
+  WFad10 ~~ WFsi10 
+  WFad12 ~~ WFsi12
+  
+  ##########################
+  # ADDITIONAL CONSTRAINTS #
+  ##########################
+  
+  # Constrain covariance of the between factors and exogenous within factors to 0
+  RIadm + RIadt + RIsim + RIsit ~~ 0*WFsi5 + 0*WFad5
+'
+```
+
+```{r fit RICLPM_multi_S1}
+RICLPM_multi_S1.fit <- cfa(RICLPM_multi_S1, 
+                           data = dat, 
+                           missing = 'ML')
+
+summary(RICLPM_multi_S1.fit, 
+        standardized = TRUE)
+```
+
+## Step 2 (RICLPM_multi_S2)
+
+In second step, we constrain the factor loadings to be invariant over time using the labels `a*`, `b*`, `c*`, `d*`. 
+
+```{r specify RICLPM_multi_S2}
+RICLPM_multi_S2 <- '
+  
+  ################
+  # BETWEEN PART #
+  ################
+  
+  # Create between factors (random intercepts) for each indicator (mother/teacher) separately
+  RIadm =~ 1*tadhdem5 + 1*tadhdem7 + 1*tadhdem10 + 1*tadhdem12
+  RIadt =~ 1*tadhdet5 + 1*tadhdet7 + 1*tadhdet10 + 1*tadhdet12
+  
+  RIsim =~ 1*isolation_mother_05 + 1*isolation_mother_07 + 1*isolation_mother_10 + 1*isolation_mother_12
+  RIsit =~ 1*isolation_teacher_05 + 1*isolation_teacher_07 + 1*isolation_teacher_10 + 1*isolation_teacher_12
+  
+  ##################################
+  # WITHIN PART: MEASUREMENT MODEL #
+  ##################################
+  
+  # Factor models for adhd at 4 waves (constrained)
+  WFad5 =~ a*tadhdem5 + b*tadhdet5 
+  WFad7 =~ a*tadhdem7 + b*tadhdet7 
+  WFad10 =~ a*tadhdem10 + b*tadhdet10
+  WFad12 =~ a*tadhdem12 + b*tadhdet12 
+  
+  # Factor models for social isolation at 4 waves (constrained)
+  WFsi5 =~ c*isolation_mother_05 + d*isolation_teacher_05 
+  WFsi7 =~ c*isolation_mother_07 + d*isolation_teacher_07
+  WFsi10 =~ c*isolation_mother_10 + d*isolation_teacher_10
+  WFsi12 =~ c*isolation_mother_12 + d*isolation_teacher_12
+  
+  #########################
+  # WITHIN PART: DYNAMICS #
+  #########################
+  
+  # Specify the lagged effects between the within-person centered latent variables
+  WFad7 + WFsi7 ~ WFad5 + WFsi5
+  WFad10 + WFsi10 ~ WFad7 + WFsi7
+  WFad12 + WFsi12 ~ WFad10 + WFsi10
+  
+  # Estimate the correlations within the same wave
+  WFad5 ~~ WFsi5
+  WFad7 ~~ WFsi7
+  WFad10 ~~ WFsi10 
+  WFad12 ~~ WFsi12
+  
+  ##########################
+  # ADDITIONAL CONSTRAINTS #
+  ##########################
+  
+  # Constrain covariance of the between factors and exogenous within factors to 0
+  RIadm + RIadt + RIsim + RIsit ~~ 0*WFsi5 + 0*WFad5
+'
+```
+
+```{r fit RICLPM_multi_S2}
+RICLPM_multi_S2.fit <- cfa(RICLPM_multi_S2, 
+                           data = dat, 
+                           missing = 'ML')
+
+summary(RICLPM_multi_S2.fit, 
+        standardized = TRUE)
+```
+
+**This model did not converge**
+
+This could be due to issues with the data - missingness or skewness. But Mulder and Hamaker (2021) state that if we are unable to establish this measurement invariance, it implies that the constructs that we try to measure are interpreted differently over time, and it is **difficult to make meaningful comparisons between the constructs measured at different occasions.** I think to test measurement invariance truly, I will need the raw data points to look at factors of "mother" and "teacher" over time. 
+
+### Longitudinal CFA to further test measurement invariance {.tabset .tabset-fade}
+
+#### Social isolation
+
+##### Configural invariance
+
+```{r config invariance social isolation}
+config.si <- '#factor loadings - NA stops setting first item as a loading of 1
+          si05 =~ NA*isolation_mother_05 + a*isolation_mother_05 + isolation_teacher_05        #mother constrained to be the same over time 
+          si07 =~ NA*isolation_mother_07 + a*isolation_mother_07 + isolation_teacher_07 
+          si10 =~ NA*isolation_mother_10 + a*isolation_mother_10 + isolation_teacher_10 
+          si12 =~ NA*isolation_mother_12 + a*isolation_mother_12 + isolation_teacher_12
+
+          #means/intercepts
+          si05 ~ 0*1                  #set the intercept of latent factor at the first time point to 0 by pre- multiplying the intercept (1) by 0. 
+          si07 ~ start(0)*1           #specifying a starting value can assist with model convergence or reduce model run time
+          si10 ~ start(0)*1
+          si12 ~ start(0)*1
+          isolation_mother_05 ~ b*1              #setting the intercepts to be equal across time
+          isolation_mother_07 ~ b*1
+          isolation_mother_10 ~ b*1
+          isolation_mother_12 ~ b*1
+
+          #variances/covariances
+          si05 ~~ 1*si05
+          si07 ~~ start(1)*si07
+          si10 ~~ start(1)*si10
+          si12 ~~ start(1)*si12
+          isolation_mother_05 ~~ isolation_mother_07 + isolation_mother_10 + isolation_mother_12
+          isolation_mother_07 ~~ isolation_mother_10 +  isolation_mother_12
+          isolation_mother_10 ~~ isolation_mother_12
+          isolation_teacher_05 ~~ isolation_teacher_07 + isolation_teacher_10 + isolation_teacher_12
+          isolation_teacher_07 ~~ isolation_teacher_10 +  isolation_teacher_12
+          isolation_teacher_10 ~~ isolation_teacher_12
+         '
+
+config.si.fit <- sem(config.si, 
+                  data = dat, 
+                  meanstructure = TRUE)
+
+summary(config.si.fit, 
+        fit.measures = TRUE, 
+        estimates = TRUE)
+```
+
+As this is the first model in a series, we are primarily interested in model fit to the observed data:
+Comparative Fit Index (CFI)                    1.000 (≥ 0.95)
+Tucker-Lewis Index (TLI)                       0.996 (≥ 0.95)
+Akaike (AIC)                               37246.048
+Bayesian (BIC)                             37466.515
+Sample-size adjusted Bayesian (BIC)        37333.097
+RMSEA                                          0.016 (≤ 0.06)
+SRMR                                           0.005 (≤ 0.08) 
+- All measures indicate an excellent fit of the model to the data, and we conclude configural invariance holds. This implies the construct itself is the same over time, but we do not know if we can measure it comparably at each time point. Prior to examining model results in detail (e.g., loadings, variances, etc.) we must first evaluate higher forms of invariance. We will begin with weak invariance.
+- **Important to note that this should be done with the raw scores, not total scores, but hopefully this can be added later.** 
+
+#### Weak invariance 
+
+Whereas configural invariance is satisfied if the same pattern of zero and non-zero parameter values holds across time, weak invariance requires that the numerical values of the factor loadings are equal over time within item. In effect, all we need to do is modify the prior chunk to impose equality constraints on all of the factor loadings, not simply for the mother items. Any parameter sharing the same label is constrained to be equal, so the extra pre-multiplication imposes equal factor loadings over time, implying weak invariance.
+
+```{r weak invariance social isolation}
+weak.invar.si <- '#factor loadings - NA stops setting first item as a loading of 1
+          si05 =~ NA*isolation_mother_05 + a*isolation_mother_05 + b*isolation_teacher_05        #mother and teacher constrained to be the same over time 
+          si07 =~ NA*isolation_mother_07 + a*isolation_mother_07 + b*isolation_teacher_07 
+          si10 =~ NA*isolation_mother_10 + a*isolation_mother_10 + b*isolation_teacher_10 
+          si12 =~ NA*isolation_mother_12 + a*isolation_mother_12 + b*isolation_teacher_12
+
+          #means/intercepts
+          si05 ~ 0*1                  #set the intercept of latent factor at the first time point to 0 by pre- multiplying the intercept (1) by 0. 
+          si07 ~ start(0)*1           #specifying a starting value can assist with model convergence or reduce model run time
+          si10 ~ start(0)*1
+          si12 ~ start(0)*1
+          isolation_mother_05 ~ c*1              #setting the intercepts to be equal across time
+          isolation_mother_07 ~ c*1
+          isolation_mother_10 ~ c*1
+          isolation_mother_12 ~ c*1
+
+          #variances/covariances
+          si05 ~~ 1*si05
+          si07 ~~ start(1)*si07
+          si10 ~~ start(1)*si10
+          si12 ~~ start(1)*si12
+          isolation_mother_05 ~~ isolation_mother_07 + isolation_mother_10 + isolation_mother_12
+          isolation_mother_07 ~~ isolation_mother_10 +  isolation_mother_12
+          isolation_mother_10 ~~ isolation_mother_12
+          isolation_teacher_05 ~~ isolation_teacher_07 + isolation_teacher_10 + isolation_teacher_12
+          isolation_teacher_07 ~~ isolation_teacher_10 +  isolation_teacher_12
+          isolation_teacher_10 ~~ isolation_teacher_12
+         '
+
+weak.invar.si.fit <- sem(weak.invar.si, 
+                  data = dat, 
+                  meanstructure = TRUE)
+
+summary(weak.invar.si.fit, 
+        fit.measures = TRUE, 
+        estimates = TRUE)
+```
+
+We are primarily concerned with model fit at this point, so we focus on that output for the time being:
+  Comparative Fit Index (CFI)                    0.993
+  Tucker-Lewis Index (TLI)                       0.963
+  Akaike (AIC)                               37258.035
+  Bayesian (BIC)                             37462.754
+  Sample-size adjusted Bayesian (BIC)        37338.866
+  RMSEA                                          0.047
+  SRMR                                           0.021
+  
+The overall fit of the weak invariance model remains excellent. 
+We can compute the likelihood ratio test to compare the change in fit between the configural (config) and the weak (weak) invariance models:
+  
+```{r LRT config.si and weak.invar.si}
+lavTestLRT(config.si.fit, weak.invar.si.fit)
+```
+  
+Thus the LRT shows **significant loss in fit** associated with imposing equality on the factor loadings over time. 
+Since weak invariance does not holds, we can NOT conclude that we are measuring the same construct over time, and we are NOT measuring this construct in comparable units. As we cannot show weak invariance, we cannot make comparisons between factor variances and covariances for social isolation. 
+
+#### ADHD
+
+##### Configural invariance
+
+```{r config invariance ADHD}
+config.ad <- '#factor loadings - NA stops setting first item as a loading of 1
+          ad05 =~ NA*tadhdem5 + a*tadhdem5 + tadhdet5        #mother constrained to be the same over time 
+          ad07 =~ NA*tadhdem7 + a*tadhdem7 + tadhdet7 
+          ad10 =~ NA*tadhdem10 + a*tadhdem10 + tadhdet10 
+          ad12 =~ NA*tadhdem12 + a*tadhdem12 + tadhdet12
+
+          #means/intercepts
+          ad05 ~ 0*1                  #set the intercept of latent factor at the first time point to 0 by pre- multiplying the intercept (1) by 0. 
+          ad07 ~ start(0)*1           #specifying a starting value can assist with model convergence or reduce model run time
+          ad10 ~ start(0)*1
+          ad12 ~ start(0)*1
+          tadhdem5 ~ b*1              #setting the intercepts to be equal across time
+          tadhdem7 ~ b*1
+          tadhdem10 ~ b*1
+          tadhdem12 ~ b*1
+
+          #variances/covariances
+          ad05 ~~ 1*ad05
+          ad07 ~~ start(1)*ad07
+          ad10 ~~ start(1)*ad10
+          ad12 ~~ start(1)*ad12
+          tadhdem5 ~~ tadhdem7 + tadhdem10 + tadhdem12
+          tadhdem7 ~~ tadhdem10 +  tadhdem12
+          tadhdem10 ~~ tadhdem12
+          tadhdet5 ~~ tadhdet7 + tadhdet10 + tadhdet12
+          tadhdet7 ~~ tadhdet10 +  tadhdet12
+          tadhdet10 ~~ tadhdet12
+         '
+
+config.ad.fit <- sem(config.ad, 
+                  data = dat, 
+                  meanstructure = TRUE)
+
+summary(config.ad.fit, 
+        fit.measures = TRUE, 
+        estimates = TRUE)
+```
+
+As this is the first model in a series, we are primarily interested in model fit to the observed data:
+Comparative Fit Index (CFI)                    0.995 (≥ 0.95)
+Tucker-Lewis Index (TLI)                       0.936 (≥ 0.95)
+Akaike (AIC)                               50113.037
+Bayesian (BIC)                             50331.392
+Sample-size adjusted Bayesian (BIC)        50197.977
+RMSEA                                          0.078 (≤ 0.06)
+SRMR                                           0.012 (≤ 0.08) 
+- All measures indicate an adequate fit of the model to the data, and we conclude configural invariance holds (just!). This implies the construct itself is the same over time, but we do not know if we can measure it comparably at each time point. Prior to examining model results in detail (e.g., loadings, variances, etc.) we must first evaluate higher forms of invariance. We will begin with weak invariance.
+- **Important to note that this should be done with the raw scores, not total scores, but hopefully this can be added later.** 
+
+#### Weak invariance 
+
+```{r weak invariance ADHD}
+weak.invar.ad <- '#factor loadings - NA stops setting first item as a loading of 1
+          ad05 =~ NA*tadhdem5 + a*tadhdem5 + b*tadhdet5        #mother constrained to be the same over time 
+          ad07 =~ NA*tadhdem7 + a*tadhdem7 + b*tadhdet7 
+          ad10 =~ NA*tadhdem10 + a*tadhdem10 + b*tadhdet10 
+          ad12 =~ NA*tadhdem12 + a*tadhdem12 + b*tadhdet12
+
+          #means/intercepts
+          ad05 ~ 0*1                  #set the intercept of latent factor at the first time point to 0 by pre- multiplying the intercept (1) by 0. 
+          ad07 ~ start(0)*1           #specifying a starting value can assist with model convergence or reduce model run time
+          ad10 ~ start(0)*1
+          ad12 ~ start(0)*1
+          tadhdem5 ~ c*1              #setting the intercepts to be equal across time
+          tadhdem7 ~ c*1
+          tadhdem10 ~ c*1
+          tadhdem12 ~ c*1
+
+          #variances/covariances
+          ad05 ~~ 1*ad05
+          ad07 ~~ start(1)*ad07
+          ad10 ~~ start(1)*ad10
+          ad12 ~~ start(1)*ad12
+          tadhdem5 ~~ tadhdem7 + tadhdem10 + tadhdem12
+          tadhdem7 ~~ tadhdem10 +  tadhdem12
+          tadhdem10 ~~ tadhdem12
+          tadhdet5 ~~ tadhdet7 + tadhdet10 + tadhdet12
+          tadhdet7 ~~ tadhdet10 +  tadhdet12
+          tadhdet10 ~~ tadhdet12
+         '
+
+weak.invar.ad.fit <- sem(weak.invar.ad, 
+                  data = dat, 
+                  meanstructure = TRUE)
+
+summary(weak.invar.ad.fit, 
+        fit.measures = TRUE, 
+        estimates = TRUE)
+```
+
+Comparative Fit Index (CFI)                    0.987
+Tucker-Lewis Index (TLI)                       0.928
+Akaike (AIC)                               50140.000
+Bayesian (BIC)                             50342.758
+Sample-size adjusted Bayesian (BIC)        50218.872
+RMSEA                                          0.083
+SRMR                                           0.033
+
+Still adequate fit. 
+
+We can compute the likelihood ratio test to compare the change in fit between the configural (config) and the weak (weak) invariance models:
+  
+```{r LRT config.ad and weak.invar.ad}
+lavTestLRT(config.ad.fit, weak.invar.ad.fit)
+```
+  
+Thus the LRT shows **significant loss in fit** associated with imposing equality on the factor loadings over time. 
+Since weak invariance does not holds, we can NOT conclude that we are measuring the same construct over time, and we are NOT measuring this construct in comparable units. As we cannot show weak invariance, we cannot make comparisons between factor variances and covariances for ADHD. 
+
+***
+
+# NEXT STEPS
+
+- Use raw scores to look at measurement invariance across time. Does weak invariance hold when only looking at mother report? If so, may only use those reports??
+- Do some reading around assessing measurement invariance when using different reporters across time (different teachers).
 
 
 
