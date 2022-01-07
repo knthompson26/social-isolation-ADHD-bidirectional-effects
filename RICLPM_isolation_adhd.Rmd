@@ -88,8 +88,7 @@ colnames(dat)
 
 | Model           | Description                                                                                                                      | 
 | --------------- | -------------------------------------------------------------------------------------------------------------------------------  |
-|    RICLPM       |  Basic RI-CLPM model using combined parent and teacher ratings for AD and SI, and **total ADHD** scores                          |
-|      CLPM       |  Basic CLPM model using combined parent and teacher ratings for AD and SI, and total inattentive and hyperacitivty scores        |
+|   RICLPM       |  Basic RI-CLPM model using mother report ratings for AD and SI, and **total ADHD** scores                                         |
 |   RICLPM1       |  RICLPM but with unconstrained factor loadings for the random intercepts                                                         |
 |   RICLPM2       |  RICLPM but with fixed autoregressive and cross-lagged relations over time                                                       |
 |   RICLPM2a      |  RICLPM but with fixed ADHD autoregressive over time                                                                             |
@@ -127,15 +126,19 @@ To specify the RI-CLPM we need four parts: notes from [Mulder's webpage](https:/
 
 * A within part, consisting of within-unit fluctuations. It is also specified using the =~ command, `wx1 =~ 1*x1; wx2 =~ 1*x2;`
 
-* The lagged regressions between the within-unit components, using `wx2 ~ wx1 wy1; wx3 ~ wx2 wy2; ...`. Here, this is writted with two variables on the left hand side of the `~`, this is doing the same thing as calculating just regression paths - but combining DVs that have the same paths leading to them, e.g. `wx2 ~ wx1 + wy1` and `wy2 ~ wx1 + wy1` becomes `wx2+ wy2 ~ wx1 + wy1`. 
+* The lagged regressions between the within-unit components, using `wx2 ~ wx1 wy1; wx3 ~ wx2 wy2; ...`. Here, this is written with two variables on the left hand side of the `~`, this is doing the same thing as calculating just regression paths - but combining DVs that have the same paths leading to them, e.g. `wx2 ~ wx1 + wy1` and `wy2 ~ wx1 + wy1` becomes `wx2+ wy2 ~ wx1 + wy1`. 
 
 * Relevant covariances in both the between and within part. In the within part the components at wave 1, and their residuals at waves 2 and further are correlated within each wave, using `wx1 ~~ wy1; wx2 ~~ wy2;...`. We also need to specify their (residual) variances here using `wx1 ~~ wx1; wx2 ~~ wx2; ...`. For the between part we have to specify the variances and covariance of the random intercepts using `RIx ~~ RIy;`.
 
+Tips for interpreting the output:
+- Model Test User Model: which provides a test statistic, degrees of freedom, and a p-value for the model that was specified by the user.
+- Model Test Baseline Model: The baseline is a null model, typically in which all of your observed variables are constrained to covary with no other variables (put another way, the covariances are fixed to 0)--just individual variances are estimated.
+
 
 ## The basic RI-CLPM model (RICLPM)
-The code for specifying the basic RI-CLPM is given below plus CLPM afterwards so these can be compared. 
+The code for specifying the basic RI-CLPM is given below.
 
-```{r specify RICLPM}
+```{r specify RICLPM, class.source = 'fold-show'}
 RICLPM <- '
   # Create between components (random intercepts treated as factors here)
   RIad =~ 1*tadhdem5 + 1*tadhdem7 + 1*tadhdem10 + 1*tadhdem12 #x
@@ -188,50 +191,15 @@ RICLPM.fit <- lavaan(RICLPM,               # model
                      meanstructure = TRUE, # adds intercepts/means to the model for both observed and latent variables
                      int.ov.free = TRUE)   # if FALSE, the intercepts of the observed variables are fixed to zero
 
-summary(RICLPM.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
-```
+RICLPM.fit.summary <- summary(RICLPM.fit, 
+                              fit.measures = TRUE,
+                              standardized = TRUE)
 
-### CLPM
+#Table of model fit 
+RICLPM.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPM.fit.summary$FIT)))[,c(3,4,9,10,13,14,16,17,18,19,21)]
 
-```{r specify CLPM}
-CLPM <- '
-  # Estimate the lagged effects between the observed variables.
-  tadhdem7 + isolation_mother_07 ~ tadhdem5 + isolation_mother_05
-  tadhdem10 + isolation_mother_10 ~ tadhdem7 + isolation_mother_07
-  tadhdem12 + isolation_mother_12 ~ tadhdem10 + isolation_mother_10
-
-  # Estimate the covariance between the observed variables at the first wave. 
-  tadhdem5 ~~ isolation_mother_05 # Covariance
-  
-  # Estimate the covariances between the residuals of the observed variables.
-  tadhdem7 ~~ isolation_mother_07
-  tadhdem10 ~~ isolation_mother_10
-  tadhdem12 ~~ isolation_mother_12
-  
-  # Estimate the (residual) variance of the observed variables.
-  tadhdem5 ~~ tadhdem5 # Variances
-  isolation_mother_05 ~~ isolation_mother_05 
-  tadhdem7 ~~ tadhdem7 # Residual variances
-  isolation_mother_07 ~~ isolation_mother_07 
-  tadhdem10 ~~ tadhdem10 
-  isolation_mother_10 ~~ isolation_mother_10 
-  tadhdem12 ~~ tadhdem12 
-  isolation_mother_12 ~~ isolation_mother_12 
-'
-```
-
-```{r fit CLPM}
-CLPM.fit <- lavaan(CLPM, 
-                   data = dat, 
-                   missing = 'ML',
-                   meanstructure = TRUE, 
-                   int.ov.free = TRUE) 
-
-summary(CLPM.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+#Table of regression coefficient 
+RICLPM.fit.summary.reg <- as.tibble(RICLPM.fit.summary$PE[c(17:28),-c(4)])
 ```
 
 ## RI-CLPM Constraints over time {.tabset .tabset-fade}
@@ -377,9 +345,9 @@ RICLPM2.fit <- lavaan(RICLPM2,
                       meanstructure = TRUE, 
                       int.ov.free = TRUE) 
 
-summary(RICLPM2.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+RICLPM2.fit.summary <- summary(RICLPM2.fit, 
+                              fit.measures = TRUE,
+                              standardized = TRUE)
 ```
 
 ```{r LRT for RICLPM and RICLPM2}
@@ -674,9 +642,15 @@ RICLPM2d.fit <- lavaan(RICLPM2d,
                       meanstructure = TRUE, 
                       int.ov.free = TRUE) 
 
-summary(RICLPM2d.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+RICLPM2d.fit.summary <- summary(RICLPM2d.fit, 
+                                fit.measures = TRUE,
+                                standardized = TRUE)
+
+#Table of model fit 
+RICLPM2d.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPM2d.fit.summary$FIT)))[,c(3,4,9,10,13,14,16,17,18,19,21)]
+
+#Table of regression coefficient 
+RICLPM2d.fit.summary.reg <- as.tibble(RICLPM2d.fit.summary$PE[c(17:28),-c(4,5)])
 ```
 
 ```{r LRT for RICLPM2c and RICLPM2d}
@@ -826,9 +800,15 @@ RICLPM_hyp.fit <- lavaan(RICLPM_hyp,       # model
                      meanstructure = TRUE, # adds intercepts/means to the model for both observed and latent variables
                      int.ov.free = TRUE)   # if FALSE, the intercepts of the observed variables are fixed to zero
 
-summary(RICLPM_hyp.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+RICLPM_hyp.fit.summary <- summary(RICLPM_hyp.fit, 
+                                  fit.measures = TRUE,
+                                  standardized = TRUE)
+
+#Table of model fit 
+RICLPM_hyp.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPM_hyp.fit.summary$FIT)))[,c(3,4,9,10,13,14,16,17,18,19,21)]
+
+#Table of regression coefficient 
+RICLPM_hyp.fit.summary.reg <- as.tibble(RICLPM_hyp.fit.summary$PE[c(17:28),-c(4)])
 ```
 
 ## RI-CLPM Constraints over time {.tabset .tabset-fade}
@@ -1266,9 +1246,15 @@ RICLPM_hyp2d.fit <- lavaan(RICLPM_hyp2d,
                       meanstructure = TRUE, 
                       int.ov.free = TRUE) 
 
-summary(RICLPM_hyp2d.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+RICLPM_hyp2d.fit.summary <- summary(RICLPM_hyp2d.fit, 
+                                    fit.measures = TRUE,
+                                    standardized = TRUE)
+
+#Table of model fit 
+RICLPM_hyp2d.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPM_hyp2d.fit.summary$FIT)))[,c(3,4,9,10,13,14,16,17,18,19,21)]
+
+#Table of regression coefficient 
+RICLPM_hyp2d.fit.summary.reg <- as.tibble(RICLPM_hyp2d.fit.summary$PE[c(17:28),-c(4,5)])
 ```
 
 ```{r LRT for RICLPM_hyp2c and RICLPM_hyp2d}
@@ -1418,9 +1404,15 @@ RICLPM_inat.fit <- lavaan(RICLPM_inat,     # model
                      meanstructure = TRUE, # adds intercepts/means to the model for both observed and latent variables
                      int.ov.free = TRUE)   # if FALSE, the intercepts of the observed variables are fixed to zero
 
-summary(RICLPM_inat.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+RICLPM_inat.fit.summary <- summary(RICLPM_inat.fit, 
+                                    fit.measures = TRUE,
+                                    standardized = TRUE)
+
+#Table of model fit 
+RICLPM_inat.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPM_inat.fit.summary$FIT)))[,c(3,4,9,10,13,14,16,17,18,19,21)]
+
+#Table of regression coefficient 
+RICLPM_inat.fit.summary.reg <- as.tibble(RICLPM_inat.fit.summary$PE[c(17:28),-c(4)])
 ```
 
 ## RI-CLPM Constraints over time {.tabset .tabset-fade}
@@ -1858,9 +1850,15 @@ RICLPM_inat2d.fit <- lavaan(RICLPM_inat2d,
                       meanstructure = TRUE, 
                       int.ov.free = TRUE) 
 
-summary(RICLPM_inat2d.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+RICLPM_inat2d.fit.summary <- summary(RICLPM_inat2d.fit, 
+                                      fit.measures = TRUE,
+                                      standardized = TRUE)
+
+#Table of model fit 
+RICLPM_inat2d.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPM_inat2d.fit.summary$FIT)))[,c(3,4,9,10,13,14,16,17,18,19,21)]
+
+#Table of regression coefficient 
+RICLPM_inat2d.fit.summary.reg <- as.tibble(RICLPM_inat2d.fit.summary$PE[c(17:28),-c(4,5)])
 ```
 
 ```{r LRT for RICLPM_inat2c and RICLPM_inat2d}
