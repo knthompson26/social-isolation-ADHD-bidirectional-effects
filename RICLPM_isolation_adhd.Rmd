@@ -90,6 +90,9 @@ colnames(dat)
 
 # All RI-CLPM models displayed here
 
+We conducted random intercept cross lagged panel models to assess bidirectional associations between social isolation and ADHD symptoms. All models in this script have used sum scores for total ADHD symptoms, hyperactivity symptoms, inattention symptoms, and social isolation. Separate models have been conducted for mother and teacher scores. See the table below for a list of all models and how they are labeled throughout the code. 
+
+
 | Model            | Description                                                                                                                       | 
 | ---------------  | --------------------------------------------------------------------------------------------------------------------------------  |
 |   RICLPM         |  Basic RI-CLPM model using **mother report** ratings for AD and SI, and **total ADHD** scores                                     |
