@@ -1,0 +1,89 @@
+---
+title: "Twin models (univariate and multivariate) for social isolation and ADHD in E-Risk"
+output:  
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: 2
+    toc_float:
+      collapsed: false
+    number_sections: false
+    highlight: monochrome
+    theme: flatly
+    code_folding: hide
+    includes:
+      after_body: footer.html
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      comment = NA,
+                      prompt = FALSE,
+                      cache = FALSE,
+                      message = FALSE,
+                      warning = FALSE,
+                      results = 'asis')
+
+options(bitmapType = 'quartz') # to render fonts better
+```
+
+```{r Clear global environment, include=FALSE}
+remove(list = ls())
+```
+
+```{r Load packages, include=FALSE}
+library(knitr)
+library(haven)
+library(lavaan)
+library(OpenMx)
+library(tidyverse)
+library(dplyr) #conflicts with tidyverse for e.g. rename and row_number
+```
+
+```{r source the data file path, include=FALSE}
+#source raw data directory: data_raw and data included
+source("../isolation_ADHD_data_path.R")
+```
+
+# Read in data 
+
+```{r read in dta data file}
+dat.raw <- read_dta(paste0(data.raw_path, "preliminary_Katie_12Nov21.dta"))
+#colnames(dat.raw)
+```
+
+```{r read in prepped regression data and check variable names, include=FALSE}
+dat.rds <- readRDS("/Users/katiethompson/Documents/PhD/LISS-DTP_Louise_and_Tim/Social isolation trajectories_Paper 1/data_analysis/data_full/data/class_joined_preprocessed_isolation_data_full_sample.rds")
+#colnames(dat.rds)
+
+dat.rds <- dat.rds %>%
+  select(atwinid = id,
+         isolation_mother_05,
+         isolation_mother_07,
+         isolation_mother_10,
+         isolation_mother_12,
+         isolation_teacher_05,
+         isolation_teacher_07,
+         isolation_teacher_10,
+         isolation_teacher_12
+         )
+```
+
+## Variable names
+```{r combine data I have and new data}
+dataframe_list <- list(
+  dat.raw,
+  dat.rds
+)
+
+#merge data frames
+dat <- plyr::join_all(
+  dataframe_list,
+  by = "atwinid" # Alternatively you can join by several columns
+  )
+
+colnames(dat)
+```
+
+
+
