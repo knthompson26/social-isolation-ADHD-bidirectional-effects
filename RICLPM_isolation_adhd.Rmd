@@ -88,13 +88,24 @@ colnames(dat)
 
 ***
 
-# All RI-CLPM models displayed here
+The below introductory notes have been adapted from [Hamaker, Kuiper, and Grasman, 2015](https://www.researchgate.net/profile/Ellen-Hamaker/publication/274262847_A_Critique_of_the_Cross-Lagged_Panel_Model/links/5b80154c92851c1e122f351f/A-Critique-of-the-Cross-Lagged-Panel-Model.pdf)
 
-We conducted random intercept cross lagged panel models to assess bidirectional associations between social isolation and ADHD symptoms. All models in this script have used sum scores for total ADHD symptoms, hyperactivity symptoms, inattention symptoms, and social isolation. Separate models have been conducted for mother and teacher scores. See the table below for a list of all models and how they are labeled throughout the code. 
+The CLPM only accounts for temporal stability through the inclusion of autoregressive parameters. Thus, it is implicitly assumed that every person varies over time around the same means μt and πt, and that there are no trait-like individual differences that endure. this is a rather problematic assumption, as it is difficult to imagine a psychological construct – whether behavioral, cognitive, emotional or psychophysiological – that is not to some extent characterized by stable individual differences (if not for the entire lifespan, then at least for the duration of the study; Hamaker, ). Longitudinal data can actually be thought of as multilevel data, in which occasions are nested within individuals (or other systems, like dyads). When considering this perspective, it becomes clear that we need to separate the *within-person* level from the *between-person* level. 
+
+The random intercepts cross lagged panel model (RI-CLPM) accounts not only for temporal stability, but also for time-invariant, trait-like stability through the inclusion of a random intercept. The cross-lagged parameters indicate the extent to which the two variables influence each other. The cross-lagged relationships pertain to a process that takes place at the within-person level and they are therefore of key interest when the interest is in *reciprocal influences over time within individuals or dyads*. The cross-lagged parameter indicates the extent to which the change in y can be predicted from the individual’s prior deviation from their expected score on the other variable, while controlling for the structural change in y and the prior deviation from one’s expected score on y. 
+
+The CLPM requires only two waves of data, but the RI-CLPM requires at least *three waves* of data, in which case there is 1 degree of freedom (df). If the intervals are of the same size, and if we assume that the effects the variables have on each other remain stable over time, we could decide to constrain the lagged parameters over time, giving us an additional 4 df (i.e., 5 df in total).  If we are not willing to make these assumptions, and we are not sure whether the effect of the time-invariant stability components κi and ωi are equal over time, we may wish to remove the constraint on the factor loadings. This relaxation may especially be of interest when the observations are made further apart in time, and we expect that we are also measuring some structural changes. However, this would imply that κi and ωi no longer represents random intercepts (as in multilevel modeling), but rather represent latent variables or traits (as common in SEM). Even more so, it would imply we need more waves of data to estimate this model. **The gaps in our time waves may be a problem here.**
+
+
+# All RI-CLPM models 
+
+We conducted RI-CLPM to assess bidirectional associations between social isolation and ADHD symptoms. All models in this script have used sum scores for total ADHD symptoms, hyperactivity symptoms, inattention symptoms, and social isolation. Separate models have been conducted for mother and teacher scores. See the table below for a list of all models and how they are labeled throughout the code. 
+
 
 
 | Model            | Description                                                                                                                       | 
 | ---------------  | --------------------------------------------------------------------------------------------------------------------------------  |
+|   CLPM           |  Cross-lagged panel model without random intercepts using **mother report** and **total ADHD** scores
 |   RICLPM         |  Basic RI-CLPM model using **mother report** ratings for AD and SI, and **total ADHD** scores                                     |
 |   RICLPM1        |  RICLPM but with unconstrained factor loadings for the random intercepts                                                          |
 |   RICLPM2        |  RICLPM but with fixed autoregressive and cross-lagged relations over time                                                        |
@@ -103,6 +114,7 @@ We conducted random intercept cross lagged panel models to assess bidirectional 
 |   RICLPM2c       |  RICLPM but with fixed ADHD to social isolation cross-lagged relations over time                                                  |
 |   RICLPM2d       |  RICLPM but with fixed all cross-lagged relations over time                                                                       |
 |   RICLPM3        |  RICLPM but with constrained grand means for AD and SI                                                                            |
+|   CLPM_hyp       |  CLPM using **mother report** ratings for AD and SI, and **hyperacitivty** scores                                                 |
 |   RICLPM_hyp     |  Basic RI-CLPM model using **mother report** ratings for AD and SI, and **hyperacitivty** scores                                  |
 |   RICLPM_hyp1    |  RICLPM_hyp but with unconstrained factor loadings for the random intercepts                                                      |
 |   RICLPM_hyp2    |  RICLPM_hyp but with fixed autoregressive and cross-lagged relations over time                                                    |
@@ -164,6 +176,46 @@ Tips for interpreting the output:
 - Model Test User Model: which provides a test statistic, degrees of freedom, and a p-value for the model that was specified by the user.
 - Model Test Baseline Model: The baseline is a null model, typically in which all of your observed variables are constrained to covary with no other variables (put another way, the covariances are fixed to 0)--just individual variances are estimated.
 
+## Cross-lagged panel model (CLPM)
+
+```{r specify CLPM}
+CLPM <- '
+  # Estimate the lagged effects between the observed variables.
+  tadhdem7 + isolation_mother_07 ~ tadhdem5 + isolation_mother_05
+  tadhdem10 + isolation_mother_10 ~ tadhdem7 + isolation_mother_07
+  tadhdem12 + isolation_mother_12 ~ tadhdem10 + isolation_mother_10
+
+  # Estimate the covariance between the observed variables at the first wave. 
+  tadhdem5 ~~ isolation_mother_05 # Covariance
+  
+  # Estimate the covariances between the residuals of the observed variables.
+  tadhdem7 ~~ isolation_mother_07
+  tadhdem10 ~~ isolation_mother_10
+  tadhdem12 ~~ isolation_mother_12
+  
+  # Estimate the (residual) variance of the observed variables.
+  tadhdem5 ~~ tadhdem5 # Variances
+  isolation_mother_05 ~~ isolation_mother_05 
+  tadhdem7 ~~ tadhdem7 # Residual variances
+  isolation_mother_07 ~~ isolation_mother_07 
+  tadhdem10 ~~ tadhdem10 
+  isolation_mother_10 ~~ isolation_mother_10 
+  tadhdem12 ~~ tadhdem12 
+  isolation_mother_12 ~~ isolation_mother_12 
+'
+```
+
+```{r fit CLPM}
+CLPM.fit <- lavaan(CLPM, 
+                   data = dat, 
+                   missing = 'ML',
+                   meanstructure = TRUE, 
+                   int.ov.free = TRUE) 
+
+summary(CLPM.fit, 
+        fit.measures = TRUE,
+        standardized = TRUE)
+```
 
 ## The basic RI-CLPM model (RICLPM)
 The code for specifying the basic RI-CLPM is given below.
@@ -779,6 +831,48 @@ If the grand means cannot be constrained to be invariant over time, this implies
 ***
 
 # RI-CLPM: Mother report only, Hyperactive/Impulsive ADHD symptoms
+
+## Cross-lagged panel model (CLPM_hyp)
+
+```{r specify CLPM_hyp}
+CLPM_hyp <- '
+  # Estimate the lagged effects between the observed variables.
+  hyem7 + isolation_mother_07 ~ hyem5 + isolation_mother_05
+  hyem10 + isolation_mother_10 ~ hyem7 + isolation_mother_07
+  hyem12 + isolation_mother_12 ~ hyem10 + isolation_mother_10
+
+  # Estimate the covariance between the observed variables at the first wave. 
+  hyem5 ~~ isolation_mother_05 # Covariance
+  
+  # Estimate the covariances between the residuals of the observed variables.
+  hyem7 ~~ isolation_mother_07
+  hyem10 ~~ isolation_mother_10
+  hyem12 ~~ isolation_mother_12
+  
+  # Estimate the (residual) variance of the observed variables.
+  hyem5 ~~ hyem5 # Variances
+  isolation_mother_05 ~~ isolation_mother_05 
+  hyem7 ~~ hyem7 # Residual variances
+  isolation_mother_07 ~~ isolation_mother_07 
+  hyem10 ~~ hyem10 
+  isolation_mother_10 ~~ isolation_mother_10 
+  hyem12 ~~ hyem12 
+  isolation_mother_12 ~~ isolation_mother_12 
+'
+```
+
+```{r fit CLPM_hyp}
+CLPM_hyp.fit <- lavaan(CLPM_hyp, 
+                   data = dat, 
+                   missing = 'ML',
+                   meanstructure = TRUE, 
+                   int.ov.free = TRUE) 
+
+summary(CLPM_hyp.fit, 
+        fit.measures = TRUE,
+        standardized = TRUE)
+```
+
 
 ## The basic RI-CLPM model (RICLPM_hyp)
 The code for specifying the basic RI-CLPM is given below.
