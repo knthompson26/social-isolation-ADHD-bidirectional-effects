@@ -1,0 +1,915 @@
+---
+title: "Random intercept cross lagged panel models for social isolation and ADHD symptoms in childhood - for different levels of SES"
+output:  
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: 2
+    toc_float:
+      collapsed: false
+    number_sections: false
+    highlight: monochrome
+    theme: flatly
+    code_folding: hide
+    includes:
+      after_body: footer.html
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      comment = NA,
+                      prompt = FALSE,
+                      cache = FALSE,
+                      message = FALSE,
+                      warning = FALSE,
+                      results = 'asis')
+
+options(bitmapType = 'quartz') # to render fonts better
+```
+
+```{r Clear global environment, include=FALSE}
+remove(list = ls())
+```
+
+```{r Load packages, include=FALSE}
+library(knitr)
+library(haven)
+library(lavaan)
+library(tidyverse)
+library(dplyr) #conflicts with tidyverse for e.g. rename and row_number
+```
+
+```{r source the data file path, include=FALSE}
+#source raw data directory: data_raw and data included
+source("../isolation_ADHD_data_path.R")
+```
+
+```{r read in dta data file}
+dat.raw <- read_dta(paste0(data.raw_path, "Katie_19Jan22.dta"))
+
+dat <- dat.raw %>%
+  select(id = atwinid,
+         sampsex,
+         seswq35,
+         sisoem5,  # social isolation mother report
+         sisoem7,
+         sisoem10,
+         sisoem12,
+         sisoet5,  # social isolation teacher report
+         sisoet7, 
+         sisoet10,
+         sisoet12,
+         tadhdem5,  # total ADHD mother report
+         tadhdem7,
+         tadhdem10,
+         tadhdem12,
+         tadhdet5,  # total ADHD teacher report
+         tadhdet7,
+         tadhdet10,
+         tadhdet12,
+         hyem5,     # hyperactivity ADHD mother report
+         hyem7,
+         hyem10,
+         hyem12, 
+         hyet5,     # hyperactivity ADHD teacher report
+         hyet7,
+         hyet10,
+         hyet12,
+         inem5,    # inattention ADHD mother report
+         inem7,
+         inem10,
+         inem12,
+         inet5,    # inattention ADHD teacher report
+         inet7,
+         inet10,
+         inet12
+  )
+
+colnames(dat)
+```
+
+First we need to recode SES as a factor, to show which level is which. 
+
+```{r recode SES variable}
+dat <- dat %>%
+  mutate(
+    SES = 
+      recode_factor(as_factor(seswq35),
+        "1" = "Low",
+        "2" = "Middle", 
+        "3" = "High"))
+
+table(dat$SES)
+```
+
+Create data sets with just low, middle, and high SES
+
+```{r datasets for males and males}
+dat.low <- dat %>% filter(SES == "Low")
+dat.mid <- dat %>% filter (SES == "Middle")
+dat.high <- dat %>% filter (SES == "High")
+``` 
+
+***
+
+# Mother report
+
+## Unconstrained RI-CLPM 
+The code for specifying the basic RI-CLPM for total ADHD symptoms and social isolation is given at the beginning of the script.
+
+To check for group differences in parameter estimates between different levels of SES, we can run the same model but test group differences in the lavaan command.
+
+```{r fit RICLPM grouped by ses}
+RICLPM.ses.fit <- lavaan(RICLPM, 
+                      data = dat, 
+                      missing = 'ML', 
+                      group = "SES",
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust") 
+
+RICLPM.ses.fit.summary <- summary(RICLPM.ses.fit, 
+                                fit.measures = TRUE,
+                                standardized = TRUE)
+```
+
+Now we want to apply constraints over time to test if lagged parameters are invariant across groups, if the chi square is significant then the lagged effects for boys and girls are different.  
+
+```{r specify RICLPM.ses2}
+RICLPM.ses2 <- '
+  # Create between components (random intercepts treated as factors here)
+  RIad =~ 1*tadhdem5 + 1*tadhdem7 + 1*tadhdem10 + 1*tadhdem12 #x
+  RIsi =~ 1*sisoem5 + 1*sisoem7 + 1*sisoem10 + 1*sisoem12 #y
+
+  # Create within-person centered variables
+  wad5 =~ 1*tadhdem5
+  wad7 =~ 1*tadhdem7
+  wad10 =~ 1*tadhdem10 
+  wad12 =~ 1*tadhdem12
+  wsi5 =~ 1*sisoem5
+  wsi7 =~ 1*sisoem7
+  wsi10 =~ 1*sisoem10
+  wsi12 =~ 1*sisoem12
+  
+  # Estimate the lagged effects between the within-person centered variables. Constrain the autoregressive effects across groups. 
+  wad7 ~ c(a1, a1, a1)*wad5 + c(b1, b1, b1)*wsi5
+  wsi7 ~ c(c1, c1, c1)*wad5 + c(d1, d1, d1)*wsi5
+  wad10 ~ c(a2, a2, a2)*wad7 + c(b2, b2, b2)*wsi7
+  wsi10 ~ c(c2, c2, c2)*wad7 + c(d2, d2, d2)*wsi7
+  wad12 ~ c(a3, a3, a3)*wad10 + c(b3, b3, b3)*wsi10
+  wsi12 ~ c(c3, c3, c3)*wad10 + c(d3, d3, d3)*wsi10 
+
+  # Estimate the covariance between the within-person centered variables at the first wave
+  wad5 ~~ wsi5 # Covariance
+  
+  # Estimate the covariances between the residuals of the within-person centered variables (the innovations)
+  wad7 ~~ wsi7
+  wad10 ~~ wsi10
+  wad12 ~~ wsi12
+  
+  # Estimate the variance and covariance of the random intercepts
+  RIad ~~ RIad
+  RIsi ~~ RIsi
+  RIad ~~ RIsi
+  
+  # Estimate the (residual) variance of the within-person centered variables.
+  wad5 ~~ wad5 # Variances
+  wsi5 ~~ wsi5 
+  wad7 ~~ wad7 # Residual variances
+  wsi7 ~~ wsi7 
+  wad10 ~~ wad10 
+  wsi10 ~~ wsi10 
+  wad12 ~~ wad12 
+  wsi12 ~~ wsi12
+'
+```
+
+```{r fit RICLPM.ses2 grouped by ses}
+RICLPM.ses2.fit <- lavaan(RICLPM.ses2, 
+                      data = dat, 
+                      missing = 'ML', 
+                      group = "SES",
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust"
+                      ) 
+
+RICLPM.ses2.fit.summary <- summary(RICLPM.ses2.fit, 
+                                fit.measures = TRUE,
+                                standardized = TRUE)
+```
+
+Now we see if there is a significantly worse fit when the lagged-parameters are constrained to be equal across groups. 
+
+```{r LRT for RICLPM.ses and RICLPM.ses2}
+lavTestLRT(RICLPM.ses.fit, RICLPM.ses2.fit)
+```
+
+The chi-square difference test of these two nested models is **significant** (p=0.0006471), which implies that the lagged effects appear to be the **different for different levels of SES** 
+
+## Create separate models for each level of SES
+
+This is done so that we can compare these baseine models when emposing time point equality constraints. The outout for these models should be exactly the same as the grouped RICLPM.ses version above. 
+
+### Low SES
+
+```{r fit RICLPM.low}
+RICLPM.low.fit <- lavaan(RICLPM, 
+                      data = dat.low, 
+                      missing = 'ML', 
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust") 
+```
+
+### Middle SES
+
+```{r fit RICLPM.mid}
+RICLPM.mid.fit <- lavaan(RICLPM, 
+                      data = dat.mid, 
+                      missing = 'ML', 
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust") 
+```
+    
+### High SES
+
+```{r fit RICLPM.high}
+RICLPM.high.fit <- lavaan(RICLPM, 
+                      data = dat.high, 
+                      missing = 'ML', 
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust") 
+```
+
+# Constraints over time
+
+Imposing constraints to the model can be achieved through **pre-multiplication**. It means that we have to prepend the number that we want to fix the parameter to, and an asterisk, to the parameter in the model specification. For example, `F =~ 0*x1` fixes the factor loading of item `x1` to factor `F` to 0. Using pre-multiplication we can also constrain parameters to be the same by giving them the same label. Below we specify an RI-CLPM with the following constraints: 
+
+1) fixed auto-regressive and cross-lagged relations over time, `wx2 ~ a*wx1 + b*wy1; ...`
+2) time-invariant (residual) (co-)variances in the within-person part `wx2 ~~ cov*wy2; ...`, `wx2 ~~ vx*wx2; ...`, and `wy2 ~~ vy*wy2; ...`
+3) constrained grand means over time, `x1 + ... ~ mx*1` and `y1 + ... ~ my*1`
+
+a = lag in ad
+b = lag in si
+c = cross lag ad->si
+d = cross lag si->ad
+
+From [Mulder and Hamaker (2021)](https://www.tandfonline.com/doi/full/10.1080/10705511.2020.1784738): We may consider testing if the lagged regression coefficients are time-invariant. This can be done by comparing the fit of a model with constrained regression coefficients (over time), with the fit of a model where these parameters are freely estimated (i.e., the unconstrained model). If this chi-square difference test is non-significant, this implies the constraints are tenable and the dynamics of the process are time-invariant. If the constraints are not tenable, this could be indicative of some kind of developmental process taking place during the time span covered by the study.
+
+In this context, it is important to realize that the lagged regression coefficients depend critically on the time interval between the repeated measures. Hence, constraining the lagged parameters to be invariant across consecutive waves only makes sense when the time interval between the occasions is *(approximately) equal*. 
+
+We will test the constraints based on the following steps recommended by Curran and Bauer:
+1. Estimate the baseline model where all parameters are freely estimated (The basic RI-CLPM)
+2. Impose equlaity constraints on one set of stabilities (within variable lags). Use LRT tests to see if he fit becomes significantly worse. 
+3. Impose equality constraints on the next set of stabilities. Compare this to wither model 1 (baseline/basic) if step 2 was significant. Compare to model 2 if step 2 was non-significant. *Non-sig LRT = not significantly worse fit*
+4. Repeat for first set of cross-lags
+5. Repeat for second set of cross-lags
+
+## Constraining lag in ADHD parameter (RICLPM2a)
+
+a = lag in adhd
+
+```{r specify RICLPM2a}
+RICLPM2a <- '
+  # Create between components (random intercepts treated as factors here)
+  RIad =~ 1*tadhdem5 + 1*tadhdem7 + 1*tadhdem10 + 1*tadhdem12 #x
+  RIsi =~ 1*sisoem5 + 1*sisoem7 + 1*sisoem10 + 1*sisoem12 #y
+
+  # Create within-person centered variables
+  wad5 =~ 1*tadhdem5
+  wad7 =~ 1*tadhdem7
+  wad10 =~ 1*tadhdem10 
+  wad12 =~ 1*tadhdem12
+  wsi5 =~ 1*sisoem5
+  wsi7 =~ 1*sisoem7
+  wsi10 =~ 1*sisoem10
+  wsi12 =~ 1*sisoem12
+  
+  # Constrained lagged effects between the within-person centered variables. 
+  wad7 ~ a*wad5 + wsi5 
+  wsi7 ~ wad5 + wsi5
+  
+  wad10 ~ a*wad7 + wsi7
+  wsi10 ~ wad7 + wsi7
+  
+  wad12 ~ a*wad10 + wsi10
+  wsi12 ~ wad10 + wsi10
+  
+  # Estimate the covariance between the within-person centered variables at the first wave
+  wad5 ~~ wsi5 # Covariance
+  
+  # Estimate the covariances between the residuals of the within-person centered variables (the innovations)
+  wad7 ~~ wsi7
+  wad10 ~~ wsi10
+  wad12 ~~ wsi12
+  
+  # Estimate the variance and covariance of the random intercepts
+  RIad ~~ RIad
+  RIsi ~~ RIsi
+  RIad ~~ RIsi
+  
+  # Estimate the (residual) variance of the within-person centered variables.
+  wad5 ~~ wad5 # Variances
+  wsi5 ~~ wsi5 
+  wad7 ~~ wad7 # Residual variances
+  wsi7 ~~ wsi7 
+  wad10 ~~ wad10 
+  wsi10 ~~ wsi10 
+  wad12 ~~ wad12 
+  wsi12 ~~ wsi12
+'
+```
+
+### Low SES
+
+```{r fit RICLPM2a.low}
+RICLPM2a.low.fit <- lavaan(RICLPM2a, 
+                      data = dat.low, 
+                      missing = 'ML', 
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust") 
+
+summary(RICLPM2a.low.fit, 
+        fit.measures = TRUE,
+        standardized = TRUE)
+```
+
+```{r LRT for RICLPM.low and RICLPM2a.low}
+lavTestLRT(RICLPM.low.fit, RICLPM2a.low.fit)
+```
+
+### Middle SES
+
+```{r fit RICLPM2a.mid}
+RICLPM2a.mid.fit <- lavaan(RICLPM2a, 
+                      data = dat.mid, 
+                      missing = 'ML', 
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust") 
+
+summary(RICLPM2a.mid.fit, 
+        fit.measures = TRUE,
+        standardized = TRUE)
+```
+
+```{r LRT for RICLPM.mid and RICLPM2a.mid}
+lavTestLRT(RICLPM.mid.fit, RICLPM2a.mid.fit)
+```
+
+### High SES
+
+```{r fit RICLPM2a.high}
+RICLPM2a.high.fit <- lavaan(RICLPM2a, 
+                      data = dat.high, 
+                      missing = 'ML', 
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust") 
+
+summary(RICLPM2a.high.fit, 
+        fit.measures = TRUE,
+        standardized = TRUE)
+```
+
+```{r LRT for RICLPM and RICLPM2a}
+lavTestLRT(RICLPM.high.fit, RICLPM2a.high.fit)
+```
+
+All models in low, middle and high SES samples, showed significantly worse model fit. 
+
+## Constraining lag in social isolation parameter (RICLPM2b)
+
+b = lag in si
+
+```{r specify RICLPM2b}
+RICLPM2b <- '
+  # Create between components (random intercepts treated as factors here)
+  RIad =~ 1*tadhdem5 + 1*tadhdem7 + 1*tadhdem10 + 1*tadhdem12 #x
+  RIsi =~ 1*sisoem5 + 1*sisoem7 + 1*sisoem10 + 1*sisoem12 #y
+
+  # Create within-person centered variables
+  wad5 =~ 1*tadhdem5
+  wad7 =~ 1*tadhdem7
+  wad10 =~ 1*tadhdem10 
+  wad12 =~ 1*tadhdem12
+  wsi5 =~ 1*sisoem5
+  wsi7 =~ 1*sisoem7
+  wsi10 =~ 1*sisoem10
+  wsi12 =~ 1*sisoem12
+  
+  
+  # Constrained lagged effects between the within-person centered variables. 
+  wad7 ~ wad5 + wsi5 
+  wsi7 ~ wad5 + b*wsi5
+  
+  wad10 ~ wad7 + wsi7
+  wsi10 ~ wad7 + b*wsi7
+  
+  wad12 ~ wad10 + wsi10
+  wsi12 ~ wad10 + b*wsi10
+  
+  # Estimate the covariance between the within-person centered variables at the first wave
+  wad5 ~~ wsi5 # Covariance
+  
+  # Estimate the covariances between the residuals of the within-person centered variables (the innovations)
+  wad7 ~~ wsi7
+  wad10 ~~ wsi10
+  wad12 ~~ wsi12
+  
+  # Estimate the variance and covariance of the random intercepts
+  RIad ~~ RIad
+  RIsi ~~ RIsi
+  RIad ~~ RIsi
+  
+  # Estimate the (residual) variance of the within-person centered variables.
+  wad5 ~~ wad5 # Variances
+  wsi5 ~~ wsi5 
+  wad7 ~~ wad7 # Residual variances
+  wsi7 ~~ wsi7 
+  wad10 ~~ wad10 
+  wsi10 ~~ wsi10 
+  wad12 ~~ wad12 
+  wsi12 ~~ wsi12
+'
+```
+
+### Low SES
+
+```{r fit RICLPM2b.low}
+RICLPM2b.low.fit <- lavaan(RICLPM2b, 
+                      data = dat.low, 
+                      missing = 'ML', 
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust") 
+
+summary(RICLPM2b.low.fit, 
+        fit.measures = TRUE,
+        standardized = TRUE)
+```
+
+```{r LRT for RICLPM.low and RICLPM2b.low}
+lavTestLRT(RICLPM.low.fit, RICLPM2b.low.fit)
+```
+
+### Middle SES
+
+```{r fit RICLPM2b.mid}
+RICLPM2b.mid.fit <- lavaan(RICLPM2b, 
+                      data = dat.mid, 
+                      missing = 'ML', 
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust") 
+
+summary(RICLPM2b.mid.fit, 
+        fit.measures = TRUE,
+        standardized = TRUE)
+```
+
+```{r LRT for RICLPM.mid and RICLPM2b.mid}
+lavTestLRT(RICLPM.mid.fit, RICLPM2b.mid.fit)
+```
+
+### High SES
+
+```{r fit RICLPM2b.high}
+RICLPM2b.high.fit <- lavaan(RICLPM2b, 
+                      data = dat.high, 
+                      missing = 'ML', 
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust") 
+
+summary(RICLPM2b.high.fit, 
+        fit.measures = TRUE,
+        standardized = TRUE)
+```
+
+```{r LRT for RICLPM.high and RICLPM2b.high}
+lavTestLRT(RICLPM.high.fit, RICLPM2b.high.fit)
+```
+
+Low and Middle SES samples were significantly worse fit when imposing b lag constraints. High SES did not have significantly worse fit. 
+
+## Constraining cross lag in ADHD to social isolation parameter (RICLPM2c)
+
+c = cross lag ad->si
+
+```{r specify RICLPM2c}
+RICLPM2c <- '
+  # Create between components (random intercepts treated as factors here)
+  RIad =~ 1*tadhdem5 + 1*tadhdem7 + 1*tadhdem10 + 1*tadhdem12 #x
+  RIsi =~ 1*sisoem5 + 1*sisoem7 + 1*sisoem10 + 1*sisoem12 #y
+
+  # Create within-person centered variables
+  wad5 =~ 1*tadhdem5
+  wad7 =~ 1*tadhdem7
+  wad10 =~ 1*tadhdem10 
+  wad12 =~ 1*tadhdem12
+  wsi5 =~ 1*sisoem5
+  wsi7 =~ 1*sisoem7
+  wsi10 =~ 1*sisoem10
+  wsi12 =~ 1*sisoem12
+  
+  
+  # Constrained lagged effects between the within-person centered variables. 
+  wad7 ~ wad5 + wsi5 
+  wsi7 ~ c*wad5 + wsi5
+  
+  wad10 ~ wad7 + wsi7
+  wsi10 ~ c*wad7 + wsi7
+  
+  wad12 ~ wad10 + wsi10
+  wsi12 ~ c*wad10 + wsi10
+  
+  # Estimate the covariance between the within-person centered variables at the first wave
+  wad5 ~~ wsi5 # Covariance
+  
+  # Estimate the covariances between the residuals of the within-person centered variables (the innovations)
+  wad7 ~~ wsi7
+  wad10 ~~ wsi10
+  wad12 ~~ wsi12
+  
+  # Estimate the variance and covariance of the random intercepts
+  RIad ~~ RIad
+  RIsi ~~ RIsi
+  RIad ~~ RIsi
+  
+  # Estimate the (residual) variance of the within-person centered variables.
+  wad5 ~~ wad5 # Variances
+  wsi5 ~~ wsi5 
+  wad7 ~~ wad7 # Residual variances
+  wsi7 ~~ wsi7 
+  wad10 ~~ wad10 
+  wsi10 ~~ wsi10 
+  wad12 ~~ wad12 
+  wsi12 ~~ wsi12
+'
+```
+
+### Low SES
+
+```{r fit RICLPM2c.low}
+RICLPM2c.low.fit <- lavaan(RICLPM2c, 
+                      data = dat.low, 
+                      missing = 'ML', 
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust") 
+
+summary(RICLPM2c.low.fit, 
+        fit.measures = TRUE,
+        standardized = TRUE)
+```
+
+```{r LRT for RICLPM.low and RICLPM2c.low}
+lavTestLRT(RICLPM.low.fit, RICLPM2c.low.fit)
+```
+
+### Middle SES
+
+```{r fit RICLPM2c.mid}
+RICLPM2c.mid.fit <- lavaan(RICLPM2c, 
+                      data = dat.mid, 
+                      missing = 'ML', 
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust") 
+
+RICLPM2c.mid.fit.summary <- summary(RICLPM2c.mid.fit, 
+                                    fit.measures = TRUE,
+                                    standardized = TRUE)
+```
+
+```{r LRT for RICLPM.mid and RICLPM2c.mid}
+lavTestLRT(RICLPM.mid.fit, RICLPM2c.mid.fit)
+```
+
+### High SES
+
+*The high SES group has to be compared to model RICLPM2b.high.fit, as that model didn't have decreased model fit*
+
+```{r specify RICLPM2c.high}
+RICLPM2c.high <- '
+  # Create between components (random intercepts treated as factors here)
+  RIad =~ 1*tadhdem5 + 1*tadhdem7 + 1*tadhdem10 + 1*tadhdem12 #x
+  RIsi =~ 1*sisoem5 + 1*sisoem7 + 1*sisoem10 + 1*sisoem12 #y
+
+  # Create within-person centered variables
+  wad5 =~ 1*tadhdem5
+  wad7 =~ 1*tadhdem7
+  wad10 =~ 1*tadhdem10 
+  wad12 =~ 1*tadhdem12
+  wsi5 =~ 1*sisoem5
+  wsi7 =~ 1*sisoem7
+  wsi10 =~ 1*sisoem10
+  wsi12 =~ 1*sisoem12
+  
+  
+  # Constrained lagged effects between the within-person centered variables. 
+  wad7 ~ wad5 + wsi5 
+  wsi7 ~ c*wad5 + b*wsi5
+  
+  wad10 ~ wad7 + wsi7
+  wsi10 ~ c*wad7 + b*wsi7
+  
+  wad12 ~ wad10 + wsi10
+  wsi12 ~ c*wad10 + b*wsi10
+  
+  # Estimate the covariance between the within-person centered variables at the first wave
+  wad5 ~~ wsi5 # Covariance
+  
+  # Estimate the covariances between the residuals of the within-person centered variables (the innovations)
+  wad7 ~~ wsi7
+  wad10 ~~ wsi10
+  wad12 ~~ wsi12
+  
+  # Estimate the variance and covariance of the random intercepts
+  RIad ~~ RIad
+  RIsi ~~ RIsi
+  RIad ~~ RIsi
+  
+  # Estimate the (residual) variance of the within-person centered variables.
+  wad5 ~~ wad5 # Variances
+  wsi5 ~~ wsi5 
+  wad7 ~~ wad7 # Residual variances
+  wsi7 ~~ wsi7 
+  wad10 ~~ wad10 
+  wsi10 ~~ wsi10 
+  wad12 ~~ wad12 
+  wsi12 ~~ wsi12
+'
+```
+
+```{r fit RICLPM2c.high}
+RICLPM2c.high.fit <- lavaan(RICLPM2c.high, 
+                      data = dat.high, 
+                      missing = 'ML', 
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust") 
+
+RICLPM2c.high.fit.summary <- summary(RICLPM2c.high.fit, 
+                                      fit.measures = TRUE,
+                                      standardized = TRUE)
+```
+
+```{r LRT for RICLPM2b.high and RICLPM2c.high}
+lavTestLRT(RICLPM2b.high.fit, RICLPM2c.high.fit)
+```
+
+All models were not significantly worse - we will not compare all models to this one going forward. 
+
+## Constraining cross lag in social isolation to ADHD parameter (RICLPM2d) - **compared to RICLPM2c** 
+
+Thus, constraining both sets of lags are tested in this model (and three lags for high SES). 
+
+c = cross lag ad->si
+d = cross lag si->ad
+
+```{r specify RICLPM2d}
+RICLPM2d <- '
+  # Create between components (random intercepts treated as factors here)
+  RIad =~ 1*tadhdem5 + 1*tadhdem7 + 1*tadhdem10 + 1*tadhdem12 #x
+  RIsi =~ 1*sisoem5 + 1*sisoem7 + 1*sisoem10 + 1*sisoem12 #y
+
+  # Create within-person centered variables
+  wad5 =~ 1*tadhdem5
+  wad7 =~ 1*tadhdem7
+  wad10 =~ 1*tadhdem10 
+  wad12 =~ 1*tadhdem12
+  wsi5 =~ 1*sisoem5
+  wsi7 =~ 1*sisoem7
+  wsi10 =~ 1*sisoem10
+  wsi12 =~ 1*sisoem12
+  
+  
+  # Constrained lagged effects between the within-person centered variables. 
+  wad7 ~ wad5 + d*wsi5 
+  wsi7 ~ c*wad5 + wsi5
+  
+  wad10 ~ wad7 + d*wsi7
+  wsi10 ~ c*wad7 + wsi7
+  
+  wad12 ~ wad10 + d*wsi10
+  wsi12 ~ c*wad10 + wsi10
+  
+  # Estimate the covariance between the within-person centered variables at the first wave
+  wad5 ~~ wsi5 # Covariance
+  
+  # Estimate the covariances between the residuals of the within-person centered variables (the innovations)
+  wad7 ~~ wsi7
+  wad10 ~~ wsi10
+  wad12 ~~ wsi12
+  
+  # Estimate the variance and covariance of the random intercepts
+  RIad ~~ RIad
+  RIsi ~~ RIsi
+  RIad ~~ RIsi
+  
+  # Estimate the (residual) variance of the within-person centered variables.
+  wad5 ~~ wad5 # Variances
+  wsi5 ~~ wsi5 
+  wad7 ~~ wad7 # Residual variances
+  wsi7 ~~ wsi7 
+  wad10 ~~ wad10 
+  wsi10 ~~ wsi10 
+  wad12 ~~ wad12 
+  wsi12 ~~ wsi12
+'
+```
+
+### Low SES
+
+```{r fit RICLPM2d.low}
+RICLPM2d.low.fit <- lavaan(RICLPM2d, 
+                      data = dat.low, 
+                      missing = 'ML', 
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust") 
+
+RICLPM2d.low.fit.summary <- summary(RICLPM2d.low.fit, 
+                                    fit.measures = TRUE,
+                                    standardized = TRUE)
+```
+
+```{r LRT for RICLPM2c.low and RICLPM2d.low}
+lavTestLRT(RICLPM2c.low.fit, RICLPM2d.low.fit)
+```
+
+### Middle SES
+
+```{r fit RICLPM2d.mid}
+RICLPM2d.mid.fit <- lavaan(RICLPM2d, 
+                      data = dat.mid, 
+                      missing = 'ML', 
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust") 
+
+summary(RICLPM2d.mid.fit, 
+        fit.measures = TRUE,
+        standardized = TRUE)
+```
+
+```{r LRT for RICLPM2c.mid and RICLPM2d.mid}
+lavTestLRT(RICLPM2c.mid.fit, RICLPM2d.mid.fit)
+```
+
+**Significantly worse fit here for missle SES**.
+
+### High SES
+
+*The high SES group has to be compared to model RICLPM2c.high.fit, (with b and c parameters constrained) as that model didn't have decreased model fit*
+
+```{r specify RICLPM2d.high}
+RICLPM2d.high <- '
+  # Create between components (random intercepts treated as factors here)
+  RIad =~ 1*tadhdem5 + 1*tadhdem7 + 1*tadhdem10 + 1*tadhdem12 #x
+  RIsi =~ 1*sisoem5 + 1*sisoem7 + 1*sisoem10 + 1*sisoem12 #y
+
+  # Create within-person centered variables
+  wad5 =~ 1*tadhdem5
+  wad7 =~ 1*tadhdem7
+  wad10 =~ 1*tadhdem10 
+  wad12 =~ 1*tadhdem12
+  wsi5 =~ 1*sisoem5
+  wsi7 =~ 1*sisoem7
+  wsi10 =~ 1*sisoem10
+  wsi12 =~ 1*sisoem12
+  
+  
+  # Constrained lagged effects between the within-person centered variables. 
+  wad7 ~ wad5 + d*wsi5 
+  wsi7 ~ c*wad5 + b*wsi5
+  
+  wad10 ~ wad7 + d*wsi7
+  wsi10 ~ c*wad7 + b*wsi7
+  
+  wad12 ~ wad10 + d*wsi10
+  wsi12 ~ c*wad10 + b*wsi10
+  
+  # Estimate the covariance between the within-person centered variables at the first wave
+  wad5 ~~ wsi5 # Covariance
+  
+  # Estimate the covariances between the residuals of the within-person centered variables (the innovations)
+  wad7 ~~ wsi7
+  wad10 ~~ wsi10
+  wad12 ~~ wsi12
+  
+  # Estimate the variance and covariance of the random intercepts
+  RIad ~~ RIad
+  RIsi ~~ RIsi
+  RIad ~~ RIsi
+  
+  # Estimate the (residual) variance of the within-person centered variables.
+  wad5 ~~ wad5 # Variances
+  wsi5 ~~ wsi5 
+  wad7 ~~ wad7 # Residual variances
+  wsi7 ~~ wsi7 
+  wad10 ~~ wad10 
+  wsi10 ~~ wsi10 
+  wad12 ~~ wad12 
+  wsi12 ~~ wsi12
+'
+```
+
+```{r fit RICLPM2d.high}
+RICLPM2d.high.fit <- lavaan(RICLPM2d.high, 
+                      data = dat.high, 
+                      missing = 'ML', 
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust") 
+
+summary(RICLPM2d.high.fit, 
+        fit.measures = TRUE,
+        standardized = TRUE)
+```
+
+```{r LRT for RICLPM2c.high and RICLPM2d.high}
+lavTestLRT(RICLPM2c.high.fit, RICLPM2d.high.fit)
+```
+**Significantly worse fit for high SES.**
+
+## Summary of constraints for each SES
+
+|  SES level | Constraints applied                                                                                                                         | 
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+|   Low      |  RICLPM2d.low was the best fit: both cross-lagged parameters were constrained                                                               |
+|   Middle   |  RICLPM2c.mid was the best fit: cross lag ADHD -> social isolation was constrained over time                                                |
+|   High     |  RICLPM2c.high was the best fit: auto-regressive lag in social isolation and cross lag ADHD -> social isolation was constrained over time   |
+
+```{r low ses best fitting tables: RICLPM2d.low}
+#Table of model fit 
+RICLPM2d.low.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPM2d.low.fit.summary$FIT)))[,c(3,4,9,10,13,14,16,17,18,19,21)]
+RICLPM2d.low.fit.summary.fit
+#Table of regression coefficient 
+RICLPM2d.low.fit.summary.reg <- as.tibble(RICLPM2d.low.fit.summary$PE[c(17:32),-c(4)])
+RICLPM2d.low.fit.summary.reg
+```
+
+Summary of cross-lag results for low SES:
+- All cross-lags can be constrained, thus the effects are consistent across the time points
+- ADHD at age 5 influences social isolation at age 7 (standardized effect = 0.143, p=0.0219)
+- ADHD at age 7 influences social isolation at age 10 (standardized effect = 0.110, p=0.0219)
+- ADHD at age 10 influences social isolation at age 12 (standardized effect = 0.095, p=0.0219)
+
+Standardized effects will vary, non-standardized ones wont (and p-values wont). 
+
+```{r mid ses best fitting tables: RICLPM2c.mid}
+#Table of model fit 
+RICLPM2c.mid.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPM2c.mid.fit.summary$FIT)))[,c(3,4,9,10,13,14,16,17,18,19,21)]
+RICLPM2c.mid.fit.summary.fit
+#Table of regression coefficient 
+RICLPM2c.mid.fit.summary.reg <- as.tibble(RICLPM2c.mid.fit.summary$PE[c(17:32),-c(4)])
+RICLPM2c.mid.fit.summary.reg
+```
+
+Summary of cross-lag results for middle SES:
+- Only cross lag ADHD -> social isolation was constrained over time, thus only these effects are consistent across the time points
+- No significant cross lag paths for middle SES.
+
+
+```{r high ses best fitting tables: RICLPM2c.high}
+#Table of model fit 
+RICLPM2c.high.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPM2c.high.fit.summary$FIT)))[,c(3,4,9,10,13,14,16,17,18,19,21)]
+RICLPM2c.high.fit.summary.fit
+#Table of regression coefficient 
+RICLPM2c.high.fit.summary.reg <- as.tibble(RICLPM2c.high.fit.summary$PE[c(17:32),-c(4)])
+RICLPM2c.high.fit.summary.reg
+```
+
+Summary of cross-lag results for middle SES:
+- Auto-regressive lag in social isolation and cross lag ADHD -> social isolation was constrained over time, thus only these effects are consistent across the time points
+- No significant cross lag paths for middle SES.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
