@@ -248,6 +248,9 @@ dat <- dat.raw %>%
 colnames(dat)
 ```
 
+```{r load saved environment with models run}
+load("../measurement_environment.RData")
+```
 
 # All RI-CLPM models displayed here **This needs to be updated**
 
