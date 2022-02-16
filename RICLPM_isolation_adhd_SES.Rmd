@@ -112,12 +112,59 @@ dat.high <- dat %>% filter (SES == "High")
 
 ***
 
-# Mother report
+# Unconstrained model SES differences 
 
-## Unconstrained RI-CLPM 
-The code for specifying the basic RI-CLPM for total ADHD symptoms and social isolation is given at the beginning of the script.
+## Mother report
 
-To check for group differences in parameter estimates between different levels of SES, we can run the same model but test group differences in the lavaan command.
+### RI-CLPM - total ADHD symptoms
+
+```{r specify RICLPM, class.source = 'fold-show'}
+RICLPM <- '
+  # Create between components (random intercepts treated as factors here)
+  RIad =~ 1*tadhdem5 + 1*tadhdem7 + 1*tadhdem10 + 1*tadhdem12 #x
+  RIsi =~ 1*sisoem5 + 1*sisoem7 + 1*sisoem10 + 1*sisoem12 #y
+
+  # Create within-person centered variables
+  wad5 =~ 1*tadhdem5
+  wad7 =~ 1*tadhdem7
+  wad10 =~ 1*tadhdem10 
+  wad12 =~ 1*tadhdem12
+  wsi5 =~ 1*sisoem5
+  wsi7 =~ 1*sisoem7
+  wsi10 =~ 1*sisoem10
+  wsi12 =~ 1*sisoem12
+  
+  # Estimate the lagged effects between the within-person centered variables
+  wad7 + wsi7 ~ wad5 + wsi5
+  wad10 + wsi10 ~ wad7 + wsi7
+  wad12 + wsi12 ~ wad10 + wsi10
+  
+  # Estimate the covariance between the within-person centered variables at the first wave
+  wad5 ~~ wsi5 # Covariance
+  
+  # Estimate the covariances between the residuals of the within-person centered variables (the innovations)
+  wad7 ~~ wsi7
+  wad10 ~~ wsi10
+  wad12 ~~ wsi12
+  
+  # Estimate the variance and covariance of the random intercepts
+  RIad ~~ RIad
+  RIsi ~~ RIsi
+  RIad ~~ RIsi
+  
+  # Estimate the (residual) variance of the within-person centered variables.
+  wad5 ~~ wad5 # Variances
+  wsi5 ~~ wsi5 
+  wad7 ~~ wad7 # Residual variances
+  wsi7 ~~ wsi7 
+  wad10 ~~ wad10 
+  wsi10 ~~ wsi10 
+  wad12 ~~ wad12 
+  wsi12 ~~ wsi12
+'
+```
+
+To check for group differences in parameter estimates between different levels of SES, we specify that we are interested to group by SES.
 
 ```{r fit RICLPM grouped by ses}
 RICLPM.ses.fit <- lavaan(RICLPM, 
@@ -193,10 +240,6 @@ RICLPM.ses2.fit <- lavaan(RICLPM.ses2,
                       int.ov.free = TRUE,
                       se = "robust"
                       ) 
-
-RICLPM.ses2.fit.summary <- summary(RICLPM.ses2.fit, 
-                                fit.measures = TRUE,
-                                standardized = TRUE)
 ```
 
 Now we see if there is a significantly worse fit when the lagged-parameters are constrained to be equal across groups. 
@@ -207,42 +250,7 @@ lavTestLRT(RICLPM.ses.fit, RICLPM.ses2.fit)
 
 The chi-square difference test of these two nested models is **significant** (p=0.0006471), which implies that the lagged effects appear to be the **different for different levels of SES** 
 
-## Create separate models for each level of SES
 
-This is done so that we can compare these baseine models when emposing time point equality constraints. The outout for these models should be exactly the same as the grouped RICLPM.ses version above. 
-
-### Low SES
-
-```{r fit RICLPM.low}
-RICLPM.low.fit <- lavaan(RICLPM, 
-                      data = dat.low, 
-                      missing = 'ML', 
-                      meanstructure = TRUE, 
-                      int.ov.free = TRUE,
-                      se = "robust") 
-```
-
-### Middle SES
-
-```{r fit RICLPM.mid}
-RICLPM.mid.fit <- lavaan(RICLPM, 
-                      data = dat.mid, 
-                      missing = 'ML', 
-                      meanstructure = TRUE, 
-                      int.ov.free = TRUE,
-                      se = "robust") 
-```
-    
-### High SES
-
-```{r fit RICLPM.high}
-RICLPM.high.fit <- lavaan(RICLPM, 
-                      data = dat.high, 
-                      missing = 'ML', 
-                      meanstructure = TRUE, 
-                      int.ov.free = TRUE,
-                      se = "robust") 
-```
 
 # Constraints over time
 
