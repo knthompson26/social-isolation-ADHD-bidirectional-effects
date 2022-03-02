@@ -49,7 +49,7 @@ source("../isolation_ADHD_data_path.R")
 dat.raw <- read_dta(paste0(data.raw_path, "Katie_19Jan22.dta"))
 
 dat <- dat.raw %>%
-  select(id = atwinid,
+  dplyr::select(id = atwinid,
          sampsex,
          seswq35,
          sisoem5,  # social isolation mother report
@@ -91,6 +91,83 @@ colnames(dat)
 
 ***
 
+Functions
+
+```{r functions}
+# Table of model fit 
+table.model.fit <- function(model){
+  model.fit <- as.data.frame(t(as.data.frame(model$FIT))) %>%
+    dplyr::select(chisq, df, chisq.scaled, cfi.robust, tli.robust, aic, bic, bic2, rmsea.robust, rmsea.ci.lower.robust, rmsea.ci.upper.robust, srmr) #can only be used with "MLR" estimator
+  return(model.fit)
+}
+
+# Table of regression and correlation (standardised covariance) coefficients
+table.model.coef <- function(model, type, constraints){
+  if (type == "RICLPM" & constraints == "No"){
+    model.coef <- as.tibble(model$PE[c(17:32),]) %>% dplyr::select(-exo, -std.lv, -std.nox)
+    return(model.coef)
+  } else if(type == "RICLPM" & constraints == "Yes"){
+    model.coef <- as.tibble(model$PE[c(17:32),]) %>% dplyr::select(-exo, -label, -std.lv, -std.nox)
+    return(model.coef)
+  } else if(type == "CLPM" & constraints == "No"){
+    model.coef <- as.tibble(model$PE[c(1:16),]) %>% dplyr::select(-exo, -std.lv, -std.nox)
+    return(model.coef)
+  } else if(type == "CLPM" & constraints == "Yes"){
+    model.coef <- as.tibble(model$PE[c(1:16),]) %>% dplyr::select(-exo, -std.lv, -std.nox)
+    return(model.coef)
+  } else {model.coef <- NULL}
+}
+```
+
+***
+# Normality checks
+
+If the data is non-normal - we should use robust test statistics for all models going forward. Robust standard errors will also be calculated to account for the use of twins in our sample. 
+
+```{r histogram social isolation}
+# mother
+hist(dat$sisoem5)
+hist(dat$sisoem7)
+hist(dat$sisoem10)
+hist(dat$sisoem12)
+
+# teacher
+hist(dat$sisoet5)
+hist(dat$sisoet7)
+hist(dat$sisoet10)
+hist(dat$sisoet12)
+```
+
+```{r histogram hyperactivity}
+# mother
+hist(dat$hyem5)
+hist(dat$hyem7)
+hist(dat$hyem10)
+hist(dat$hyem12)
+
+# mother
+hist(dat$hyet5)
+hist(dat$hyet7)
+hist(dat$hyet10)
+hist(dat$hyet12)
+```
+
+```{r histogram inattention}
+# mother
+hist(dat$inem5)
+hist(dat$inem7)
+hist(dat$inem10)
+hist(dat$inem12)
+
+# mother
+hist(dat$inet5)
+hist(dat$inet7)
+hist(dat$inet10)
+hist(dat$inet12)
+```
+
+***
+
 The below introductory notes have been adapted from [Hamaker, Kuiper, and Grasman, 2015](https://www.researchgate.net/profile/Ellen-Hamaker/publication/274262847_A_Critique_of_the_Cross-Lagged_Panel_Model/links/5b80154c92851c1e122f351f/A-Critique-of-the-Cross-Lagged-Panel-Model.pdf)
 
 The CLPM only accounts for temporal stability through the inclusion of autoregressive parameters. Thus, it is implicitly assumed that every person varies over time around the same means μt and πt, and that there are no trait-like individual differences that endure. this is a rather problematic assumption, as it is difficult to imagine a psychological construct – whether behavioral, cognitive, emotional or psychophysiological – that is not to some extent characterized by stable individual differences (if not for the entire lifespan, then at least for the duration of the study; Hamaker, ). Longitudinal data can actually be thought of as multilevel data, in which occasions are nested within individuals (or other systems, like dyads). When considering this perspective, it becomes clear that we need to separate the *within-person* level from the *between-person* level. 
@@ -105,12 +182,10 @@ The CLPM requires only two waves of data, but the RI-CLPM requires at least *thr
 We conducted RI-CLPM to assess bidirectional associations between social isolation and ADHD symptoms. All models in this script have used sum scores for total ADHD symptoms, hyperactivity symptoms, inattention symptoms, and social isolation. Separate models have been conducted for mother and teacher scores. See the table below for a list of all models and how they are labeled throughout the code. 
 
 
-
 | Model            | Description                                                                                                                       | 
 | ---------------  | --------------------------------------------------------------------------------------------------------------------------------  |
 |   CLPM           |  Cross-lagged panel model without random intercepts using **mother report** and **total ADHD** scores                             |
 |   RICLPM         |  Basic RI-CLPM model using **mother report** ratings for AD and SI, and **total ADHD** scores                                     |
-|   RICLPM1        |  RICLPM but with unconstrained factor loadings for the random intercepts                                                          |
 |   RICLPM2        |  RICLPM but with fixed autoregressive and cross-lagged relations over time                                                        |
 |   RICLPM2a       |  RICLPM but with fixed ADHD autoregressive over time                                                                              |
 |   RICLPM2b       |  RICLPM but with fixed social isolation autoregressive over time                                                                  |
@@ -118,7 +193,6 @@ We conducted RI-CLPM to assess bidirectional associations between social isolati
 |   RICLPM2d       |  RICLPM but with fixed all cross-lagged relations over time                                                                       |
 |   RICLPM3        |  RICLPM but with constrained grand means for AD and SI                                                                            |
 |   RICLPM_hyp     |  Basic RI-CLPM model using **mother report** ratings for AD and SI, and **hyperacitivty** scores                                  |
-|   RICLPM_hyp1    |  RICLPM_hyp but with unconstrained factor loadings for the random intercepts                                                      |
 |   RICLPM_hyp2    |  RICLPM_hyp but with fixed autoregressive and cross-lagged relations over time                                                    |
 |   RICLPM_hyp2a   |  RICLPM_hyp but with fixed ADHD autoregressive over time                                                                          |
 |   RICLPM_hyp2b   |  RICLPM_hyp but with fixed social isolation autoregressive over time                                                              |
@@ -126,7 +200,6 @@ We conducted RI-CLPM to assess bidirectional associations between social isolati
 |   RICLPM_hyp2d   |  RICLPM_hyp but with fixed all cross-lagged relations over time                                                                   |
 |   RICLPM_hyp3    |  RICLPM_hyp but with constrained grand means for AD and SI                                                                        |
 |   RICLPM_inat    |  Basic RI-CLPM model using **mother report** ratings for AD and SI, and **inattention** scores                                    |
-|   RICLPM_inat1   |  RICLPM_inat but with unconstrained factor loadings for the random intercepts                                                     |
 |   RICLPM_inat2   |  RICLPM_inat but with fixed autoregressive and cross-lagged relations over time                                                   |
 |   RICLPM_inat2a  |  RICLPM_inat but with fixed ADHD autoregressive over time                                                                         |
 |   RICLPM_inat2b  |  RICLPM_inat but with fixed social isolation autoregressive over time                                                             |
@@ -135,15 +208,12 @@ We conducted RI-CLPM to assess bidirectional associations between social isolati
 |   RICLPM_inat3   |  RICLPM_inat but with constrained grand means for AD and SI                                                                       |
 |   CLPMt          |  Cross-lagged panel model without random intercepts using **teacher report** and **total ADHD** scores                            |
 |   RICLPMt        |  Basic RI-CLPM model using **teacher report** ratings for AD and SI, and **total ADHD** scores                                    |
-|   RICLPMt1       |  RICLPMt but with unconstrained factor loadings for the random intercepts                                                         |
 |   RICLPMt2       |  RICLPMt but with fixed autoregressive and cross-lagged relations over time                                                       |
 |   RICLPMt3       |  RICLPMt but with constrained grand means for AD and SI                                                                           |
 |   RICLPMt_hyp    |  Basic RI-CLPM model using **teacher report** ratings for AD and SI, and **hyperacitivty** scores                                 |
-|   RICLPMt_hyp1   |  RICLPMt_hyp but with unconstrained factor loadings for the random intercepts                                                     |
 |   RICLPMt_hyp2   |  RICLPMt_hyp but with fixed autoregressive and cross-lagged relations over time                                                   |
 |   RICLPMt_hyp3   |  RICLPMt_hyp but with constrained grand means for AD and SI                                                                       |
 |   RICLPMt_inat   |  Basic RI-CLPM model using **teacher report** ratings for AD and SI, and **inattention** scores                                   |
-|   RICLPMt_inat1  |  RICLPMt_inat but with unconstrained factor loadings for the random intercepts                                                    |
 |   RICLPMt_inat2  |  RICLPMt_inat but with fixed autoregressive and cross-lagged relations over time                                                  |
 |   RICLPMt_inat3  |  RICLPMt_inat but with constrained grand means for AD and SI                                                                      |
 
@@ -202,17 +272,20 @@ CLPM.fit <- lavaan(CLPM,
                    missing = 'ML',
                    meanstructure = TRUE, 
                    int.ov.free = TRUE,
-                   se = "robust") 
+                   se = "robust",
+                   estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic 
+                   ) 
 
 CLPM.fit.summary <- summary(CLPM.fit, 
                             fit.measures = TRUE,
                             standardized = TRUE)
 
 #Table of model fit 
-CLPM.fit.summary.fit <- as.data.frame(t(as.data.frame(CLPM.fit.summary$FIT)))[,c(3,4,9,10,13,14,16,17,18,19,21)]
-
+CLPM.fit.summary.fit <- table.model.fit(CLPM.fit.summary)
+CLPM.fit.summary.fit
 #Table of regression coefficients and covariances (concurrent associations)
-CLPM.fit.summary.reg <- as.tibble(CLPM.fit.summary$PE[c(1:16),-c(4)])
+CLPM.fit.summary.reg <- table.model.coef(model = CLPM.fit.summary, type = "CLPM", constraints = "No")
+CLPM.fit.summary.reg
 ```
 
 ## The basic RI-CLPM model (RICLPM)
@@ -270,17 +343,18 @@ RICLPM.fit <- lavaan(RICLPM,               # model
                      missing = 'ML',       # how to handle missing data 
                      meanstructure = TRUE, # adds intercepts/means to the model for both observed and latent variables
                      se = "robust",        # robust standard errors
-                     int.ov.free = TRUE)   # if FALSE, the intercepts of the observed variables are fixed to zero
+                     int.ov.free = TRUE,   # if FALSE, the intercepts of the observed variables are fixed to zero
+                     estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+)
 
 RICLPM.fit.summary <- summary(RICLPM.fit, 
                               fit.measures = TRUE,
                               standardized = TRUE)
 
 #Table of model fit 
-RICLPM.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPM.fit.summary$FIT)))[,c(3,4,9,10,13,14,16,17,18,19,21)]
-
-#Table of regression coefficients and covariances
-RICLPM.fit.summary.reg <- as.tibble(RICLPM.fit.summary$PE[c(17:32),-c(4)])
+RICLPM.fit.summary.fit <- table.model.fit(RICLPM.fit.summary)
+#Table of regression coefficients and covariances (concurrent associations)
+RICLPM.fit.summary.reg <- table.model.coef(model = RICLPM.fit.summary, type = "RICLPM", constraints = "No")
 ```
 
 ## Comparison between CLPM and RI-CLPM
@@ -323,71 +397,6 @@ Imposing constraints to the model can be achieved through **pre-multiplication**
 1) fixed auto-regressive and cross-lagged relations over time, `wx2 ~ a*wx1 + b*wy1; ...`
 2) time-invariant (residual) (co-)variances in the within-person part `wx2 ~~ cov*wy2; ...`, `wx2 ~~ vx*wx2; ...`, and `wy2 ~~ vy*wy2; ...`
 3) constrained grand means over time, `x1 + ... ~ mx*1` and `y1 + ... ~ my*1`
-
-### Unconstrained factor loadings for the random intercepts (RICLPM1) 
-
-From [Mulder and Hamaker (2021)](https://www.tandfonline.com/doi/full/10.1080/10705511.2020.1784738): One can choose to relax; instead, of impose, constraints over time to allow for a more flexible and better fitting model. The RI-CLPM is based on the assumption that the random intercepts have the exact same influence on the observed variables at each occasion, which is reflected by the factor loadings that are all constrained to be 1 over time. However, researchers may want to test this, which can be done by comparing the model with these constrained factor loadings to a model in which the factor loadings are estimated freely; the latter model implies that there are stable, trait-like differences between individuals, but the size of these differences can change over time. The between components are then no longer random intercepts, but can be interpreted as traits. To fit a model with freely estimated factor loadings, at least four occasions of data are needed; in contrast, with the fixed factor loadings, the model is already identified with only three waves of data.
-
-```{r specify RICLPM1}
-RICLPM1 <- '
-  # Create between components (random intercepts)
-  RIad =~ 1*tadhdem5 + tadhdem7 + tadhdem10 + tadhdem12 #x
-  RIsi =~ 1*sisoem5 + sisoem7 + sisoem10 + sisoem12 #y
-  
-  # Create within-person centered variables
-  wad5 =~ 1*tadhdem5
-  wad7 =~ 1*tadhdem7
-  wad10 =~ 1*tadhdem10 
-  wad12 =~ 1*tadhdem12
-  wsi5 =~ 1*sisoem5
-  wsi7 =~ 1*sisoem7
-  wsi10 =~ 1*sisoem10
-  wsi12 =~ 1*sisoem12
-  
-  # Estimate the lagged effects between the within-person centered variables
-  wad7 + wsi7 ~ wad5 + wsi5
-  wad10 + wsi10 ~ wad7 + wsi7
-  wad12 + wsi12 ~ wad10 + wsi10
-  
-  # Estimate the covariance between the within-person centered variables at the first wave
-  wad5 ~~ wsi5 # Covariance
-  
-  # Estimate the covariances between the residuals of the within-person centered variables (the innovations)
-  wad7 ~~ wsi7
-  wad10 ~~ wsi10
-  wad12 ~~ wsi12
-  
-  # Estimate the variance and covariance of the random intercepts
-  RIad ~~ RIad
-  RIsi ~~ RIsi
-  RIad ~~ RIsi
-  
-  # Estimate the (residual) variance of the within-person centered variables.
-  wad5 ~~ wad5 # Variances
-  wsi5 ~~ wsi5 
-  wad7 ~~ wad7 # Residual variances
-  wsi7 ~~ wsi7 
-  wad10 ~~ wad10 
-  wsi10 ~~ wsi10 
-  wad12 ~~ wad12 
-  wsi12 ~~ wsi12
-'
-```
-
-```{r fit RICLPM1}
-RICLPM1.fit <- lavaan(RICLPM1, 
-                      data = dat, 
-                      missing = 'ML', 
-                      meanstructure = TRUE, 
-                      int.ov.free = TRUE,
-                      se = "robust") 
-summary(RICLPM1.fit, 
-        standardized = TRUE)
-```
-
-*This model did not converge, therefore random intercepts loadings will be fixed to 1 throughout all other models.*
-
-***
 
 ### Fixed autoregressive and cross-lagged relations over time (RICLPM2)
 
@@ -459,27 +468,16 @@ RICLPM2.fit <- lavaan(RICLPM2,
                       missing = 'ML', 
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
-
-RICLPM2.fit.summary <- summary(RICLPM2.fit, 
-                              fit.measures = TRUE,
-                              standardized = TRUE)
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 ```
 
 ```{r LRT for RICLPM and RICLPM2}
-lavTestLRT(RICLPM.fit, RICLPM2.fit)
+lavTestLRT(RICLPM.fit, RICLPM2.fit, method = "satorra.bentler.2010")
 ```
 
-RICLPM2 is significantly *worse* fit compared to RICLPM according to the Chi square test. However the Chi square is highly dependent on sample size. Also goo to look at difference in model fit. 
- - RMSEA difference = increase smaller than 0.01 is acceptable 
- - CFA difference = decrease smaller than 0.01 is acceptable 
- - TLI difference = decrease smaller than 0.01 is acceptable
-
-Here the CFI is a bigger decrease than we would like - therefore we will continue with the other constraints on the model. 
-
-```{r compare fit RICLPM and RICLPM2}
-summary(semTools::compareFit(RICLPM.fit, RICLPM2.fit, nested = TRUE)) #† indicates the best fitting model - using the robust statistics
-```
+RICLPM2 is significantly *worse* fit compared to RICLPM according to the Chi square test.
 
 #### Constraining lag in ADHD parameter (RICLPM2a)
 
@@ -548,15 +546,13 @@ RICLPM2a.fit <- lavaan(RICLPM2a,
                       missing = 'ML', 
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
-
-summary(RICLPM2a.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 ```
 
 ```{r LRT for RICLPM and RICLPM2a}
-lavTestLRT(RICLPM.fit, RICLPM2a.fit)
+lavTestLRT(RICLPM.fit, RICLPM2a.fit, method = "satorra.bentler.2010")
 ```
 
 RICLPM2a is significantly *worse* fit compared to RICLPM. Now we will constrain the other set of stability coefficients: lag in si (b)
@@ -621,15 +617,13 @@ RICLPM2b.fit <- lavaan(RICLPM2b,
                       missing = 'ML', 
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
-
-summary(RICLPM2b.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 ```
 
 ```{r LRT for RICLPM and RICLPM2b}
-lavTestLRT(RICLPM.fit, RICLPM2b.fit)
+lavTestLRT(RICLPM.fit, RICLPM2b.fit, method = "satorra.bentler.2010")
 ```
 
 RICLPM2b is significantly *worse* fit compared to RICLPM. Now we will constrain the other set of stability coefficients: cross lag ad->si (c)
@@ -651,7 +645,6 @@ RICLPM2c <- '
   wsi7 =~ 1*sisoem7
   wsi10 =~ 1*sisoem10
   wsi12 =~ 1*sisoem12
-  
   
   # Constrained lagged effects between the within-person centered variables. 
   wad7 ~ wad5 + wsi5 
@@ -694,18 +687,16 @@ RICLPM2c.fit <- lavaan(RICLPM2c,
                       missing = 'ML', 
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
-
-summary(RICLPM2c.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 ```
 
 ```{r LRT for RICLPM and RICLPM2c}
-lavTestLRT(RICLPM.fit, RICLPM2c.fit)
+lavTestLRT(RICLPM.fit, RICLPM2c.fit, method = "satorra.bentler.2010")
 ```
 
-RICLPM2c is *NOT* significantly worse fit compared to RICLPM (p = 0.9275). Now we will constrain the other set of stability coefficients: cross lag si->ad (d) *but comparing that model to this one*. 
+RICLPM2c is *NOT* significantly worse fit compared to RICLPM (p = 0.9616). Now we will constrain the other set of stability coefficients: cross lag si->ad (d) *but comparing that model to this one*. 
 
 #### Constraining cross lag in social isolation to ADHD parameter (RICLPM2d) - **compared to RICLPM2c** 
 
@@ -769,24 +760,27 @@ RICLPM2d.fit <- lavaan(RICLPM2d,
                       missing = 'ML', 
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 
 RICLPM2d.fit.summary <- summary(RICLPM2d.fit, 
                                 fit.measures = TRUE,
                                 standardized = TRUE)
 
-# Table of model fit 
-RICLPM2d.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPM2d.fit.summary$FIT)))[,c(3,4,9,10,13,14,16,17,18,19,21)]
-
-# Table of regression coefficients and covariances 
-RICLPM2d.fit.summary.reg <- as.tibble(RICLPM2d.fit.summary$PE[c(17:32),-c(4,5)])
+#Table of model fit 
+RICLPM2d.fit.summary.fit <- table.model.fit(RICLPM2d.fit.summary)
+RICLPM2d.fit.summary.fit
+#Table of regression coefficients and covariances (concurrent associations)
+RICLPM2d.fit.summary.reg <- table.model.coef(model = RICLPM2d.fit.summary, type = "RICLPM", constraints = "Yes")
+RICLPM2d.fit.summary.reg
 ```
 
 ```{r LRT for RICLPM2c and RICLPM2d}
-lavTestLRT(RICLPM2c.fit, RICLPM2d.fit) #comparing to other best fitting model
+lavTestLRT(RICLPM2c.fit, RICLPM2d.fit, method = "satorra.bentler.2010") #comparing to other best fitting model
 ```
 
-RICLPM2d is *NOT* significantly worse fit compared to RICLPM2c (p = 0.1844). 
+RICLPM2d is *NOT* significantly worse fit compared to RICLPM2c (p = 0.4225). 
 
 **The best fitting model (mother report and total ADHD symptoms) is currently RICLPM2d where cross-lags are constrained to be equal across time.**
 
@@ -855,15 +849,13 @@ RICLPM3.fit <- lavaan(RICLPM3,
                       missing = 'ML', 
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
-
-summary(RICLPM3.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 ```
 
 ```{r LRT for RICLPM and RICLPM3}
-lavTestLRT(RICLPM.fit, RICLPM3.fit) 
+lavTestLRT(RICLPM.fit, RICLPM3.fit, method = "satorra.bentler.2010") 
 ```
 
 If the grand means cannot be constrained to be invariant over time, this implies that on average there is some change in this variable over time, which may reflect some occasion-specific effect, or a developmental trend. By allowing the means to freely vary over time, we account for such average changes over time.
@@ -929,17 +921,18 @@ RICLPM_hyp.fit <- lavaan(RICLPM_hyp,       # model
                      missing = 'ML',       # how to handle missing data 
                      meanstructure = TRUE, # adds intercepts/means to the model for both observed and latent variables
                      se = "robust",        # robust standard errors
-                     int.ov.free = TRUE)   # if FALSE, the intercepts of the observed variables are fixed to zero
+                     int.ov.free = TRUE,   # if FALSE, the intercepts of the observed variables are fixed to zero
+                     estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+)
 
 RICLPM_hyp.fit.summary <- summary(RICLPM_hyp.fit, 
                                   fit.measures = TRUE,
                                   standardized = TRUE)
 
 #Table of model fit 
-RICLPM_hyp.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPM_hyp.fit.summary$FIT)))[,c(3,4,9,10,13,14,16,17,18,19,21)]
-
-#Table of regression coefficient 
-RICLPM_hyp.fit.summary.reg <- as.tibble(RICLPM_hyp.fit.summary$PE[c(17:32),-c(4)])
+RICLPM_hyp.fit.summary.fit <- table.model.fit(RICLPM_hyp.fit.summary)
+#Table of regression coefficients and covariances (concurrent associations)
+RICLPM_hyp.fit.summary.reg <- table.model.coef(model = RICLPM_hyp.fit.summary, type = "RICLPM", constraints = "No")
 ```
 
 ## RI-CLPM Constraints over time {.tabset .tabset-fade}
@@ -950,68 +943,12 @@ Imposing constraints to the model can be achieved through **pre-multiplication**
 2) time-invariant (residual) (co-)variances in the within-person part `wx2 ~~ cov*wy2; ...`, `wx2 ~~ vx*wx2; ...`, and `wy2 ~~ vy*wy2; ...`
 3) constrained grand means over time, `x1 + ... ~ mx*1` and `y1 + ... ~ my*1`
 
-### Unconstrained factor loadings for the random intercepts (RICLPM_hyp1) 
+Here we will use the Chi square significance value to indicate a significantly worse fitting model. 
 
-```{r specify RICLPM_hyp1}
-RICLPM_hyp1 <- '
-  # Create between components (random intercepts)
-  RIad =~ 1*hyem5 + hyem7 + hyem10 + hyem12 #x
-  RIsi =~ 1*sisoem5 + sisoem7 + sisoem10 + sisoem12 #y
-  
-  # Create within-person centered variables
-  wad5 =~ 1*hyem5
-  wad7 =~ 1*hyem7
-  wad10 =~ 1*hyem10 
-  wad12 =~ 1*hyem12
-  wsi5 =~ 1*sisoem5
-  wsi7 =~ 1*sisoem7
-  wsi10 =~ 1*sisoem10
-  wsi12 =~ 1*sisoem12
-  
-  # Estimate the lagged effects between the within-person centered variables
-  wad7 + wsi7 ~ wad5 + wsi5
-  wad10 + wsi10 ~ wad7 + wsi7
-  wad12 + wsi12 ~ wad10 + wsi10
-  
-  # Estimate the covariance between the within-person centered variables at the first wave
-  wad5 ~~ wsi5 # Covariance
-  
-  # Estimate the covariances between the residuals of the within-person centered variables (the innovations)
-  wad7 ~~ wsi7
-  wad10 ~~ wsi10
-  wad12 ~~ wsi12
-  
-  # Estimate the variance and covariance of the random intercepts
-  RIad ~~ RIad
-  RIsi ~~ RIsi
-  RIad ~~ RIsi
-  
-  # Estimate the (residual) variance of the within-person centered variables.
-  wad5 ~~ wad5 # Variances
-  wsi5 ~~ wsi5 
-  wad7 ~~ wad7 # Residual variances
-  wsi7 ~~ wsi7 
-  wad10 ~~ wad10 
-  wsi10 ~~ wsi10 
-  wad12 ~~ wad12 
-  wsi12 ~~ wsi12
-'
-```
-
-```{r fit RICLPM_hyp1}
-RICLPM_hyp1.fit <- lavaan(RICLPM_hyp1, 
-                          data = dat, 
-                          missing = 'ML', 
-                          meanstructure = TRUE, 
-                          int.ov.free = TRUE,
-                          se = "robust") 
-summary(RICLPM_hyp1.fit, 
-        standardized = TRUE)
-```
-
-*This model RICLPM_hyp1 did not converge, therefore random intercepts loadings will be fixed to 1 throughout all other models.*
-
-***
+You can also use fit indices for large sample sizes as below, we will use this method when looking at invariance testing in the measirement models:
+ - RMSEA difference = increase smaller than 0.01 is acceptable
+ - CFI difference = decrease smaller than 0.01 is acceptable
+ - TLI difference = decrease smaller than 0.01 is acceptable
 
 ### Fixed autoregressive and cross-lagged relations over time (RICLPM_hyp2)
 
@@ -1080,15 +1017,13 @@ RICLPM_hyp2.fit <- lavaan(RICLPM_hyp2,
                       missing = 'ML', 
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
-
-summary(RICLPM_hyp2.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 ```
 
 ```{r LRT for RICLPM_hyp and RICLPM_hyp2}
-lavTestLRT(RICLPM_hyp.fit, RICLPM_hyp2.fit)
+lavTestLRT(RICLPM_hyp.fit, RICLPM_hyp2.fit, method = "satorra.bentler.2010")
 ```
 
 RICLPM_hyp2 is significantly *worse* fit compared to RICLPM_hyp. 
@@ -1160,15 +1095,13 @@ RICLPM_hyp2a.fit <- lavaan(RICLPM_hyp2a,
                       missing = 'ML', 
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
-
-summary(RICLPM_hyp2a.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 ```
 
 ```{r LRT for RICLPM_hyp and RICLPM_hyp2a}
-lavTestLRT(RICLPM_hyp.fit, RICLPM_hyp2a.fit)
+lavTestLRT(RICLPM_hyp.fit, RICLPM_hyp2a.fit, method = "satorra.bentler.2010")
 ```
 
 RICLPM_hyp2a is significantly *worse* fit compared to RICLPM_hyp. Now we will constrain the other set of stability coefficients: lag in si (b)
@@ -1190,7 +1123,6 @@ RICLPM_hyp2b <- '
   wsi7 =~ 1*sisoem7
   wsi10 =~ 1*sisoem10
   wsi12 =~ 1*sisoem12
-  
   
   # Constrained lagged effects between the within-person centered variables. 
   wad7 ~ wad5 + wsi5 
@@ -1233,15 +1165,13 @@ RICLPM_hyp2b.fit <- lavaan(RICLPM_hyp2b,
                       missing = 'ML', 
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
-
-summary(RICLPM_hyp2b.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 ```
 
 ```{r LRT for RICLPM_hyp and RICLPM_hyp2b}
-lavTestLRT(RICLPM_hyp.fit, RICLPM_hyp2b.fit)
+lavTestLRT(RICLPM_hyp.fit, RICLPM_hyp2b.fit, method = "satorra.bentler.2010")
 ```
 
 RICLPM_hyp2b is significantly *worse* fit compared to RICLPM_hyp. Now we will constrain the other set of stability coefficients: cross lag ad->si (c)
@@ -1306,18 +1236,16 @@ RICLPM_hyp2c.fit <- lavaan(RICLPM_hyp2c,
                       missing = 'ML', 
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
-
-summary(RICLPM_hyp2c.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 ```
 
 ```{r LRT for RICLPM_hyp and RICLPM_hyp2c}
-lavTestLRT(RICLPM_hyp.fit, RICLPM_hyp2c.fit)
+lavTestLRT(RICLPM_hyp.fit, RICLPM_hyp2c.fit, method = "satorra.bentler.2010")
 ```
 
-RICLPM_hyp2c is *NOT* significantly worse fit compared to RICLPM_hyp (p = 0.9071). Now we will constrain the other set of stability coefficients: cross lag si->ad (d) *but comparing that model to this one*. 
+RICLPM_hyp2c is *NOT* significantly worse fit compared to RICLPM_hyp (p = 0.9412). Now we will constrain the other set of stability coefficients: cross lag si->ad (d) *but comparing that model to this one*. 
 
 #### Constraining cross lag in social isolation to ADHD parameter (RICLPM_hyp2d) - **compared to RICLPM_hyp2c** 
 
@@ -1338,7 +1266,6 @@ RICLPM_hyp2d <- '
   wsi7 =~ 1*sisoem7
   wsi10 =~ 1*sisoem10
   wsi12 =~ 1*sisoem12
-  
   
   # Constrained lagged effects between the within-person centered variables. 
   wad7 ~ wad5 + d*wsi5 
@@ -1381,24 +1308,27 @@ RICLPM_hyp2d.fit <- lavaan(RICLPM_hyp2d,
                       missing = 'ML', 
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 
 RICLPM_hyp2d.fit.summary <- summary(RICLPM_hyp2d.fit, 
                                     fit.measures = TRUE,
                                     standardized = TRUE)
 
 #Table of model fit 
-RICLPM_hyp2d.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPM_hyp2d.fit.summary$FIT)))[,c(3,4,9,10,13,14,16,17,18,19,21)]
-
-#Table of regression coefficients and covariances
-RICLPM_hyp2d.fit.summary.reg <- as.tibble(RICLPM_hyp2d.fit.summary$PE[c(17:32),-c(4,5)])
+RICLPM_hyp2d.fit.summary.fit <- table.model.fit(RICLPM_hyp2d.fit.summary)
+RICLPM_hyp2d.fit.summary.fit
+#Table of regression coefficients and covariances (concurrent associations)
+RICLPM_hyp2d.fit.summary.reg <- table.model.coef(model = RICLPM_hyp2d.fit.summary, type = "RICLPM", constraints = "Yes")
+RICLPM_hyp2d.fit.summary.reg
 ```
 
 ```{r LRT for RICLPM_hyp2c and RICLPM_hyp2d}
-lavTestLRT(RICLPM_hyp2c.fit, RICLPM_hyp2d.fit) #comparing to other best fitting model
+lavTestLRT(RICLPM_hyp2c.fit, RICLPM_hyp2d.fit, method = "satorra.bentler.2010") #comparing to other best fitting model
 ```
 
-RICLPM_hyp2d is *NOT* significantly worse fit compared to RICLPM_hyp2c.fit (p = 0.1995). 
+RICLPM_hyp2d is *NOT* significantly worse fit compared to RICLPM_hyp2c.fit (p = 0.3911). 
 
 **The best fitting model (mother report and Hyperactivity/impulsivity ADHD symptoms) is currently RICLPM2d where cross-lags are constrained to be equal across time.**
 
@@ -1467,15 +1397,13 @@ RICLPM_hyp3.fit <- lavaan(RICLPM_hyp3,
                       missing = 'ML', 
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
-
-summary(RICLPM_hyp3.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 ```
 
 ```{r LRT for RICLPM_hyp and RICLPM_hyp3}
-lavTestLRT(RICLPM_hyp.fit, RICLPM_hyp3.fit) 
+lavTestLRT(RICLPM_hyp.fit, RICLPM_hyp3.fit, method = "satorra.bentler.2010") 
 ```
 
 If the grand means cannot be constrained to be invariant over time, this implies that on average there is some change in this variable over time, which may reflect some occasion-specific effect, or a developmental trend. By allowing the means to freely vary over time, we account for such average changes over time.
@@ -1541,17 +1469,18 @@ RICLPM_inat.fit <- lavaan(RICLPM_inat,     # model
                      missing = 'ML',       # how to handle missing data 
                      meanstructure = TRUE, # adds intercepts/means to the model for both observed and latent variables
                      se = "robust",        # robust standard errors
-                     int.ov.free = TRUE)   # if FALSE, the intercepts of the observed variables are fixed to zero
+                     int.ov.free = TRUE,   # if FALSE, the intercepts of the observed variables are fixed to zero
+                     estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+)
 
 RICLPM_inat.fit.summary <- summary(RICLPM_inat.fit, 
                                     fit.measures = TRUE,
                                     standardized = TRUE)
 
 #Table of model fit 
-RICLPM_inat.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPM_inat.fit.summary$FIT)))[,c(3,4,9,10,13,14,16,17,18,19,21)]
-
-#Table of regression coefficients and covariances
-RICLPM_inat.fit.summary.reg <- as.tibble(RICLPM_inat.fit.summary$PE[c(17:32),-c(4)])
+RICLPM_inat.fit.summary.fit <- table.model.fit(RICLPM_inat.fit.summary)
+#Table of regression coefficients and covariances (concurrent associations)
+RICLPM_inat.fit.summary.reg <- table.model.coef(model = RICLPM_inat.fit.summary, type = "RICLPM", constraints = "No")
 ```
 
 ## RI-CLPM Constraints over time {.tabset .tabset-fade}
@@ -1562,68 +1491,6 @@ Imposing constraints to the model can be achieved through **pre-multiplication**
 2) time-invariant (residual) (co-)variances in the within-person part `wx2 ~~ cov*wy2; ...`, `wx2 ~~ vx*wx2; ...`, and `wy2 ~~ vy*wy2; ...`
 3) constrained grand means over time, `x1 + ... ~ mx*1` and `y1 + ... ~ my*1`
 
-### Unconstrained factor loadings for the random intercepts (RICLPM_inat1) 
-
-```{r specify RICLPM_inat1}
-RICLPM_inat1 <- '
-  # Create between components (random intercepts)
-  RIad =~ 1*inem5 + inem7 + inem10 + inem12 #x
-  RIsi =~ 1*sisoem5 + sisoem7 + sisoem10 + sisoem12 #y
-  
-  # Create within-person centered variables
-  wad5 =~ 1*inem5
-  wad7 =~ 1*inem7
-  wad10 =~ 1*inem10 
-  wad12 =~ 1*inem12
-  wsi5 =~ 1*sisoem5
-  wsi7 =~ 1*sisoem7
-  wsi10 =~ 1*sisoem10
-  wsi12 =~ 1*sisoem12
-  
-  # Estimate the lagged effects between the within-person centered variables
-  wad7 + wsi7 ~ wad5 + wsi5
-  wad10 + wsi10 ~ wad7 + wsi7
-  wad12 + wsi12 ~ wad10 + wsi10
-  
-  # Estimate the covariance between the within-person centered variables at the first wave
-  wad5 ~~ wsi5 # Covariance
-  
-  # Estimate the covariances between the residuals of the within-person centered variables (the innovations)
-  wad7 ~~ wsi7
-  wad10 ~~ wsi10
-  wad12 ~~ wsi12
-  
-  # Estimate the variance and covariance of the random intercepts
-  RIad ~~ RIad
-  RIsi ~~ RIsi
-  RIad ~~ RIsi
-  
-  # Estimate the (residual) variance of the within-person centered variables.
-  wad5 ~~ wad5 # Variances
-  wsi5 ~~ wsi5 
-  wad7 ~~ wad7 # Residual variances
-  wsi7 ~~ wsi7 
-  wad10 ~~ wad10 
-  wsi10 ~~ wsi10 
-  wad12 ~~ wad12 
-  wsi12 ~~ wsi12
-'
-```
-
-```{r fit RICLPM_inat1}
-RICLPM_inat1.fit <- lavaan(RICLPM_inat1, 
-                          data = dat, 
-                          missing = 'ML', 
-                          meanstructure = TRUE, 
-                          int.ov.free = TRUE,
-                          se = "robust") 
-summary(RICLPM_inat1.fit, 
-        standardized = TRUE)
-```
-
-*This model RICLPM_inat1 did not converge, therefore random intercepts loadings will be fixed to 1 throughout all other models.*
-
-***
 
 ### Fixed autoregressive and cross-lagged relations over time (RICLPM_inat2)
 
@@ -1692,15 +1559,13 @@ RICLPM_inat2.fit <- lavaan(RICLPM_inat2,
                       missing = 'ML', 
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
-
-summary(RICLPM_inat2.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 ```
 
 ```{r LRT for RICLPM_inat and RICLPM_inat2}
-lavTestLRT(RICLPM_inat.fit, RICLPM_inat2.fit)
+lavTestLRT(RICLPM_inat.fit, RICLPM_inat2.fit, method = "satorra.bentler.2010")
 ```
 
 RICLPM_inat2 is significantly *worse* fit compared to RICLPM_inat. 
@@ -1729,7 +1594,6 @@ RICLPM_inat2a <- '
   wsi7 =~ 1*sisoem7
   wsi10 =~ 1*sisoem10
   wsi12 =~ 1*sisoem12
-  
   
   # Constrained lagged effects between the within-person centered variables. 
   wad7 ~ a*wad5 + wsi5 
@@ -1772,15 +1636,13 @@ RICLPM_inat2a.fit <- lavaan(RICLPM_inat2a,
                       missing = 'ML', 
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
-
-summary(RICLPM_inat2a.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 ```
 
 ```{r LRT for RICLPM_inat and RICLPM_inat2a}
-lavTestLRT(RICLPM_inat.fit, RICLPM_inat2a.fit)
+lavTestLRT(RICLPM_inat.fit, RICLPM_inat2a.fit, method = "satorra.bentler.2010")
 ```
 
 RICLPM_inat2a is significantly *worse* fit compared to RICLPM_inat. Now we will constrain the other set of stability coefficients: lag in si (b)
@@ -1802,7 +1664,6 @@ RICLPM_inat2b <- '
   wsi7 =~ 1*sisoem7
   wsi10 =~ 1*sisoem10
   wsi12 =~ 1*sisoem12
-  
   
   # Constrained lagged effects between the within-person centered variables. 
   wad7 ~ wad5 + wsi5 
@@ -1845,15 +1706,13 @@ RICLPM_inat2b.fit <- lavaan(RICLPM_inat2b,
                       missing = 'ML', 
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
-
-summary(RICLPM_inat2b.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 ```
 
 ```{r LRT for RICLPM_inat and RICLPM_inat2b}
-lavTestLRT(RICLPM_inat.fit, RICLPM_inat2b.fit)
+lavTestLRT(RICLPM_inat.fit, RICLPM_inat2b.fit, method = "satorra.bentler.2010")
 ```
 
 RICLPM_inat2b is significantly *worse* fit compared to RICLPM_inat. Now we will constrain the other set of stability coefficients: cross lag ad->si (c)
@@ -1875,7 +1734,6 @@ RICLPM_inat2c <- '
   wsi7 =~ 1*sisoem7
   wsi10 =~ 1*sisoem10
   wsi12 =~ 1*sisoem12
-  
   
   # Constrained lagged effects between the within-person centered variables. 
   wad7 ~ wad5 + wsi5 
@@ -1918,18 +1776,16 @@ RICLPM_inat2c.fit <- lavaan(RICLPM_inat2c,
                       missing = 'ML', 
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
-
-summary(RICLPM_inat2c.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 ```
 
 ```{r LRT for RICLPM_inat and RICLPM_inat2c}
-lavTestLRT(RICLPM_inat.fit, RICLPM_inat2c.fit)
+lavTestLRT(RICLPM_inat.fit, RICLPM_inat2c.fit, method = "satorra.bentler.2010")
 ```
 
-RICLPM_inat2c is *NOT* significantly worse fit compared to RICLPM_inat (p = 0.7238). Now we will constrain the other set of stability coefficients: cross lag si->ad (d) *but comparing that model to this one*. 
+RICLPM_inat2c is *NOT* significantly worse fit compared to RICLPM_inat (p = 0.8485). Now we will constrain the other set of stability coefficients: cross lag si->ad (d) *but comparing that model to this one*. 
 
 #### Constraining cross lag in social isolation to ADHD parameter (RICLPM_inat2d) - **compared to RICLPM_inat2c** 
 
@@ -1950,7 +1806,6 @@ RICLPM_inat2d <- '
   wsi7 =~ 1*sisoem7
   wsi10 =~ 1*sisoem10
   wsi12 =~ 1*sisoem12
-  
   
   # Constrained lagged effects between the within-person centered variables. 
   wad7 ~ wad5 + d*wsi5 
@@ -1993,26 +1848,29 @@ RICLPM_inat2d.fit <- lavaan(RICLPM_inat2d,
                       missing = 'ML', 
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 
 RICLPM_inat2d.fit.summary <- summary(RICLPM_inat2d.fit, 
                                       fit.measures = TRUE,
                                       standardized = TRUE)
 
 #Table of model fit 
-RICLPM_inat2d.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPM_inat2d.fit.summary$FIT)))[,c(3,4,9,10,13,14,16,17,18,19,21)]
-
-#Table of regression coefficients and covariances
-RICLPM_inat2d.fit.summary.reg <- as.tibble(RICLPM_inat2d.fit.summary$PE[c(17:32),-c(4,5)])
+RICLPM_inat2d.fit.summary.fit <- table.model.fit(RICLPM_inat2d.fit.summary)
+RICLPM_inat2d.fit.summary.fit
+#Table of regression coefficients and covariances (concurrent associations)
+RICLPM_inat2d.fit.summary.reg <- table.model.coef(model = RICLPM_inat2d.fit.summary, type = "RICLPM", constraints = "Yes")
+RICLPM_inat2d.fit.summary.reg
 ```
 
 ```{r LRT for RICLPM_inat2c and RICLPM_inat2d}
-lavTestLRT(RICLPM_inat2c.fit, RICLPM_inat2d.fit) #comparing to other best fitting model
+lavTestLRT(RICLPM_inat2c.fit, RICLPM_inat2d.fit, method = "satorra.bentler.2010") #comparing to other best fitting model
 ```
 
-RICLPM_inat2d is *NOT* significantly worse fit compared to RICLPM_inat2c.fit (p = 0.756). 
+RICLPM_inat2d is *NOT* significantly worse fit compared to RICLPM_inat2c.fit (p = 0.8625). 
 
-**The best fitting model (mother report and inateractivity/impulsivity ADHD symptoms) is currently RICLPM2d where cross-lags are constrained to be equal across time.**
+**The best fitting model (mother report and inattention ADHD symptoms) is currently RICLPM2d where cross-lags are constrained to be equal across time.**
 
 ***
 
@@ -2079,15 +1937,13 @@ RICLPM_inat3.fit <- lavaan(RICLPM_inat3,
                       missing = 'ML', 
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
-
-summary(RICLPM_inat3.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 ```
 
 ```{r LRT for RICLPM_inat and RICLPM_inat3}
-lavTestLRT(RICLPM_inat.fit, RICLPM_inat3.fit) 
+lavTestLRT(RICLPM_inat.fit, RICLPM_inat3.fit, method = "satorra.bentler.2010") 
 ```
 
 If the grand means cannot be constrained to be invariant over time, this implies that on average there is some change in this variable over time, which may reflect some occasion-specific effect, or a developmental trend. By allowing the means to freely vary over time, we account for such average changes over time.
@@ -2127,25 +1983,27 @@ CLPMt <- '
 '
 ```
 
-```{r fit CLPM}
+```{r fit CLPMt}
 CLPMt.fit <- lavaan(CLPMt, 
                    data = dat, 
                    missing = 'ML',
                    meanstructure = TRUE, 
                    int.ov.free = TRUE,
-                   se = "robust") 
+                   se = "robust",
+                   estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                   ) 
 
 CLPMt.fit.summary <- summary(CLPMt.fit, 
                               fit.measures = TRUE,
                               standardized = TRUE)
 
 #Table of model fit 
-CLPMt.fit.summary.fit <- as.data.frame(t(as.data.frame(CLPMt.fit.summary$FIT)))[,c(3,4,9,10,13,14,16,17,18,19,21)]
-
-#Table of regression coefficients and variances
-CLPMt.fit.summary.reg <- as.tibble(CLPMt.fit.summary$PE[c(1:16),-c(4)])
+CLPMt.fit.summary.fit <- table.model.fit(CLPMt.fit.summary)
+CLPMt.fit.summary.fit
+#Table of regression coefficients and covariances (concurrent associations)
+CLPMt.fit.summary.reg <- table.model.coef(model = CLPMt.fit.summary, type = "CLPM", constraints = "No")
+CLPMt.fit.summary.reg
 ```
-
 
 ## The basic RI-CLPM model teacher report (RICLPMt)
 The code for specifying the basic RI-CLPM teacher report is given below.
@@ -2202,17 +2060,18 @@ RICLPMt.fit <- lavaan(RICLPMt,             # model
                      missing = 'ML',       # how to handle missing data 
                      meanstructure = TRUE, # adds intercepts/means to the model for both observed and latent variables
                      se = "robust",        # robust standard errors
-                     int.ov.free = TRUE)   # if FALSE, the intercepts of the observed variables are fixed to zero
+                     int.ov.free = TRUE,   # if FALSE, the intercepts of the observed variables are fixed to zero
+                     estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+)
 
 RICLPMt.fit.summary <- summary(RICLPMt.fit, 
                               fit.measures = TRUE,
                               standardized = TRUE)
 
 #Table of model fit 
-RICLPMt.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPMt.fit.summary$FIT)))[,c(3,4,9,10,13,14,16,17,18,19,21)]
-
-#Table of regression coefficients and variances
-RICLPMt.fit.summary.reg <- as.tibble(RICLPMt.fit.summary$PE[c(17:32),-c(4)])
+RICLPMt.fit.summary.fit <- table.model.fit(RICLPMt.fit.summary)
+#Table of regression coefficients and covariances (concurrent associations)
+RICLPMt.fit.summary.reg <- table.model.coef(model = RICLPMt.fit.summary, type = "RICLPM", constraints = "No")
 ```
 
 ## RI-CLPMt Constraints over time {.tabset .tabset-fade}
@@ -2220,73 +2079,6 @@ RICLPMt.fit.summary.reg <- as.tibble(RICLPMt.fit.summary$PE[c(17:32),-c(4)])
 1) fixed auto-regressive and cross-lagged relations over time, `wx2 ~ a*wx1 + b*wy1; ...`
 2) time-invariant (residual) (co-)variances in the within-person part `wx2 ~~ cov*wy2; ...`, `wx2 ~~ vx*wx2; ...`, and `wy2 ~~ vy*wy2; ...`
 3) constrained grand means over time, `x1 + ... ~ mx*1` and `y1 + ... ~ my*1`
-
-### Unconstrained factor loadings for the random intercepts (RICLPMt1) 
-
-```{r specify RICLPMt1}
-RICLPMt1 <- '
-  # Create between components (random intercepts)
-  RIad =~ 1*tadhdet5 + tadhdet7 + tadhdet10 + tadhdet12 #x
-  RIsi =~ 1*sisoet5 + sisoet7 + sisoet10 + sisoet12 #y
-  
-  # Create within-person centered variables
-  wad5 =~ 1*tadhdet5
-  wad7 =~ 1*tadhdet7
-  wad10 =~ 1*tadhdet10 
-  wad12 =~ 1*tadhdet12
-  wsi5 =~ 1*sisoet5
-  wsi7 =~ 1*sisoet7
-  wsi10 =~ 1*sisoet10
-  wsi12 =~ 1*sisoet12
-  
-  # Estimate the lagged effects between the within-person centered variables
-  wad7 + wsi7 ~ wad5 + wsi5
-  wad10 + wsi10 ~ wad7 + wsi7
-  wad12 + wsi12 ~ wad10 + wsi10
-  
-  # Estimate the covariance between the within-person centered variables at the first wave
-  wad5 ~~ wsi5 # Covariance
-  
-  # Estimate the covariances between the residuals of the within-person centered variables (the innovations)
-  wad7 ~~ wsi7
-  wad10 ~~ wsi10
-  wad12 ~~ wsi12
-  
-  # Estimate the variance and covariance of the random intercepts
-  RIad ~~ RIad
-  RIsi ~~ RIsi
-  RIad ~~ RIsi
-  
-  # Estimate the (residual) variance of the within-person centered variables.
-  wad5 ~~ wad5 # Variances
-  wsi5 ~~ wsi5 
-  wad7 ~~ wad7 # Residual variances
-  wsi7 ~~ wsi7 
-  wad10 ~~ wad10 
-  wsi10 ~~ wsi10 
-  wad12 ~~ wad12 
-  wsi12 ~~ wsi12
-'
-```
-
-```{r fit RICLPMt1}
-RICLPMt1.fit <- lavaan(RICLPMt1, 
-                      data = dat, 
-                      missing = 'ML', 
-                      meanstructure = TRUE, 
-                      int.ov.free = TRUE,
-                      se = "robust") 
-summary(RICLPMt1.fit, 
-        standardized = TRUE)
-```
-
-```{r LRT for RICLPMt and RICLPMt1}
-lavTestLRT(RICLPMt.fit, RICLPMt1.fit)
-```
-
-RICLPMt1 is significantly *worse* fit compared to RICLPMt. 
-
-***
 
 ### Fixed autoregressive and cross-lagged relations over time (RICLPMt2)
 
@@ -2312,7 +2104,6 @@ RICLPMt2 <- '
   wsi7 =~ 1*sisoet7
   wsi10 =~ 1*sisoet10
   wsi12 =~ 1*sisoet12
-  
   
   # Constrained lagged effects between the within-person centered variables. 
   wad7 ~ a*wad5 + d*wsi5 
@@ -2355,24 +2146,27 @@ RICLPMt2.fit <- lavaan(RICLPMt2,
                       missing = 'ML', 
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 
 RICLPMt2.fit.summary <- summary(RICLPMt2.fit, 
                               fit.measures = TRUE,
                               standardized = TRUE)
 
 #Table of model fit 
-RICLPMt2.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPMt2.fit.summary$FIT)))[,c(3,4,9,10,13,14,16,17,18,19,21)]
-
-#Table of regression coefficient 
-RICLPMt2.fit.summary.reg <- as.tibble(RICLPMt2.fit.summary$PE[c(17:32),-c(4,5)])
+RICLPMt2.fit.summary.fit <- table.model.fit(RICLPMt2.fit.summary)
+RICLPMt2.fit.summary.fit
+#Table of regression coefficients and covariances (concurrent associations)
+RICLPMt2.fit.summary.reg <- table.model.coef(model = RICLPMt2.fit.summary, type = "RICLPM", constraints = "Yes")
+RICLPMt2.fit.summary.reg
 ```
 
 ```{r LRT for RICLPMt and RICLPMt2}
-lavTestLRT(RICLPMt.fit, RICLPMt2.fit)
+lavTestLRT(RICLPMt.fit, RICLPMt2.fit, method = "satorra.bentler.2010")
 ```
 
-RICLPMt2 is *NOT* significantly worse fit compared to RICLPMt.fit (p = 0.07972). 
+RICLPMt2 is *NOT* significantly worse fit compared to RICLPMt.fit (p = 0.7661). 
 
 **The best fitting model (teacher report and total ADHD symptoms) is currently RICLPMt2 where autoregressive AND cross-lags are constrained to be equal across time.**
 
@@ -2441,15 +2235,13 @@ RICLPMt3.fit <- lavaan(RICLPMt3,
                       missing = 'ML', 
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
-
-summary(RICLPMt3.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 ```
 
 ```{r LRT for RICLPMt and RICLPMt3}
-lavTestLRT(RICLPMt.fit, RICLPMt3.fit) 
+lavTestLRT(RICLPMt.fit, RICLPMt3.fit, method = "satorra.bentler.2010") 
 ```
 
 RICLPMt3 is significantly *worse* fit than RICLPMt. 
@@ -2517,20 +2309,22 @@ RICLPMt_hyp.fit <- lavaan(RICLPMt_hyp,     # model
                      missing = 'ML',       # how to handle missing data 
                      meanstructure = TRUE, # adds intercepts/means to the model for both observed and latent variables
                      se = "robust",        # robust standard errors
-                     int.ov.free = TRUE)   # if FALSE, the intercepts of the observed variables are fixed to zero
+                     int.ov.free = TRUE,   # if FALSE, the intercepts of the observed variables are fixed to zero
+                     estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+)
 
 RICLPMt_hyp.fit.summary <- summary(RICLPMt_hyp.fit, 
                                   fit.measures = TRUE,
                                   standardized = TRUE)
 
 #Table of model fit 
-RICLPMt_hyp.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPMt_hyp.fit.summary$FIT)))[,c(3,4,9,10,13,14,16,17,18,19,21)]
-
-#Table of regression coefficients and covariances
-RICLPMt_hyp.fit.summary.reg <- as.tibble(RICLPMt_hyp.fit.summary$PE[c(17:32),-c(4)])
+RICLPMt_hyp.fit.summary.fit <- table.model.fit(RICLPMt_hyp.fit.summary)
+#Table of regression coefficients and covariances (concurrent associations)
+RICLPMt_hyp.fit.summary.reg <- table.model.coef(model = RICLPMt_hyp.fit.summary, type = "RICLPM", constraints = "No")
 ```
 
 ***
+
 ## RI-CLPM Constraints over time teacher report {.tabset .tabset-fade}
 
 Imposing constraints to the model can be achieved through **pre-multiplication**. It means that we have to prepend the number that we want to fix the parameter to, and an asterisk, to the parameter in the model specification. For example, `F =~ 0*x1` fixes the factor loading of item `x1` to factor `F` to 0. Using pre-multiplication we can also constrain parameters to be the same by giving them the same label. Below we specify an RI-CLPM with the following constraints: 
@@ -2538,75 +2332,6 @@ Imposing constraints to the model can be achieved through **pre-multiplication**
 1) fixed auto-regressive and cross-lagged relations over time, `wx2 ~ a*wx1 + b*wy1; ...`
 2) time-invariant (residual) (co-)variances in the within-person part `wx2 ~~ cov*wy2; ...`, `wx2 ~~ vx*wx2; ...`, and `wy2 ~~ vy*wy2; ...`
 3) constrained grand means over time, `x1 + ... ~ mx*1` and `y1 + ... ~ my*1`
-
-### Unconstrained factor loadings for the random intercepts (RICLPMt_hyp1) 
-
-```{r specify RICLPMt_hyp1}
-RICLPMt_hyp1 <- '
-  # Create between components (random intercepts)
-  RIad =~ 1*hyet5 + hyet7 + hyet10 + hyet12 #x
-  RIsi =~ 1*sisoet5 + sisoet7 + sisoet10 + sisoet12 #y
-  
-  # Create within-person centered variables
-  wad5 =~ 1*hyet5
-  wad7 =~ 1*hyet7
-  wad10 =~ 1*hyet10 
-  wad12 =~ 1*hyet12
-  wsi5 =~ 1*sisoet5
-  wsi7 =~ 1*sisoet7
-  wsi10 =~ 1*sisoet10
-  wsi12 =~ 1*sisoet12
-  
-  # Estimate the lagged effects between the within-person centered variables
-  wad7 + wsi7 ~ wad5 + wsi5
-  wad10 + wsi10 ~ wad7 + wsi7
-  wad12 + wsi12 ~ wad10 + wsi10
-  
-  # Estimate the covariance between the within-person centered variables at the first wave
-  wad5 ~~ wsi5 # Covariance
-  
-  # Estimate the covariances between the residuals of the within-person centered variables (the innovations)
-  wad7 ~~ wsi7
-  wad10 ~~ wsi10
-  wad12 ~~ wsi12
-  
-  # Estimate the variance and covariance of the random intercepts
-  RIad ~~ RIad
-  RIsi ~~ RIsi
-  RIad ~~ RIsi
-  
-  # Estimate the (residual) variance of the within-person centered variables.
-  wad5 ~~ wad5 # Variances
-  wsi5 ~~ wsi5 
-  wad7 ~~ wad7 # Residual variances
-  wsi7 ~~ wsi7 
-  wad10 ~~ wad10 
-  wsi10 ~~ wsi10 
-  wad12 ~~ wad12 
-  wsi12 ~~ wsi12
-'
-```
-
-```{r fit RICLPMt_hyp1}
-RICLPMt_hyp1.fit <- lavaan(RICLPMt_hyp1, 
-                          data = dat, 
-                          missing = 'ML', 
-                          meanstructure = TRUE, 
-                          int.ov.free = TRUE,
-                          se = "robust") 
-summary(RICLPMt_hyp1.fit, 
-        standardized = TRUE)
-```
-
-```{r LRT for RICLPMt_hyp and RICLPMt_hyp2}
-lavTestLRT(RICLPMt_hyp.fit, RICLPMt_hyp1.fit)
-```
-
-RICLPMt_hyp1 fits significantly *worse* than RICLPMt_hyp. 
-
-*Random intercepts loadings will be fixed to 1 throughout all other models.*
-
-***
 
 ### Fixed autoregressive and cross-lagged relations over time (RICLPMt_hyp2)
 
@@ -2632,7 +2357,6 @@ RICLPMt_hyp2 <- '
   wsi7 =~ 1*sisoet7
   wsi10 =~ 1*sisoet10
   wsi12 =~ 1*sisoet12
-  
   
   # Constrained lagged effects between the within-person centered variables. 
   wad7 ~ a*wad5 + d*wsi5 
@@ -2675,30 +2399,27 @@ RICLPMt_hyp2.fit <- lavaan(RICLPMt_hyp2,
                       missing = 'ML', 
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 
 RICLPMt_hyp2.fit.summary <- summary(RICLPMt_hyp2.fit, 
                                     fit.measures = TRUE,
                                     standardized = TRUE)
 
 #Table of model fit 
-RICLPMt_hyp2.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPMt_hyp2.fit.summary$FIT)))[,c(3,4,9,10,13,14,16,17,18,19,21)]
-
-#Table of regression coefficients and covariances 
-RICLPMt_hyp2.fit.summary.reg <- as.tibble(RICLPMt_hyp2.fit.summary$PE[c(17:32),-c(4,5)])
+RICLPMt_hyp2.fit.summary.fit <- table.model.fit(RICLPMt_hyp2.fit.summary)
+RICLPMt_hyp2.fit.summary.fit
+#Table of regression coefficients and covariances (concurrent associations)
+RICLPMt_hyp2.fit.summary.reg <- table.model.coef(model = RICLPMt_hyp2.fit.summary, type = "RICLPM", constraints = "Yes")
+RICLPMt_hyp2.fit.summary.reg
 ```
 
 ```{r LRT for RICLPMt_hyp and RICLPMt_hyp2}
-lavTestLRT(RICLPMt_hyp.fit, RICLPMt_hyp2.fit)
+lavTestLRT(RICLPMt_hyp.fit, RICLPMt_hyp2.fit, method = "satorra.bentler.2010")
 ```
 
-RICLPMt_hyp2 is significantly *worse* fit compared to RICLPMt_hyp. 
-
-However, the model fit actually shows that the RMSEA and TLI are better fit, and the CFI only had a decrease of 0.01 which is considered acceptable. 
-
-```{r compare fit RICLPMt_hyp and RICLPMt_hyp2}
-summary(semTools::compareFit(RICLPMt_hyp.fit, RICLPMt_hyp2.fit, nested = TRUE)) #† indicates the best fitting model - using the robust statistics
-```
+RICLPMt_hyp2 is *not* significantly worse fit compared to RICLPMt_hyp (p = 0.3735) 
 
 ***
 
@@ -2765,15 +2486,13 @@ RICLPMt_hyp3.fit <- lavaan(RICLPMt_hyp3,
                       missing = 'ML', 
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
-
-summary(RICLPMt_hyp3.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 ```
 
 ```{r LRT for RICLPMt_hyp and RICLPMt_hyp3}
-lavTestLRT(RICLPMt_hyp.fit, RICLPMt_hyp3.fit) 
+lavTestLRT(RICLPMt_hyp.fit, RICLPMt_hyp3.fit, method = "satorra.bentler.2010") 
 ```
 
 RICLPMt_hyp3 is significantly *worse* fit than RICLPMt_hyp. 
@@ -2841,17 +2560,18 @@ RICLPMt_inat.fit <- lavaan(RICLPMt_inat,   # model
                      missing = 'ML',       # how to handle missing data 
                      meanstructure = TRUE, # adds intercepts/means to the model for both observed and latent variables
                      se = "robust",        # robust standard errors
-                     int.ov.free = TRUE)   # if FALSE, the intercepts of the observed variables are fixed to zero
+                     int.ov.free = TRUE,   # if FALSE, the intercepts of the observed variables are fixed to zero
+                     estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+)
 
 RICLPMt_inat.fit.summary <- summary(RICLPMt_inat.fit, 
                                     fit.measures = TRUE,
                                     standardized = TRUE)
 
 #Table of model fit 
-RICLPMt_inat.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPMt_inat.fit.summary$FIT)))[,c(3,4,9,10,13,14,16,17,18,19,21)]
-
-#Table of regression coefficient 
-RICLPMt_inat.fit.summary.reg <- as.tibble(RICLPMt_inat.fit.summary$PE[c(17:32),-c(4)])
+RICLPMt_inat.fit.summary.fit <- table.model.fit(RICLPMt_inat.fit.summary)
+#Table of regression coefficients and covariances (concurrent associations)
+RICLPMt_inat.fit.summary.reg <- table.model.coef(model = RICLPMt_inat.fit.summary, type = "RICLPM", constraints = "No")
 ```
 
 ## RI-CLPM Constraints over time {.tabset .tabset-fade}
@@ -2861,69 +2581,6 @@ Imposing constraints to the model can be achieved through **pre-multiplication**
 1) fixed auto-regressive and cross-lagged relations over time, `wx2 ~ a*wx1 + b*wy1; ...`
 2) time-invariant (residual) (co-)variances in the within-person part `wx2 ~~ cov*wy2; ...`, `wx2 ~~ vx*wx2; ...`, and `wy2 ~~ vy*wy2; ...`
 3) constrained grand means over time, `x1 + ... ~ mx*1` and `y1 + ... ~ my*1`
-
-### Unconstrained factor loadings for the random intercepts (RICLPMt_inat1) 
-
-```{r specify RICLPMt_inat1}
-RICLPMt_inat1 <- '
-  # Create between components (random intercepts)
-  RIad =~ 1*inet5 + inet7 + inet10 + inet12 #x
-  RIsi =~ 1*sisoet5 + sisoet7 + sisoet10 + sisoet12 #y
-  
-  # Create within-person centered variables
-  wad5 =~ 1*inet5
-  wad7 =~ 1*inet7
-  wad10 =~ 1*inet10 
-  wad12 =~ 1*inet12
-  wsi5 =~ 1*sisoet5
-  wsi7 =~ 1*sisoet7
-  wsi10 =~ 1*sisoet10
-  wsi12 =~ 1*sisoet12
-  
-  # Estimate the lagged effects between the within-person centered variables
-  wad7 + wsi7 ~ wad5 + wsi5
-  wad10 + wsi10 ~ wad7 + wsi7
-  wad12 + wsi12 ~ wad10 + wsi10
-  
-  # Estimate the covariance between the within-person centered variables at the first wave
-  wad5 ~~ wsi5 # Covariance
-  
-  # Estimate the covariances between the residuals of the within-person centered variables (the innovations)
-  wad7 ~~ wsi7
-  wad10 ~~ wsi10
-  wad12 ~~ wsi12
-  
-  # Estimate the variance and covariance of the random intercepts
-  RIad ~~ RIad
-  RIsi ~~ RIsi
-  RIad ~~ RIsi
-  
-  # Estimate the (residual) variance of the within-person centered variables.
-  wad5 ~~ wad5 # Variances
-  wsi5 ~~ wsi5 
-  wad7 ~~ wad7 # Residual variances
-  wsi7 ~~ wsi7 
-  wad10 ~~ wad10 
-  wsi10 ~~ wsi10 
-  wad12 ~~ wad12 
-  wsi12 ~~ wsi12
-'
-```
-
-```{r fit RICLPMt_inat1}
-RICLPMt_inat1.fit <- lavaan(RICLPMt_inat1, 
-                          data = dat, 
-                          missing = 'ML', 
-                          meanstructure = TRUE, 
-                          int.ov.free = TRUE,
-                          se = "robust") 
-summary(RICLPMt_inat1.fit, 
-        standardized = TRUE)
-```
-
-*This model RICLPMt_inat1 did not converge, therefore random intercepts loadings will be fixed to 1 throughout all other models.*
-
-***
 
 ### Fixed autoregressive and cross-lagged relations over time (RICLPMt_inat2)
 
@@ -2949,7 +2606,6 @@ RICLPMt_inat2 <- '
   wsi7 =~ 1*sisoet7
   wsi10 =~ 1*sisoet10
   wsi12 =~ 1*sisoet12
-  
   
   # Constrained lagged effects between the within-person centered variables. 
   wad7 ~ a*wad5 + d*wsi5 
@@ -2992,31 +2648,27 @@ RICLPMt_inat2.fit <- lavaan(RICLPMt_inat2,
                       missing = 'ML', 
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 
 RICLPMt_inat2.fit.summary <- summary(RICLPMt_inat2.fit, 
                                     fit.measures = TRUE,
                                     standardized = TRUE)
 
 #Table of model fit 
-RICLPMt_inat2.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPMt_inat2.fit.summary$FIT)))[,c(3,4,9,10,13,14,16,17,18,19,21)]
-
-#Table of regression coefficient 
-RICLPMt_inat2.fit.summary.reg <- as.tibble(RICLPMt_inat2.fit.summary$PE[c(17:32),-c(4,5)])
+RICLPMt_inat2.fit.summary.fit <- table.model.fit(RICLPMt_inat2.fit.summary)
+RICLPMt_inat2.fit.summary.fit
+#Table of regression coefficients and covariances (concurrent associations)
+RICLPMt_inat2.fit.summary.reg <- table.model.coef(model = RICLPMt_inat2.fit.summary, type = "RICLPM", constraints = "Yes")
+RICLPMt_inat2.fit.summary.reg
 ```
 
 ```{r LRT for RICLPMt_inat and RICLPMt_inat2}
-lavTestLRT(RICLPMt_inat.fit, RICLPMt_inat2.fit)
+lavTestLRT(RICLPMt_inat.fit, RICLPMt_inat2.fit, method = "satorra.bentler.2010")
 ```
 
-RICLPMt_inat2 is significantly *worse* fit compared to RICLPMt_inat. 
-
-However, the model fit actually shows that the RMSEA and TLI are better fit, and the CFI only had a decrease of 0.01 which is considered acceptable. 
-
-```{r compare fit RICLPMt_hyp and RICLPMt_hyp2}
-summary(semTools::compareFit(RICLPMt_inat.fit, RICLPMt_inat2.fit, nested = TRUE)) #† indicates the best fitting model - using the robust statistics
-```
-
+RICLPMt_inat2 is *not* significantly worse fit compared to RICLPMt_inat (0.6158)
 
 ***
 
@@ -3083,15 +2735,13 @@ RICLPMt_inat3.fit <- lavaan(RICLPMt_inat3,
                       missing = 'ML', 
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
-
-summary(RICLPMt_inat3.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 ```
 
 ```{r LRT for RICLPMt_inat and RICLPMt_inat3}
-lavTestLRT(RICLPMt_inat.fit, RICLPMt_inat3.fit) 
+lavTestLRT(RICLPMt_inat.fit, RICLPMt_inat3.fit, method = "satorra.bentler.2010") 
 ```
 
 If the grand means cannot be constrained to be invariant over time, this implies that on average there is some change in this variable over time, which may reflect some occasion-specific effect, or a developmental trend. By allowing the means to freely vary over time, we account for such average changes over time.
@@ -3099,4 +2749,3 @@ If the grand means cannot be constrained to be invariant over time, this implies
 *This makes sense as we have shown variation in social isolation over time and other literature has shown variation in ADHD over time.*
 
 ***
-

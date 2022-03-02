@@ -34,7 +34,6 @@ remove(list = ls())
 ```{r Load packages, include=FALSE}
 library(knitr)
 library(haven)
-library(semTools)
 library(lavaan)
 library(tidyverse)
 library(dplyr) #conflicts with tidyverse for e.g. rename and row_number
@@ -50,7 +49,7 @@ dat.raw <- read_dta(paste0(data.raw_path, "Katie_19Jan22.dta"))
 colnames(dat.raw)
 
 dat <- dat.raw %>%
-  select(id = atwinid,
+  dplyr::select(id = atwinid,
          pe2m5,   # social isolation mother report raw items (elder variables)
          pe4m5,
          pe7m5,
@@ -248,8 +247,42 @@ dat <- dat.raw %>%
 colnames(dat)
 ```
 
+# Cronbach alpha for social isolation items 
+
+```{r identifying items}
+isolation.mother.age5 <- c("pe2m5", "pe4m5", "pe7m5", "pe11m5", "pe13m5", "pe25m5")
+isolation.mother.age7 <- c("pe2m7", "pe4m7", "pe7m7", "pe11m7", "pe13m7", "pe25m7")
+isolation.mother.age10 <- c("pe2m10", "pe4m10", "pe7m10", "pe11m10", "pe13m10", "pe25m10")
+isolation.mother.age12 <- c("pe2m12", "pe4m12", "pe7m12", "pe11m12", "pe13m12", "pe25m12")
+
+isolation.teacher.age5 <- c( "trf11e5", "trf19e5","trf24e5","trf30e5","trf34e5","trf77e5")
+isolation.teacher.age7 <- c( "trf11e7", "trf19e7","trf24e7","trf30e7","trf34e7","trf77e7")
+isolation.teacher.age10 <- c( "trf11e10", "trf19e10","trf24e10","trf30e10","trf34e10","trf77e10")
+isolation.teacher.age12 <- c( "trf11e12", "trf19e12","trf24e12","trf30e12","trf34e12","trf77e12")
+```
+
+```{r cronbach alpha}
+# mother report
+cronbach.alpha(dat[isolation.mother.age5], standardized = TRUE, CI = TRUE, na.rm = TRUE)
+cronbach.alpha(dat[isolation.mother.age7], standardized = TRUE, CI = TRUE, na.rm = TRUE)
+cronbach.alpha(dat[isolation.mother.age10], standardized = TRUE, CI = TRUE, na.rm = TRUE)
+cronbach.alpha(dat[isolation.mother.age12], standardized = TRUE, CI = TRUE, na.rm = TRUE)
+# teacher report
+cronbach.alpha(dat[isolation.teacher.age5], standardized = TRUE, CI = TRUE, na.rm = TRUE)
+cronbach.alpha(dat[isolation.teacher.age7], standardized = TRUE, CI = TRUE, na.rm = TRUE)
+cronbach.alpha(dat[isolation.teacher.age10], standardized = TRUE, CI = TRUE, na.rm = TRUE)
+cronbach.alpha(dat[isolation.teacher.age12], standardized = TRUE, CI = TRUE, na.rm = TRUE)
+```
+
+Teacher report Cronbach's alpha (standardized): 0.596
+Mother report Cronbach's alpha (standardized): 0.785
+
+
+The loaded data is for se = robust and listwise deletion models.
+Need to create a new saved dataset where all models are robust standard errors and pairwise deletion. 
+For now the robust standard errors isn't computing for the pairwise deletion (I think this is an issue with the package). *So all models have se='robust' hashed out for now.*
 ```{r load saved environment with models run}
-load("../measurement_environment.RData")
+#load("../measurement_environment.RData")
 ```
 
 # All RI-CLPM models displayed here **This needs to be updated**
@@ -275,7 +308,7 @@ To allow for a meaningful comparison of factors over time, the factor loadings s
 
 ***
 
-# Multiple indicator RI-CLPM: Hyperactivity and social isolation
+# Mother report RI-CLPM: Inattention and social isolation
 
 ## RICLPM_multi_inat_S1: Inattention step 1
 
@@ -287,7 +320,7 @@ We have six indicators of $Social isolation$, measured at four waves, we specify
 
 At the latent within-unit level, we specify the dynamic model using `WFX2 ~ WFY1 + WFX1; WFX3 ~ WFY2 + WFX2; ...`. In addition, we allow the within-person factors at the first wave, and their residuals at subsequent waves to be correlated within each wave, `WFX1 ~~ WFY1; WFX2 ~~ WFY2; ...`. The random intercepts are allowed to be freely correlated with each other through using the cfa() command below. 
 
-**At the moment all models are using listwise deletion - if we decide we do not want to drop that many people, we can use pairwise deletion**
+**At the moment all models are using pairwise deletion**
 
 ```{r specify RICLPM_multi_inat_S1}
 RICLPM_multi_inat_S1 <- '
@@ -355,19 +388,21 @@ RICLPM_multi_inat_S1 <- '
 '
 ```
 
+When running se = "robust" the error comes up as: Error in inherits(NVarCov, "try-error") : object 'NVarCov' not found
+Not sure how to fix this so for the moment running without robust standard errors. 
+
 ```{r fit RICLPM_multi_inat_S1}
 RICLPM_multi_inat_S1.fit <- cfa(RICLPM_multi_inat_S1, 
                            data = dat, 
-                           se = "robust",          # computes robust standard errors to account for use of twins
-                           ordered = TRUE          # using the "ordered" option will use DWLS with polychoric correlations for the ordinal variables
-                         #  missing = 'pairwise'  # only excludes people who are missing both variables
+                        #   se = "robust",         # computes robust standard errors to account for use of twins
+                           ordered = TRUE,        # using the "ordered" option will use DWLS with polychoric correlations for the ordinal variables
+                           missing = 'pairwise'    # only excludes people who are missing both variables
 )
 
-summary(RICLPM_multi_inat_S1.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+summary(RICLPM_multi_inat_S1.fit, fit.measures = TRUE, standardized = TRUE)
 ```
 
+For the listwise deletion model:
 S1 Model fit (robust indices):
 Comparative Fit Index (CFI)                    0.990 (>0.95)
 Tucker-Lewis Index (TLI)                       0.998 (>0.95)      
@@ -383,7 +418,7 @@ We can conclude that the model shows very good fit.
 **Multiple response items RICLPM mother report inattention ADHD symptoms and social isolation: Step 2**.
 If configural variance is supported, we next test for weak invariance (sometimes called metric invariance). This tests for the equivalence of the item loadings on the factors. Weak (metric) invariance means that each item contributes to the latent construct to a similar degree across groups. this is tested by constraining factor loadings (i.e., the loadings of the items on the constructs) to be equivalent in the two time points (Putnick and Bornstein, 2016). The model with constrained factor loadings (S2) is then compared to the configural invariance model (S1) to determine fit. If the overall model fit is significantly worse in the weak invariance model compared to the configural invariance model, it indicates that at least one loading is not equivalent across the groups, and weak invariance is not supported.
 
-In our second  step model, we constrain the factor loadings to be invariant over time using the labels `a*`, `b*`, `c*`, `d*` etc, in the "within" part of the model. 
+In our second step model, we constrain the factor loadings to be invariant over time using the labels `a*`, `b*`, `c*`, `d*` etc, in the "within" part of the model. 
 
 ```{r specify RICLPM_multi_inat_S2}
 RICLPM_multi_inat_S2 <- '
@@ -454,9 +489,9 @@ RICLPM_multi_inat_S2 <- '
 ```{r fit RICLPM_multi_inat_S2}
 RICLPM_multi_inat_S2.fit <- cfa(RICLPM_multi_inat_S2, 
                            data = dat, 
-                           se = "robust",
-                           ordered = TRUE
-                          # missing = 'pairwise'
+                          # se = "robust",
+                           ordered = TRUE,
+                           missing = 'pairwise'
                            )
 
 summary(RICLPM_multi_inat_S2.fit, 
@@ -481,7 +516,7 @@ summary(semTools::compareFit(RICLPM_multi_inat_S1.fit, RICLPM_multi_inat_S2.fit,
 
 Now we need to conduct a Likelihood ratio test to see if the constrained model is a significantly worse fit than the free loading model. By constraining the factor loadings over time we can assume that the items load onto the same construct in the same way at each time point. 
 
-**Really important to note that the Chi Square p value is very likely to be significant when using large samples. We should consider the change in model fit as well as the Chi square**
+Really important to note that the Chi Square p value is very likely to be significant when using large samples. We should consider the change in model fit as well as the Chi square.
 
 ```{r LRT for RICLPM_multi_inat_S1 and RICLPM_multi_inat_S2}
 lavTestLRT(RICLPM_multi_inat_S1.fit, RICLPM_multi_inat_S2.fit)
@@ -493,11 +528,11 @@ Significantly worse fit to include the restrictions, p=0.001017.
 
 Now we will move onto strong invariance tests. 
 
-## RICLPM_multi_inat_S3
+## RICLPM_multi_inat_S3: Inattention step 3
 
 **Multiple response items RICLPM mother report inattention ADHD symptoms and social isolation: Step 3** 
 
-If full or partial weak invariance is supported, the next step is to test for strong (scalar) invariance, or equivalence of item intercepts, for weak invariant items. Strong invariance means that mean differences in the latent construct capture all mean differences in the shared variance of the items. Strong invariance is tested by constraining the item intercepts to be equivalent in the two groups - with the restarint applied in the weak invariance model retained. *Any items that had unequal loadings in the weak invariance model (and were allowed to vary) should be allowed to vary in the strong invariance model because it is meaningless to test for equal item intercepts if the factor loadings of the items differs across groups* (Putnick and Bornstein, 2016). 
+As full or partial weak invariance is supported, the next step is to test for strong (scalar) invariance, or equivalence of item intercepts, for weak invariant items. Strong invariance means that mean differences in the latent construct capture all mean differences in the shared variance of the items. Strong invariance is tested by constraining the item intercepts to be equivalent in the two groups - with the restraint applied in the weak invariance model retained. *Any items that had unequal loadings in the weak invariance model (and were allowed to vary) should be allowed to vary in the strong invariance model because it is meaningless to test for equal item intercepts if the factor loadings of the items differs across groups* (Putnick and Bornstein, 2016). 
 
 Fitting a model with constraints to ensure strong factorial invariance, with a random intercept for each indicator separately.
 
@@ -592,8 +627,9 @@ RICLPM_multi_inat_S3 <- '
 ```{r fit RICLPM_multi_inat_S3}
 RICLPM_multi_inat_S3.fit <- cfa(RICLPM_multi_inat_S3, 
                            data = dat, 
-                           se = "robust",
-                           ordered = TRUE)
+                       #    se = "robust",
+                           ordered = TRUE,
+                           missing = 'pairwise')
 
 RICLPM_multi_inat_S3.fit.summary <- summary(RICLPM_multi_inat_S3.fit, 
                                             fit.measures = TRUE,
@@ -612,7 +648,7 @@ SRMR                                           0.036 (≤ 0.08)   Change in SRMR
 We attempted to view the fit differences using semTools but it gives the error "a dimention is zero". We aren't sure why this is the case, but there is no difference in model fit between S2 and S3, so we can assume that **strong invariance holds here.**
 
 ```{r compare fit RICLPM_multi_inat_S2 and RICLPM_multi_inat_S3}
-# summary(semTools::compareFit(RICLPM_multi_inat_S2.fit, RICLPM_multi_inat_S3.fit, nested = TRUE)) #† indicates the best fitting model - have hashed out here
+summary(semTools::compareFit(RICLPM_multi_inat_S2.fit, RICLPM_multi_inat_S3.fit, nested = TRUE)) #† indicates the best fitting model - have hashed out here
 ```
 
 ```{r tables for inattention ADHD S3}
@@ -642,7 +678,6 @@ Multiple indicator RI-CLPM, 5 waves with 3 indicators for each variable at each 
 
 ```{r specify RICLPM_multi_inat_S4}
 RICLPM_multi_inat_S4 <- '
-
   #####################
   # MEASUREMENT MODEL #
   #####################
@@ -676,6 +711,10 @@ RICLPM_multi_inat_S4 <- '
   pe11m5 + pe11m7 + pe11m10 + pe11m12 ~ ab*1
   pe13m5 + pe13m7 + pe13m10 + pe13m12 ~ ac*1
   pe25m5 + pe25m7 + pe25m10 + pe25m12 ~ ad*1
+  
+  # Free latent means from timepoint = 2 (age 7) onward. 
+  # Only do this in combination with the constraints on the intercepts; without these, this would not be specified).
+  Finat7 + Finat10 + Finat12 + Fsi7 + Fsi10 + Fsi12 ~ 1
   
   ################
   # BETWEEN PART #
@@ -726,15 +765,15 @@ RICLPM_multi_inat_S4 <- '
   
   # Set correlations between the between-factors (random intercepts) and within-factors at wave 1 at 0. 
   RIinat + RIsi ~~ 0*WFinat5 + 0*WFsi5
-
 '
 ```
 
 ```{r fit RICLPM_multi_S4}
 RICLPM_multi_inat_S4.fit <- cfa(RICLPM_multi_inat_S4, 
                            data = dat, 
-                           se = "robust",
-                           ordered = TRUE)
+                       #    se = "robust",
+                           ordered = TRUE,
+                           missing = 'pairwise')
 
 summary(RICLPM_multi_inat_S4.fit, 
         fit.measures = TRUE,
@@ -742,12 +781,12 @@ summary(RICLPM_multi_inat_S4.fit,
 ``` 
 
 S4 Model fit:
-(We have included here the change in CFI, TLI and RMSEA compared to the S1 model)
-Comparative Fit Index (CFI)                    0.935 (>0.95)    Change in CFI:   0.056 (decrease) - worse fit
-Tucker-Lewis Index (TLI)                       0.933 (>0.95)    Change in TLI:   0.057 (decrease) - worse fit
-RMSEA                                          0.039 (≤ 0.06)   Change in RMSEA: 0.024 (increase) - worse fit
-90 Percent confidence interval - lower         0.038 
-90 Percent confidence interval - upper         0.040       
+(We have included here the change in CFI, TLI and RMSEA compared to the S3 model)
+Comparative Fit Index (CFI)                    0.937 (>0.95)    Change in CFI:   0.056 (decrease) - worse fit
+Tucker-Lewis Index (TLI)                       0.934 (>0.95)    Change in TLI:   0.057 (decrease) - worse fit
+RMSEA                                          0.038 (≤ 0.06)   Change in RMSEA: 0.024 (increase) - worse fit
+90 Percent confidence interval - lower         0.037 
+90 Percent confidence interval - upper         0.049       
 SRMR                                           0.071 (≤ 0.08)   Change in SRMR:  0.036 (increase) - worse fit
 
 ```{r compare fit RICLPM_multi_inat_S3 and RICLPM_multi_inat_S4}
@@ -848,9 +887,9 @@ RICLPM_multi_hyp_S1 <- '
 ```{r fit RICLPM_multi_hyp_S1}
 RICLPM_multi_hyp_S1.fit <- cfa(RICLPM_multi_hyp_S1, 
                            data = dat, 
-                           se = "robust",          # computes robust standard errors to account for use of twins
-                           ordered = TRUE          # using the "ordered" option will use DWLS with polychoric correlations for the ordinal variables
-                          # missing = 'pairwise'   # only excludes people who are missing both variables
+                          # se = "robust",          # computes robust standard errors to account for use of twins
+                           ordered = TRUE,          # using the "ordered" option will use DWLS with polychoric correlations for the ordinal variables
+                           missing = 'pairwise'   # only excludes people who are missing both variables
 )
 
 summary(RICLPM_multi_hyp_S1.fit, 
@@ -877,7 +916,6 @@ In our second  step model, we constrain the factor loadings to be invariant over
 
 ```{r specify RICLPM_multi_hyp_S2}
 RICLPM_multi_hyp_S2 <- '
-  
   ################
   # BETWEEN PART #
   ################
@@ -944,9 +982,9 @@ RICLPM_multi_hyp_S2 <- '
 ```{r fit RICLPM_multi_hyp_S2}
 RICLPM_multi_hyp_S2.fit <- cfa(RICLPM_multi_hyp_S2, 
                            data = dat, 
-                           se = "robust",
-                           ordered = TRUE
-                          # missing = 'pairwise'
+                          # se = "robust",
+                           ordered = TRUE,
+                           missing = 'pairwise'
                            )
 
 summary(RICLPM_multi_hyp_S2.fit, 
@@ -985,7 +1023,6 @@ Fitting a model with constraints to ensure strong factorial invariance, with a r
 
 ```{r specify RICLPM_multi_hyp_S3}
 RICLPM_multi_hyp_S3 <- '
-  
   ################
   # BETWEEN PART #
   ################
@@ -1013,7 +1050,7 @@ RICLPM_multi_hyp_S3 <- '
   # WITHIN PART: MEASUREMENT MODEL #
   ##################################
   
-  # Factor models for hyptention symptoms at 4 waves (constrained)
+  # Factor models for hyperactivity symptoms at 4 waves (constrained)
   WFhyp5 =~ a*pe84m5 + b*pe85m5 + c*pe96m5 + d*pe97m5 + e*pe92m5 + f*pe93m5 + g*pe94m5 + h*pe95m5 + i*pe64m5
   WFhyp7 =~ a*pe84m7 + b*pe85m7 + c*pe96m7 + d*pe97m7 + e*pe92m7 + f*pe93m7 + g*pe94m7 + h*pe95m7 + i*pe64m7
   WFhyp10 =~ a*pe84m10 + b*pe85m10 + c*pe96m10 + d*pe97m10 + e*pe92m10 + f*pe93m10 + g*pe94m10 + h*pe95m10 + i*pe64m10
@@ -1024,7 +1061,6 @@ RICLPM_multi_hyp_S3 <- '
   WFsi7 =~ j*pe2m7 + k*pe4m7 + l*pe7m7 + m*pe11m7 + n*pe13m7 + o*pe25m7 
   WFsi10 =~ j*pe2m10 + k*pe4m10 + l*pe7m10 + m*pe11m10 + n*pe13m10 + o*pe25m10
   WFsi12 =~ j*pe2m12 + k*pe4m12 + l*pe7m12 + m*pe11m12 + n*pe13m12 + o*pe25m12
-  
   
   # Constrained intercepts over time (this is necessary for strong factorial invariance; without these contraints we have week factorial invariance). 
   pe84m5 + pe84m7 + pe84m10 + pe84m12 ~ p*1
@@ -1074,9 +1110,9 @@ RICLPM_multi_hyp_S3 <- '
 ```{r fit RICLPM_multi_hyp_S3}
 RICLPM_multi_hyp_S3.fit <- cfa(RICLPM_multi_hyp_S3, 
                            data = dat, 
-                           se = "robust",
-                           ordered = TRUE
-                          # missing = 'pairwise'
+                         #  se = "robust",
+                           ordered = TRUE,
+                           missing = 'pairwise'
                            )
 
 RICLPM_multi_hyp_S3.fit.summary <- summary(RICLPM_multi_hyp_S3.fit, 
@@ -1141,7 +1177,6 @@ RICLPM_multi_hyp_S4 <- '
   Fsi10 =~ j*pe2m10 + k*pe4m10 + l*pe7m10 + m*pe11m10 + n*pe13m10 + o*pe25m10
   Fsi12 =~ j*pe2m12 + k*pe4m12 + l*pe7m12 + m*pe11m12 + n*pe13m12 + o*pe25m12
   
-  
   # Constrained intercepts over time (this is necessary for strong factorial invariance; without these contraints we have week factorial invariance). 
   pe84m5 + pe84m7 + pe84m10 + pe84m12 ~ p*1
   pe85m5 + pe85m7 + pe85m10 + pe85m12 ~ q*1
@@ -1161,7 +1196,7 @@ RICLPM_multi_hyp_S4 <- '
   pe25m5 + pe25m7 + pe25m10 + pe25m12 ~ ad*1
   
   # Free latent means from t = 2 onward (only do this in combination with the constraints on the intercepts; without these, this would not be specified).
-  WFhyp7 + WFhyp10 + WFhyp12 + WFsi7 + WFsi10 + WFsi12 ~ 1
+  Fhyp7 + Fhyp10 + Fhyp12 + Fsi7 + Fsi10 + Fsi12 ~ 1
   
   ################
   # BETWEEN PART #
@@ -1219,9 +1254,9 @@ RICLPM_multi_hyp_S4 <- '
 ```{r fit RICLPM_multi_hyp_S4}
 RICLPM_multi_hyp_S4.fit <- cfa(RICLPM_multi_hyp_S4, 
                            data = dat, 
-                           se = "robust",
-                           ordered = TRUE
-                          # missing = 'pairwise'
+                         #  se = "robust",
+                           ordered = TRUE,
+                           missing = 'pairwise'
                            )
 
 summary(RICLPM_multi_hyp_S4.fit, 
@@ -1252,9 +1287,6 @@ So if the S3 model is the way to go here - then I need to figure out how to inte
 
 ***
 
-
-***
-
 # Multiple indicator RI-CLPM: ADHD and social isolation
 
 ## RICLPM_multi_adhd_S1: ADHD step 1
@@ -1265,7 +1297,6 @@ The configural model is the least stringent test of invariance, it is designed t
 
 ```{r specify RICLPM_multi_adhd_S1}
 RICLPM_multi_adhd_S1 <- '
-  
   ################
   # BETWEEN PART #
   ################
@@ -1343,9 +1374,9 @@ RICLPM_multi_adhd_S1 <- '
 ```{r fit RICLPM_multi_adhd_S1}
 RICLPM_multi_adhd_S1.fit <- cfa(RICLPM_multi_adhd_S1, 
                            data = dat, 
-                           se = "robust",          # computes robust standard errors to account for use of twins
-                           ordered = TRUE          # using the "ordered" option will use DWLS with polychoric correlations for the ordinal variables
-                          # missing = 'pairwise'  # only excludes people who are missing both variables
+                          # se = "robust",          # computes robust standard errors to account for use of twins
+                           ordered = TRUE,          # using the "ordered" option will use DWLS with polychoric correlations for the ordinal variables
+                           missing = 'pairwise'  # only excludes people who are missing both variables
 )
 
 summary(RICLPM_multi_adhd_S1.fit, 
@@ -1450,9 +1481,9 @@ RICLPM_multi_adhd_S2 <- '
 ```{r fit RICLPM_multi_adhd_S2}
 RICLPM_multi_adhd_S2.fit <- cfa(RICLPM_multi_adhd_S2, 
                            data = dat, 
-                           se = "robust",
-                           ordered = TRUE
-                          # missing = 'pairwise'
+                          # se = "robust",
+                           ordered = TRUE,
+                           missing = 'pairwise'
                            )
 
 summary(RICLPM_multi_adhd_S2.fit, 
@@ -1602,9 +1633,9 @@ RICLPM_multi_adhd_S3 <- '
 ```{r fit RICLPM_multi_adhd_S3}
 RICLPM_multi_adhd_S3.fit <- cfa(RICLPM_multi_adhd_S3, 
                            data = dat, 
-                           se = "robust",
-                           ordered = TRUE
-                          # missing = 'pairwise'
+                          # se = "robust",
+                           ordered = TRUE,
+                           missing = 'pairwise'
                            )
 
 RICLPM_multi_adhd_S3.fit.summary <- summary(RICLPM_multi_adhd_S3.fit, 
@@ -1623,14 +1654,12 @@ SRMR                                           0.038 (≤ 0.08) Change in SRMR: 
 Now we need to conduct a Likelihood ratio test and compare the model fit for S1 and S2 to see if the constrained model is a significantly worse fit than the free loading model. By constraining the factor loadings over time we can assume that the items load onto the same construct in the same way at each time point. 
 
 ```{r compare fit RICLPM_multi_adhd_S2 and RICLPM_hyp_adhd_S3}
-# summary(semTools::compareFit(RICLPM_multi_adhd_S2.fit, RICLPM_multi_adhd_S3.fit, nested = TRUE)) #† indicates the best fitting model 
+summary(semTools::compareFit(RICLPM_multi_adhd_S2.fit, RICLPM_multi_adhd_S3.fit, nested = TRUE)) #† indicates the best fitting model 
 ```
 
 *** 
-below needs work
-
-****
-
+below table rows need updating 
+***
 ```{r tables for total ADHD S3}
 # Table of model fit 
 RICLPM_multi_adhd_S3.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPM_multi_adhd_S3.fit.summary$FIT)))[,c(3,4,9,10,13,14,16,17,18,19,21)]
@@ -1642,822 +1671,1133 @@ RICLPM2d.fit.summary.reg <- as.tibble(RICLPM2d.fit.summary$PE[c(17:28),-c(4,5)])
 RICLPM2d.fit.summary.covar <- as.tibble(RICLPM2d.fit.summary$PE[c(29:32),-c(4,5)])
 ```
 
+## RICLPM_multi_adhd_S4: Total ADHD symptoms step 4 - *Full model*
 
+From Mulder and Hamaker (2021):
+A significant chi-square difference test would mean strong factorial invariance does not hold, implying that the actual scores cannot be compared over time, but individual differences in scores can still be meaningfully compared since weak factorial invariance holds. As the focus in cross-lagged panel modeling is primarily on comparing individual differences (by decomposing the observed scores into between-unit and withinunit components) rather than mean scores over time, weak factorial invariance may be enough. However, from a measurement point of view, having strong factorial invariance would be considered more ideal.
 
+Instead of including a random intercept at the observed level for each indicator separately (as done so far and in the upper part of the figure at the beginning of this document), we can also choose to specify the entire RI-CLPM at the latent level; this is illustrated in the lower part of the beginning figure. This can be done in either a model with weak or strong factorial invariance over time. To this end, we specify the common factors that capture both trait-like and state-like common variance, and thereby make the assumption that the trait- and state structures coincide. We then decompose these latent variables into a stable, between-unit part and the within-unit components.
+
+We set the factor loadings of these second-order factors to be identical to the corresponding factor loadings of the withinunit factors. Additionally, we constrain the residual variances for the first-order factors to zero. This model is nested under the model we just presented (top panel of the figure), and is statistically equivalent to the model presented in the lower panel of the figure. This implies that we can use a chi-square difference test to compare. 
+
+Multiple indicator RI-CLPM, 5 waves with 3 indicators for each variable at each wave (30 observed variables). Fitting a model with constraints to ensure strong factorial invariance, with the RI-CLPM at the latent level.
+
+```{r specify RICLPM_multi_adhd_S4}
+RICLPM_multi_adhd_S4 <- '
+  ##################################
+  # WITHIN PART: MEASUREMENT MODEL #
+  ##################################
+  
+  # Factor models for ADHD (inattention and hyperactivity) symptoms at 4 waves
+  Fadhd5 =~ a*pe81m5 + b*pe82m5 + c*pe83m5 + d*pe86m5 + e*pe87m5 + f*pe88m5 + g*pe89m5 + h*pe90m5 + i*pe91m5 + j*pe84m5 + k*pe85m5 + l*pe96m5 + m*pe97m5 + n*pe92m5 + o*pe93m5 + p*pe94m5 + q*pe95m5 + r*pe64m5
+  Fadhd7 =~ a*pe81m7 + b*pe82m7 + c*pe83m7 + d*pe86m7 + e*pe87m7 + f*pe88m7 + g*pe89m7 + h*pe90m7 + i*pe91m7 + j*pe84m7 + k*pe85m7 + l*pe96m7 + m*pe97m7 + n*pe92m7 + o*pe93m7 + p*pe94m7 + q*pe95m7 + r*pe64m7
+  Fadhd10 =~ a*pe81m10 + b*pe82m10 + c*pe83m10 + d*pe86m10 + e*pe87m10 + f*pe88m10 + g*pe89m10 + h*pe90m10 + i*pe91m10 + j*pe84m10 + k*pe85m10 + l*pe96m10 + m*pe97m10 + n*pe92m10 + o*pe93m10 + p*pe94m10 + q*pe95m10 + r*pe64m10
+  Fadhd12 =~ a*pe81m12 + b*pe82m12 + c*pe83m12 + d*pe86m12 + e*pe87m12 + f*pe88m12 + g*pe89m12 + h*pe90m12 + i*pe91m12 + j*pe84m12 + k*pe85m12 + l*pe96m12 + m*pe97m12 + n*pe92m12 + o*pe93m12 + p*pe94m12 + q*pe95m12 + r*pe64m12 
+  
+  # Factor models for social isolation at 4 waves
+  Fsi5 =~ s*pe2m5 + t*pe4m5 + u*pe7m5 + v*pe11m5 + w*pe13m5 + x*pe25m5 
+  Fsi7 =~ s*pe2m7 + t*pe4m7 + u*pe7m7 + v*pe11m7 + w*pe13m7 + x*pe25m7 
+  Fsi10 =~ s*pe2m10 + t*pe4m10 + u*pe7m10 + v*pe11m10 + w*pe13m10 + x*pe25m10
+  Fsi12 =~ s*pe2m12 + t*pe4m12 + u*pe7m12 + v*pe11m12 + w*pe13m12 + x*pe25m12
+  
+  # Constrained intercepts over time (this is necessary for strong factorial invariance; without these contraints we have week factorial invariance). 
+  # Inattention symptoms
+  pe81m5 + pe81m7 + pe81m10 + pe81m12 ~ y*1
+  pe82m5 + pe82m7 + pe82m10 + pe82m12 ~ z*1
+  pe83m5 + pe83m7 + pe83m10 + pe83m12 ~ aa*1
+  pe86m5 + pe86m7 + pe86m10 + pe86m12 ~ ab*1
+  pe87m5 + pe87m7 + pe87m10 + pe87m12 ~ ac*1
+  pe88m5 + pe88m7 + pe88m10 + pe88m12 ~ ad*1
+  pe89m5 + pe89m7 + pe89m10 + pe89m12 ~ ae*1
+  pe90m5 + pe90m7 + pe90m10 + pe90m12 ~ af*1
+  pe91m5 + pe91m7 + pe91m10 + pe91m12 ~ ag*1
+  # Hyperactivity symptoms
+  pe84m5 + pe84m7 + pe84m10 + pe84m12 ~ ah*1
+  pe85m5 + pe85m7 + pe85m10 + pe85m12 ~ ai*1
+  pe96m5 + pe96m7 + pe96m10 + pe96m12 ~ aj*1
+  pe97m5 + pe97m7 + pe97m10 + pe97m12 ~ ak*1
+  pe92m5 + pe92m7 + pe92m10 + pe92m12 ~ al*1
+  pe93m5 + pe93m7 + pe93m10 + pe93m12 ~ am*1
+  pe94m5 + pe94m7 + pe94m10 + pe94m12 ~ an*1
+  pe95m5 + pe95m7 + pe95m10 + pe95m12 ~ ao*1
+  pe64m5 + pe64m7 + pe64m10 + pe64m12 ~ ap*1
+
+  # Social isolation
+  pe2m5 + pe2m7 + pe2m10 + pe2m12 ~ aq*1
+  pe4m5 + pe4m7 + pe4m10 + pe4m12 ~ ar*1
+  pe7m5 + pe7m7 + pe7m10 + pe7m12 ~ as*1
+  pe11m5 + pe11m7 + pe11m10 + pe11m12 ~ at*1
+  pe13m5 + pe13m7 + pe13m10 + pe13m12 ~ au*1
+  pe25m5 + pe25m7 + pe25m10 + pe25m12 ~ av*1
+  
+  # Free latent means from t = 2 onward (only do this in combination with the constraints on the intercepts; without these, this would not be specified).
+  Fadhd7 + Fadhd10 + Fadhd12 + Fsi7 + Fsi10 + Fsi12 ~ 1
+  
+  ################
+  # BETWEEN PART #
+  ################
+  
+  # Create between factors (random intercepts) 
+  RIadhd =~ 1*Fadhd5 + 1*Fadhd7 + 1*Fadhd10 + 1*Fadhd12
+  RIsi =~ 1*Fsi5 + 1*Fsi7 + 1*Fsi10 + 1*Fsi12
+  
+  # Set the residual variances of all Fadhd and Fsi variables to 0. 
+  Fadhd5 ~~ 0*Fadhd5
+  Fadhd7 ~~ 0*Fadhd7
+  Fadhd10 ~~ 0*Fadhd10
+  Fadhd12 ~~ 0*Fadhd12
+  Fsi5 ~~ 0*Fsi5
+  Fsi7 ~~ 0*Fsi7
+  Fsi10 ~~ 0*Fsi10
+  Fsi12 ~~ 0*Fsi12
+  
+  ###############
+  # WITHIN PART #
+  ###############
+  
+  # Create the within-part
+  WFadhd5 =~ 1*Fadhd5
+  WFadhd7 =~ 1*Fadhd7
+  WFadhd10 =~ 1*Fadhd10
+  WFadhd12 =~ 1*Fadhd12
+  
+  WFsi5 =~ 1*Fsi5
+  WFsi7 =~ 1*Fsi7
+  WFsi10 =~ 1*Fsi10
+  WFsi12 =~ 1*Fsi12
+  
+  # Specify the lagged effects between the within-person centered latent variables
+  WFadhd7 + WFsi7 ~ WFadhd5 + WFsi5
+  WFadhd10 + WFsi10 ~ WFadhd7 + WFsi7
+  WFadhd12 + WFsi12 ~ WFadhd10 + WFsi10
+  
+  # Estimate the correlations within the same wave
+  WFadhd5 ~~ WFsi5
+  WFadhd7 ~~ WFsi7
+  WFadhd10 ~~ WFsi10 
+  WFadhd12 ~~ WFsi12
+  
+  ##########################
+  # ADDITIONAL CONSTRAINTS #
+  ##########################
+  
+  # Set correlations between the between-factors (random intercepts) and within-factors at wave 1 (age 5) at 0
+  RIadhd + RIsi ~~ 0*WFadhd5 + 0*WFsi5
+'
+```
+
+```{r fit RICLPM_multi_adhd_S4}
+RICLPM_multi_adhd_S4.fit <- cfa(RICLPM_multi_adhd_S4, 
+                           data = dat, 
+                         #  se = "robust",
+                           ordered = TRUE,
+                           missing = 'pairwise'
+                           )
+
+summary(RICLPM_multi_adhd_S4.fit, 
+        fit.measures = TRUE,
+        standardized = TRUE)
+```
+
+S4 Model fit:
+(We have included here the change in CFI, TLI and RMSEA compared to the S3 model)
+Comparative Fit Index (CFI)                    0. (>0.95)    Change in CFI:   0.0 (decrease) - worse fit 
+Tucker-Lewis Index (TLI)                       0. (>0.95)    Change in TLI:   0.0 (decrease) - worse fit 
+RMSEA                                          0. (≤ 0.06)   Change in RMSEA: 0.0 (increase) - worse fit
+90 Percent confidence interval - lower         0. 
+90 Percent confidence interval - upper         0.       
+SRMR                                           0. (≤ 0.08)   Change in SRMR: 0.0 (increase)  - worse fit 
+
+Now we need to conduct a Likelihood ratio test to see if the constrained model is a significantly worse fit than the free loading model. By constraining the factor loadings over time we can assume that the items load onto the same construct in the same way at each time point. We use the compareFit command which gives the LRT with the comparison in model fit for the two models. 
+
+```{r compare fit RICLPM_multi_adhd_S3 and RICLPM_multi_adhd_S4}
+summary(semTools::compareFit(RICLPM_multi_adhd_S3.fit, RICLPM_multi_adhd_S4.fit, nested = TRUE)) #† indicates the best fitting model
+```
+
+**As all fit indices changed by more than 0.01 - we cannot accept this measurement model.**
 
 ***
 
-NEED TO ENTER S4 model for total ADHD here
+# Teacher report RI-CLPM: Inattention and social isolation
+
+## RICLPM_multi_inat_S1: Inattention step 1
+
+**Multiple response items RICLPM teacher report inattention ADHD symptoms and social isolation: Step 1, the configural model**  
+
+The configural model is the least stringent test of invariance, it is designed to test if the constructs have the same pattern of free and fixed loadings. Configural *non*invariance means that the pattern of loadings of items on the latent factors differs over the time points. This would then suggest that a slightly different concept is being measured at each time point (Putnick and Bornstein, 2016). To test if the configural variance holds, we will look at the fit of the configural model (S1).
+
+We have six indicators of $Social isolation$, measured at four waves, we specify six random intercepts to capture the trait-like part of each indicator, that is, `RIX1 =~ 1*x11 1*x21 ...`, and `RIX2 =~ 1*x121 1*x22@1 ...`. In addition, we specify four within-unit components that capture the state-like part at each wave, using `WFX1 =~ x11 x12 x13; WFX2 =~ x21 x22 x23; ...`.
+
+At the latent within-unit level, we specify the dynamic model using `WFX2 ~ WFY1 + WFX1; WFX3 ~ WFY2 + WFX2; ...`. In addition, we allow the within-person factors at the first wave, and their residuals at subsequent waves to be correlated within each wave, `WFX1 ~~ WFY1; WFX2 ~~ WFY2; ...`. The random intercepts are allowed to be freely correlated with each other through using the cfa() command below. 
+
+```{r specify RICLPMt_multi_inat_S1}
+RICLPMt_multi_inat_S1 <- '
+  ################
+  # BETWEEN PART #
+  ################
+  
+  # Create between factors (random intercepts) for each item of inattention (teacher report)
+  RIinat1 =~ 1*trf89e5 + 1*trf89e7 + 1*trf89e10 + 1*trf89e12
+  RIinat2 =~ 1*trf90e5 + 1*trf90e7 + 1*trf90e10 + 1*trf90e12
+  RIinat3 =~ 1*trf91e5 + 1*trf91e7 + 1*trf91e10 + 1*trf91e12
+  RIinat4 =~ 1*trf94e5 + 1*trf94e7 + 1*trf94e10 + 1*trf94e12
+  RIinat5 =~ 1*trf95e5 + 1*trf95e7 + 1*trf95e10 + 1*trf95e12
+  RIinat6 =~ 1*trf96e5 + 1*trf96e7 + 1*trf96e10 + 1*trf96e12
+  RIinat7 =~ 1*trf97e5 + 1*trf97e7 + 1*trf97e10 + 1*trf97e12
+  RIinat8 =~ 1*trf98e5 + 1*trf98e7 + 1*trf98e10 + 1*trf98e12
+  RIinat9 =~ 1*trf99e5 + 1*trf99e7 + 1*trf99e10 + 1*trf99e12
+  
+  # Create between factors (random intercepts) for each item of social isolation (teacher report)
+  RIsi1 =~ 1*trf11e5 + 1*trf11e7 + 1*trf11e10 + 1*trf11e12 
+  RIsi2 =~ 1*trf19e5 + 1*trf19e7 + 1*trf19e10 + 1*trf19e12
+  RIsi3 =~ 1*trf24e5 + 1*trf24e7 + 1*trf24e10 + 1*trf24e12
+  RIsi4 =~ 1*trf30e5 + 1*trf30e7 + 1*trf30e10 + 1*trf30e12
+  RIsi5 =~ 1*trf34e5 + 1*trf34e7 + 1*trf34e10 + 1*trf34e12
+  RIsi6 =~ 1*trf77e5 + 1*trf77e7 + 1*trf77e10 + 1*trf77e12
+  
+  ##################################
+  # WITHIN PART: MEASUREMENT MODEL #
+  ##################################
+  
+  # Factor models for inattention symptoms at 4 waves
+  WFinat5 =~ trf89e5 + trf90e5 + trf91e5 + trf94e5 + trf95e5 + trf96e5 + trf97e5 + trf98e5 + trf99e5
+  WFinat7 =~ trf89e7 + trf90e7 + trf91e7 + trf94e7 + trf95e7 + trf96e7 + trf97e7 + trf98e7 + trf99e7
+  WFinat10 =~ trf89e10 + trf90e10 + trf91e10 + trf94e10 + trf95e10 + trf96e10 + trf97e10 + trf98e10 + trf99e10
+  WFinat12 =~ trf89e12 + trf90e12 + trf91e12 + trf94e12 + trf95e12 + trf96e12 + trf97e12 + trf98e12 + trf99e12
+  
+  # Factor models for social isolation at 4 waves
+  WFsi5 =~ trf11e5 + trf19e5 + trf24e5 + trf30e5 + trf34e5 + trf77e5 
+  WFsi7 =~ trf11e7 + trf19e7 + trf24e7 + trf30e7 + trf34e7 + trf77e7 
+  WFsi10 =~ trf11e10 + trf19e10 + trf24e10 + trf30e10 + trf34e10 + trf77e10 
+  WFsi12 =~ trf11e12 + trf19e12 + trf24e12 + trf30e12 + trf34e12 + trf77e12
+  
+  #########################
+  # WITHIN PART: DYNAMICS #
+  #########################
+  
+  # Specify the lagged effects between the within-person centered latent variables
+  WFinat7 + WFsi7 ~ WFinat5 + WFsi5
+  WFinat10 + WFsi10 ~ WFinat7 + WFsi7
+  WFinat12 + WFsi12 ~ WFinat10 + WFsi10
+  
+  # Estimate the correlations within the same wave
+  WFinat5 ~~ WFsi5
+  WFinat7 ~~ WFsi7
+  WFinat10 ~~ WFsi10 
+  WFinat12 ~~ WFsi12
+  
+  ##########################
+  # ADDITIONAL CONSTRAINTS #
+  ##########################
+  
+  # Constrain covariance of the between factors and exogenous within factors to 0
+  RIinat1 + RIinat2 + RIinat3 + RIinat4 + RIinat5 + RIinat6 + RIinat7 + RIinat8 + RIinat9 + RIsi1 + RIsi2 + RIsi3 + RIsi4 + RIsi5 + RIsi6 ~~ 0*WFsi5 + 0*WFinat5
+'
+```
+
+```{r fit RICLPMt_multi_inat_S1}
+RICLPMt_multi_inat_S1.fit <- cfa(RICLPMt_multi_inat_S1, 
+                           data = dat, 
+                        #   se = "robust",         # computes robust standard errors to account for use of twins
+                           ordered = TRUE,        # using the "ordered" option will use DWLS with polychoric correlations for the ordinal variables
+                           missing = 'pairwise'    # only excludes people who are missing both variables
+)
+
+summary(RICLPMt_multi_inat_S1.fit, fit.measures = TRUE, standardized = TRUE)
+```
+
+For the pairwise deletion model without robust standard errors:
+S1 Model fit (robust indices):
+Comparative Fit Index (CFI)                    0.995 (>0.95)
+Tucker-Lewis Index (TLI)                       0.995 (>0.95)      
+RMSEA                                          0.012 (≤ 0.06)         
+90 Percent confidence interval - lower         0.011 
+90 Percent confidence interval - upper         0.014       
+SRMR                                           0.051 (≤ 0.08)      
+
+We can conclude that the model shows very good fit. 
+
+## RICLPMt_multi_inat_S2: Inattention step 2 
+
+**Multiple response items RICLPMt teacher report inattention ADHD symptoms and social isolation: Step 2**.
+If configural variance is supported, we next test for weak invariance (sometimes called metric invariance). This tests for the equivalence of the item loadings on the factors. Weak (metric) invariance means that each item contributes to the latent construct to a similar degree across groups. this is tested by constraining factor loadings (i.e., the loadings of the items on the constructs) to be equivalent in the two time points (Putnick and Bornstein, 2016). The model with constrained factor loadings (S2) is then compared to the configural invariance model (S1) to determine fit. If the overall model fit is significantly worse in the weak invariance model compared to the configural invariance model, it indicates that at least one loading is not equivalent across the groups, and weak invariance is not supported.
+
+In our second step model, we constrain the factor loadings to be invariant over time using the labels `a*`, `b*`, `c*`, `d*` etc, in the "within" part of the model. 
+
+```{r specify RICLPMt_multi_inat_S2}
+RICLPMt_multi_inat_S2 <- '
+  ################
+  # BETWEEN PART #
+  ################
+  
+  # Create between factors (random intercepts) for each item of inattention (teacher report)
+  RIinat1 =~ 1*trf89e5 + 1*trf89e7 + 1*trf89e10 + 1*trf89e12
+  RIinat2 =~ 1*trf90e5 + 1*trf90e7 + 1*trf90e10 + 1*trf90e12
+  RIinat3 =~ 1*trf91e5 + 1*trf91e7 + 1*trf91e10 + 1*trf91e12
+  RIinat4 =~ 1*trf94e5 + 1*trf94e7 + 1*trf94e10 + 1*trf94e12
+  RIinat5 =~ 1*trf95e5 + 1*trf95e7 + 1*trf95e10 + 1*trf95e12
+  RIinat6 =~ 1*trf96e5 + 1*trf96e7 + 1*trf96e10 + 1*trf96e12
+  RIinat7 =~ 1*trf97e5 + 1*trf97e7 + 1*trf97e10 + 1*trf97e12
+  RIinat8 =~ 1*trf98e5 + 1*trf98e7 + 1*trf98e10 + 1*trf98e12
+  RIinat9 =~ 1*trf99e5 + 1*trf99e7 + 1*trf99e10 + 1*trf99e12
+  
+  # Create between factors (random intercepts) for each item of social isolation (teacher report)
+  RIsi1 =~ 1*trf11e5 + 1*trf11e7 + 1*trf11e10 + 1*trf11e12 
+  RIsi2 =~ 1*trf19e5 + 1*trf19e7 + 1*trf19e10 + 1*trf19e12
+  RIsi3 =~ 1*trf24e5 + 1*trf24e7 + 1*trf24e10 + 1*trf24e12
+  RIsi4 =~ 1*trf30e5 + 1*trf30e7 + 1*trf30e10 + 1*trf30e12
+  RIsi5 =~ 1*trf34e5 + 1*trf34e7 + 1*trf34e10 + 1*trf34e12
+  RIsi6 =~ 1*trf77e5 + 1*trf77e7 + 1*trf77e10 + 1*trf77e12
+  
+  ##################################
+  # WITHIN PART: MEASUREMENT MODEL #
+  ##################################
+  
+  # Factor models for inattention symptoms at 4 waves (constrained)
+  WFinat5 =~ a*trf89e5 + b*trf90e5 + c*trf91e5 + d*trf94e5 + e*trf95e5 + f*trf96e5 + g*trf97e5 + h*trf98e5 + i*trf99e5
+  WFinat7 =~ a*trf89e7 + b*trf90e7 + c*trf91e7 + d*trf94e7 + e*trf95e7 + f*trf96e7 + g*trf97e7 + h*trf98e7 + i*trf99e7
+  WFinat10 =~ a*trf89e10 + b*trf90e10 + c*trf91e10 + d*trf94e10 + e*trf95e10 + f*trf96e10 + g*trf97e10 + h*trf98e10 + i*trf99e10
+  WFinat12 =~ a*trf89e12 + b*trf90e12 + c*trf91e12 + d*trf94e12 + e*trf95e12 + f*trf96e12 + g*trf97e12 + h*trf98e12 + i*trf99e12
+  
+  # Factor models for social isolation at 4 waves (constrained)
+  WFsi5 =~ j*trf11e5 + k*trf19e5 + l*trf24e5 + m*trf30e5 + n*trf34e5 + o*trf77e5 
+  WFsi7 =~ j*trf11e7 + k*trf19e7 + l*trf24e7 + m*trf30e7 + n*trf34e7 + o*trf77e7 
+  WFsi10 =~ j*trf11e10 + k*trf19e10 + l*trf24e10 + m*trf30e10 + n*trf34e10 + o*trf77e10 
+  WFsi12 =~ j*trf11e12 + k*trf19e12 + l*trf24e12 + m*trf30e12 + n*trf34e12 + o*trf77e12
+  
+  #########################
+  # WITHIN PART: DYNAMICS #
+  #########################
+  
+  # Specify the lagged effects between the within-person centered latent variables
+  WFinat7 + WFsi7 ~ WFinat5 + WFsi5
+  WFinat10 + WFsi10 ~ WFinat7 + WFsi7
+  WFinat12 + WFsi12 ~ WFinat10 + WFsi10
+  
+  # Estimate the correlations within the same wave
+  WFinat5 ~~ WFsi5
+  WFinat7 ~~ WFsi7
+  WFinat10 ~~ WFsi10 
+  WFinat12 ~~ WFsi12
+  
+  ##########################
+  # ADDITIONAL CONSTRAINTS #
+  ##########################
+  
+  # Constrain covariance of the between factors and exogenous within factors to 0
+  RIinat1 + RIinat2 + RIinat3 + RIinat4 + RIinat5 + RIinat6 + RIinat7 + RIinat8 + RIinat9 + RIsi1 + RIsi2 + RIsi3 + RIsi4 + RIsi5 + RIsi6 ~~ 0*WFsi5 + 0*WFinat5
+'
+```
+
+```{r fit RICLPMt_multi_inat_S2}
+RICLPMt_multi_inat_S2.fit <- cfa(RICLPMt_multi_inat_S2, 
+                           data = dat, 
+                          # se = "robust",
+                           ordered = TRUE,
+                           missing = 'pairwise'
+                           )
+
+summary(RICLPMt_multi_inat_S2.fit, 
+        fit.measures = TRUE,
+        standardized = TRUE)
+```
+
+S2 for the pairwise deletion model without robust standard errors:
+(We have included here the change in CFI, TLI and RMSEA compared to the S1 model)
+Comparative Fit Index (CFI)                    0.995 (>0.95)    Change in CFI:   0.000 (increase) - same fit 
+Tucker-Lewis Index (TLI)                       0.994 (>0.95)    Change in TLI:   0.001 (decrease) - worse fit 
+RMSEA                                          0.013 (≤ 0.06)   Change in RMSEA: 0.001 (decrease) - worse fit
+90 Percent confidence interval - lower         0.011 
+90 Percent confidence interval - upper         0.014       
+SRMR                                           0.052 (≤ 0.08)   Change in SRMR: 0.001 (increase)  - worse fit 
+
+We can look at the best fitting model and the difference in fit indices by using the compareFit function from semTools. 
+
+```{r compare fit RICLPMt_multi_inat_S1 and RICLPMt_multi_inat_S2}
+summary(semTools::compareFit(RICLPMt_multi_inat_S1.fit, RICLPMt_multi_inat_S2.fit, nested = TRUE)) #† indicates the best fitting model - using the robust statistics
+```
+
+Now we need to conduct a Likelihood ratio test to see if the constrained model is a significantly worse fit than the free loading model. By constraining the factor loadings over time we can assume that the items load onto the same construct in the same way at each time point. 
+
+Really important to note that the Chi Square p value is very likely to be significant when using large samples. We should consider the change in model fit as well as the Chi square.
+
+```{r LRT for RICLPMt_multi_inat_S1 and RICLPMt_multi_inat_S2}
+lavTestLRT(RICLPMt_multi_inat_S1.fit, RICLPMt_multi_inat_S2.fit)
+```
+
+Significantly worse fit to include the restrictions, p=0.000000163
+
+**However this is almost never going to be nonsignificant, we can assume here that because the S2 model did not show substantial decrease in model fit (actually showed better fit than the S1 model), that weak invariance holds here.**
+
+Now we will move onto strong invariance tests. 
+
+## RICLPMt_multi_inat_S3: Inattention step 3
+
+**Multiple response items RICLPMt teacher report inattention ADHD symptoms and social isolation: Step 3** 
+
+As full or partial weak invariance is supported, the next step is to test for strong (scalar) invariance, or equivalence of item intercepts, for weak invariant items. Strong invariance means that mean differences in the latent construct capture all mean differences in the shared variance of the items. Strong invariance is tested by constraining the item intercepts to be equivalent in the two groups - with the restraint applied in the weak invariance model retained. *Any items that had unequal loadings in the weak invariance model (and were allowed to vary) should be allowed to vary in the strong invariance model because it is meaningless to test for equal item intercepts if the factor loadings of the items differs across groups* (Putnick and Bornstein, 2016). 
+
+Fitting a model with constraints to ensure strong factorial invariance, with a random intercept for each indicator separately.
+
+```{r specify RICLPMt_multi_inat_S3}
+RICLPMt_multi_inat_S3 <- '
+  ################
+  # BETWEEN PART #
+  ################
+  
+  # Create between factors (random intercepts) for each item of inattention (teacher report)
+  RIinat1 =~ 1*trf89e5 + 1*trf89e7 + 1*trf89e10 + 1*trf89e12
+  RIinat2 =~ 1*trf90e5 + 1*trf90e7 + 1*trf90e10 + 1*trf90e12
+  RIinat3 =~ 1*trf91e5 + 1*trf91e7 + 1*trf91e10 + 1*trf91e12
+  RIinat4 =~ 1*trf94e5 + 1*trf94e7 + 1*trf94e10 + 1*trf94e12
+  RIinat5 =~ 1*trf95e5 + 1*trf95e7 + 1*trf95e10 + 1*trf95e12
+  RIinat6 =~ 1*trf96e5 + 1*trf96e7 + 1*trf96e10 + 1*trf96e12
+  RIinat7 =~ 1*trf97e5 + 1*trf97e7 + 1*trf97e10 + 1*trf97e12
+  RIinat8 =~ 1*trf98e5 + 1*trf98e7 + 1*trf98e10 + 1*trf98e12
+  RIinat9 =~ 1*trf99e5 + 1*trf99e7 + 1*trf99e10 + 1*trf99e12
+  
+  # Create between factors (random intercepts) for each item of social isolation (teacher report)
+  RIsi1 =~ 1*trf11e5 + 1*trf11e7 + 1*trf11e10 + 1*trf11e12 
+  RIsi2 =~ 1*trf19e5 + 1*trf19e7 + 1*trf19e10 + 1*trf19e12
+  RIsi3 =~ 1*trf24e5 + 1*trf24e7 + 1*trf24e10 + 1*trf24e12
+  RIsi4 =~ 1*trf30e5 + 1*trf30e7 + 1*trf30e10 + 1*trf30e12
+  RIsi5 =~ 1*trf34e5 + 1*trf34e7 + 1*trf34e10 + 1*trf34e12
+  RIsi6 =~ 1*trf77e5 + 1*trf77e7 + 1*trf77e10 + 1*trf77e12
+  
+  ##################################
+  # WITHIN PART: MEASUREMENT MODEL #
+  ##################################
+  
+  # Factor models for inattention symptoms at 4 waves (constrained)
+  WFinat5 =~ a*trf89e5 + b*trf90e5 + c*trf91e5 + d*trf94e5 + e*trf95e5 + f*trf96e5 + g*trf97e5 + h*trf98e5 + i*trf99e5
+  WFinat7 =~ a*trf89e7 + b*trf90e7 + c*trf91e7 + d*trf94e7 + e*trf95e7 + f*trf96e7 + g*trf97e7 + h*trf98e7 + i*trf99e7
+  WFinat10 =~ a*trf89e10 + b*trf90e10 + c*trf91e10 + d*trf94e10 + e*trf95e10 + f*trf96e10 + g*trf97e10 + h*trf98e10 + i*trf99e10
+  WFinat12 =~ a*trf89e12 + b*trf90e12 + c*trf91e12 + d*trf94e12 + e*trf95e12 + f*trf96e12 + g*trf97e12 + h*trf98e12 + i*trf99e12
+  
+  # Factor models for social isolation at 4 waves (constrained)
+  WFsi5 =~ j*trf11e5 + k*trf19e5 + l*trf24e5 + m*trf30e5 + n*trf34e5 + o*trf77e5 
+  WFsi7 =~ j*trf11e7 + k*trf19e7 + l*trf24e7 + m*trf30e7 + n*trf34e7 + o*trf77e7 
+  WFsi10 =~ j*trf11e10 + k*trf19e10 + l*trf24e10 + m*trf30e10 + n*trf34e10 + o*trf77e10 
+  WFsi12 =~ j*trf11e12 + k*trf19e12 + l*trf24e12 + m*trf30e12 + n*trf34e12 + o*trf77e12
+  
+  # Constrained intercepts over time (this is necessary for strong factorial invariance; without these contraints we have week factorial invariance). 
+  trf89e5 + trf89e7 + trf89e10 + trf89e12 ~ p*1
+  trf90e5 + trf90e7 + trf90e10 + trf90e12 ~ q*1
+  trf91e5 + trf91e7 + trf91e10 + trf91e12 ~ r*1
+  trf94e5 + trf94e7 + trf94e10 + trf94e12 ~ s*1
+  trf95e5 + trf95e7 + trf95e10 + trf95e12 ~ t*1
+  trf96e5 + trf96e7 + trf96e10 + trf96e12 ~ u*1
+  trf97e5 + trf97e7 + trf97e10 + trf97e12 ~ v*1
+  trf98e5 + trf98e7 + trf98e10 + trf98e12 ~ w*1
+  trf99e5 + trf99e7 + trf99e10 + trf99e12 ~ x*1
+  
+  trf11e5 + trf11e7 + trf11e10 + trf11e12 ~ y*1
+  trf19e5 + trf19e7 + trf19e10 + trf19e12 ~ z*1
+  trf24e5 + trf24e7 + trf24e10 + trf24e12 ~ aa*1
+  trf30e5 + trf30e7 + trf30e10 + trf30e12 ~ ab*1
+  trf34e5 + trf34e7 + trf34e10 + trf34e12 ~ ac*1
+  trf77e5 + trf77e7 + trf77e10 + trf77e12 ~ ad*1
+  
+  # Free latent means from timepoint = 2 (age 7) onward. 
+  # Only do this in combination with the constraints on the intercepts; without these, this would not be specified).
+  WFinat7 + WFinat10 + WFinat12 + WFsi7 + WFsi10 + WFsi12 ~ 1
+  
+  #########################
+  # WITHIN PART: DYNAMICS #
+  #########################
+  
+  # Specify the lagged effects between the within-person centered latent variables
+  WFinat7 + WFsi7 ~ WFinat5 + WFsi5
+  WFinat10 + WFsi10 ~ WFinat7 + WFsi7
+  WFinat12 + WFsi12 ~ WFinat10 + WFsi10
+  
+  # Estimate the correlations within the same wave
+  WFinat5 ~~ WFsi5
+  WFinat7 ~~ WFsi7
+  WFinat10 ~~ WFsi10 
+  WFinat12 ~~ WFsi12
+  
+  ##########################
+  # ADDITIONAL CONSTRAINTS #
+  ##########################
+  
+  # Constrain covariance of the between factors and exogenous within factors to 0
+  RIinat1 + RIinat2 + RIinat3 + RIinat4 + RIinat5 + RIinat6 + RIinat7 + RIinat8 + RIinat9 + RIsi1 + RIsi2 + RIsi3 + RIsi4 + RIsi5 + RIsi6 ~~ 0*WFsi5 + 0*WFinat5
+'
+```
+
+```{r fit RICLPMt_multi_inat_S3}
+RICLPMt_multi_inat_S3.fit <- cfa(RICLPMt_multi_inat_S3, 
+                           data = dat, 
+                       #    se = "robust",
+                           ordered = TRUE,
+                           missing = 'pairwise')
+
+RICLPMt_multi_inat_S3.fit.summary <- summary(RICLPMt_multi_inat_S3.fit, 
+                                            fit.measures = TRUE,
+                                            standardized = TRUE)
+```  
+
+S3 Model fit (no robust se):
+(We have included here the change in CFI, TLI and RMSEA compared to the S1 model)
+Comparative Fit Index (CFI)                    0.995 (>0.95)    Change in CFI:   0.000 (decrease)
+Tucker-Lewis Index (TLI)                       0.994 (>0.95)    Change in TLI:   0.000 (decrease)
+RMSEA                                          0.013 (≤ 0.06)   Change in RMSEA: 0.000 (increase)
+90 Percent confidence interval - lower         0.011 
+90 Percent confidence interval - upper         0.014       
+SRMR                                           0.052 (≤ 0.08)   Change in SRMR:  0.000 
+
+We attempted to view the fit differences using semTools but it gives the error "a dimention is zero" - which I think means that there is no differences to test here. And this is somethign to do with the way the models are specified. But there is no difference in model fit between S2 and S3, so we can assume that **strong invariance holds here.**
+
+```{r LRT for RICLPMt_multi_inat_S2 and RICLPMt_multi_inat_S3}
+#lavTestLRT(RICLPMt_multi_inat_S2.fit, RICLPMt_multi_inat_S3.fit)
+```
+
+```{r compare fit RICLPMt_multi_inat_S2 and RICLPMt_multi_inat_S3}
+summary(semTools::compareFit(RICLPMt_multi_inat_S2.fit, RICLPMt_multi_inat_S3.fit, nested = TRUE)) #† indicates the best fitting model - have hashed out here
+```
+
+Our model does not loose *any* fit, which means we can assume that strong factorial invariance holds over time. In contrast, If the overall model fit is not significantly worse in the strong invariance model compared to the weak invariance model, it indicates that constraining the item intercepts across time points does not significantly affect the model fit, and strong invariance is supported. 
+
+**Going forward, we will assume that we have strong invariance for our inattention and social isolation mother report RI-CLPM.**
 
 ***
 
+## RICLPMt_multi_inat_S4: Inattention step 4 - *Full model*
 
+From Mulder and Hamaker (2021):
+A significant chi-square difference test would mean strong factorial invariance does not hold, implying that the actual scores cannot be compared over time, but individual differences in scores can still be meaningfully compared since weak factorial invariance holds. As the focus in cross-lagged panel modeling is primarily on comparing individual differences (by decomposing the observed scores into between-unit and withinunit components) rather than mean scores over time, weak factorial invariance may be enough. However, from a measurement point of view, having strong factorial invariance would be considered more ideal.
 
+Instead of including a random intercept at the observed level for each indicator separately (as done so far and in the upper part of the figure at the beginning of this document), we can also choose to specify the entire RI-CLPM at the latent level; this is illustrated in the lower part of the beginning figure. This can be done in either a model with weak or strong factorial invariance over time. To this end, we specify the common factors that capture both trait-like and state-like common variance, and thereby make the assumption that the trait- and state structures coincide. We then decompose these latent variables into a stable, between-unit part and the within-unit components.
 
+We set the factor loadings of these second-order factors to be identical to the corresponding factor loadings of the within unit factors. Additionally, we constrain the residual variances for the first-order factors to zero. This model is nested under the model we just presented, and is statistically equivalent to the model presented in the lower panel of the figure at the top of the script. This implies that we can use a chi-square difference test to compare. 
 
+Multiple indicator RI-CLPM, 4 waves with 9 indicators for inattention and 6 indicators for social isolation. Fitting a model with constraints to ensure strong factorial invariance, with the RI-CLPM at the latent level.
 
+```{r specify RICLPMt_multi_inat_S4}
+RICLPMt_multi_inat_S4 <- '
+  #####################
+  # MEASUREMENT MODEL #
+  #####################
+  
+  # Factor models for inattention symptoms at 4 waves (constrained)
+  Finat5 =~ a*trf89e5 + b*trf90e5 + c*trf91e5 + d*trf94e5 + e*trf95e5 + f*trf96e5 + g*trf97e5 + h*trf98e5 + i*trf99e5
+  Finat7 =~ a*trf89e7 + b*trf90e7 + c*trf91e7 + d*trf94e7 + e*trf95e7 + f*trf96e7 + g*trf97e7 + h*trf98e7 + i*trf99e7
+  Finat10 =~ a*trf89e10 + b*trf90e10 + c*trf91e10 + d*trf94e10 + e*trf95e10 + f*trf96e10 + g*trf97e10 + h*trf98e10 + i*trf99e10
+  Finat12 =~ a*trf89e12 + b*trf90e12 + c*trf91e12 + d*trf94e12 + e*trf95e12 + f*trf96e12 + g*trf97e12 + h*trf98e12 + i*trf99e12
+  
+  # Factor models for social isolation at 4 waves (constrained)
+  Fsi5 =~ j*trf11e5 + k*trf19e5 + l*trf24e5 + m*trf30e5 + n*trf34e5 + o*trf77e5 
+  Fsi7 =~ j*trf11e7 + k*trf19e7 + l*trf24e7 + m*trf30e7 + n*trf34e7 + o*trf77e7 
+  Fsi10 =~ j*trf11e10 + k*trf19e10 + l*trf24e10 + m*trf30e10 + n*trf34e10 + o*trf77e10 
+  Fsi12 =~ j*trf11e12 + k*trf19e12 + l*trf24e12 + m*trf30e12 + n*trf34e12 + o*trf77e12
+  
+  # Constrained intercepts over time (this is necessary for strong factorial invariance; without these contraints we have week factorial invariance). 
+  trf89e5 + trf89e7 + trf89e10 + trf89e12 ~ p*1
+  trf90e5 + trf90e7 + trf90e10 + trf90e12 ~ q*1
+  trf91e5 + trf91e7 + trf91e10 + trf91e12 ~ r*1
+  trf94e5 + trf94e7 + trf94e10 + trf94e12 ~ s*1
+  trf95e5 + trf95e7 + trf95e10 + trf95e12 ~ t*1
+  trf96e5 + trf96e7 + trf96e10 + trf96e12 ~ u*1
+  trf97e5 + trf97e7 + trf97e10 + trf97e12 ~ v*1
+  trf98e5 + trf98e7 + trf98e10 + trf98e12 ~ w*1
+  trf99e5 + trf99e7 + trf99e10 + trf99e12 ~ x*1
+  
+  trf11e5 + trf11e7 + trf11e10 + trf11e12 ~ y*1
+  trf19e5 + trf19e7 + trf19e10 + trf19e12 ~ z*1
+  trf24e5 + trf24e7 + trf24e10 + trf24e12 ~ aa*1
+  trf30e5 + trf30e7 + trf30e10 + trf30e12 ~ ab*1
+  trf34e5 + trf34e7 + trf34e10 + trf34e12 ~ ac*1
+  trf77e5 + trf77e7 + trf77e10 + trf77e12 ~ ad*1
+  
+  # Free latent means from timepoint = 2 (age 7) onward. 
+  # Only do this in combination with the constraints on the intercepts; without these, this would not be specified).
+  Finat7 + Finat10 + Finat12 + Fsi7 + Fsi10 + Fsi12 ~ 1
+  
+  ################
+  # BETWEEN PART #
+  ################
+  
+  # Create between factors (random intercepts). 
+  RIinat =~ 1*Finat5 + 1*Finat7 + 1*Finat10 + 1*Finat12 
+  RIsi =~ 1*Fsi5 + 1*Fsi7 + 1*Fsi10 + 1*Fsi12
+  
+  # Set the residual variances of all Finat and Fsi variables to 0. 
+  Finat5 ~~ 0*Finat5
+  Finat7 ~~ 0*Finat7
+  Finat10 ~~ 0*Finat10
+  Finat12 ~~ 0*Finat12
+  Fsi5 ~~ 0*Fsi5
+  Fsi7 ~~ 0*Fsi7
+  Fsi10 ~~ 0*Fsi10
+  Fsi12 ~~ 0*Fsi12
 
+  ###############
+  # WITHIN PART #
+  ###############
+ 
+  # Create the within-part
+  WFinat5 =~ 1*Finat5
+  WFinat7 =~ 1*Finat7
+  WFinat10 =~ 1*Finat10
+  WFinat12 =~ 1*Finat12
+  
+  WFsi5 =~ 1*Fsi5
+  WFsi7 =~ 1*Fsi7
+  WFsi10 =~ 1*Fsi10
+  WFsi12 =~ 1*Fsi12
 
+  # Specify the lagged effects between the within-person centered latent variables
+  WFinat7 + WFsi7 ~ WFinat5 + WFsi5
+  WFinat10 + WFsi10 ~ WFinat7 + WFsi7
+  WFinat12 + WFsi12 ~ WFinat10 + WFsi10
+  
+  # Estimate the correlations within the same wave - age 5 is missing here. 
+  WFinat7 ~~ WFsi7
+  WFinat10 ~~ WFsi10 
+  WFinat12 ~~ WFsi12
+  
+  ##########################
+  # ADDITIONAL CONSTRAINTS #
+  ##########################
+  
+  # Set correlations between the between-factors (random intercepts) and within-factors at wave 1 at 0. 
+  RIinat + RIsi ~~ 0*WFinat5 + 0*WFsi5
+'
+```
 
+```{r fit RICLPMt_multi_S4}
+RICLPMt_multi_inat_S4.fit <- cfa(RICLPMt_multi_inat_S4, 
+                           data = dat, 
+                       #    se = "robust",
+                           ordered = TRUE,
+                           missing = 'pairwise')
 
+RICLPM_multi_inat_S4.fit.summary <- summary(RICLPMt_multi_inat_S4.fit, 
+                                            fit.measures = TRUE,
+                                            standardized = TRUE)
+``` 
 
+S4 Model fit (no robust se):
+(We have included here the change in CFI, TLI and RMSEA compared to the S3 model)
+Comparative Fit Index (CFI)                    0.984 (>0.95)    Change in CFI:   0.011 (decrease) - worse fit
+Tucker-Lewis Index (TLI)                       0.983 (>0.95)    Change in TLI:   0.011 (decrease) - worse fit
+RMSEA                                          0.022 (≤ 0.06)   Change in RMSEA: 0.011 (increase) - worse fit
+90 Percent confidence interval - lower         0.021 
+90 Percent confidence interval - upper         0.023       
+SRMR                                           0.070 (≤ 0.08)   Change in SRMR:  0.018 (increase) - worse fit
 
+```{r LRT for RICLPMt_multi_inat_S3 and RICLPMt_multi_inat_S4}
+lavTestLRT(RICLPMt_multi_inat_S3.fit, RICLPMt_multi_inat_S4.fit)
+```
 
+According to the chi square - significantly worse fit, p<0.000001
 
+```{r compare fit RICLPMt_multi_inat_S3 and RICLPMt_multi_inat_S4}
+summary(semTools::compareFit(RICLPMt_multi_inat_S3.fit, RICLPMt_multi_inat_S4.fit, nested = TRUE)) #† indicates the best fitting model 
+```
 
+This is slightly tricky - I would be inclined to say that change of 0.011 in fit statistics and 0.018 in SRMR is not a substantial loss in fit. **Therefore, we can conclude that S4 is good fit for teacher report inattention scores and social isolation**
 
+The nonsignificant chi square implies that the current model does not have to be rejected, and we can say that there is *measurement invariance across the stable between structure and fluctuating within-structure.* If the chi-square test is significant, then we need to conclude that *these structures do not coincide, and temporal fluctuations within individuals take place on a different underlying dimension than the stable differences between units* (see Hamaker et al. (2017) for further discussion on this).
 
+From [Hamaker et al. (2017)](https://www.tandfonline.com/doi/full/10.1080/00273171.2016.1251299):
+**need to add notes here**
 
+To key points from [Hamaker et al., 2015](https://www.tandfonline.com/doi/pdf/10.1080/10705511.2020.1784738) (page 646 & 647)
+1. The disadvantage of using sum and mean scores however is that one assumes an absence of measurement error, which often is an unrealistic assumption, especially within the social sciences (Griliches & Hausman, 1986). Failing to properly account for measurement error can bias lagged-parameter estimates downward, leading to a loss of power. Also, the estimation of factor scores is difficult due to the problem of factor indeterminacy (i.e., there are multiple ways to obtain factor scores, each with their own set of advantages and disadvantages), and it is unclear how this affects the results of the RI-CLPM.
+2. The procedure described above for establishing measurement invariance relies heavily on chi-square difference testing which, as mentioned before, can have serious disadvantages such as an increased Type I and Type II error rate when the base model is misspecified (Yuan & Bentler, 2004). Alternatively, researchers can use equivalence testing **(Yuan & Chan, 2016)**, which allows researchers to explicitly specify an acceptable level of model misfit. 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#### Exported tables for this model - **this does not include robust standard errors at the moment**
+```{r tables for RICLPMt_multi_inat_S4}
+# Table of model fit 
+RICLPM_multi_inat_S4.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPM_multi_inat_S4.fit.summary$FIT)))[,c(6,7,19,20,27,28,29,35)]
+# Table of regression coefficients and covariances 
+RICLPM_multi_inat_S4.fit.summary.reg <- as.tibble(RICLPM_multi_inat_S4.fit.summary$PE[c(151:165),-c(4,5)])
+```
+Here, suddenly the cross-lagged effects go negative??? Need to think about why this could be and what is means. 
 
 ***
 
-# Longitudinal CFA to further test measurement invariance {.tabset .tabset-fade}
+# Multiple indicator RI-CLPM teacher report: Hyperactivity and social isolation
 
-## Social isolation - Mother report
+## RICLPMt_multi_hyp_S1: Hyperactivity/Implsivity step 1
 
-### Configural invariance
+**Multiple response items RICLPMt teacher report hyperactivity ADHD symptoms and social isolation: Step 1, the configural model**  
 
-```{r config invariance social isolation}
-config.si <- '#factor loadings - NA stops setting first item as a loading of 1
-          si05 =~ NA*pe2m5 + a*pe2m5 + pe4m5 + pe7m5 +  pe11m5 +  pe13m5 + pe25m5 
-          si07 =~ NA*pe2m7 + a*pe2m7 + pe4m7 + pe7m7 +  pe11m7 +  pe13m7 + pe25m7  
-          si10 =~ NA*pe2m10 + a*pe2m10 + pe4m10 + pe7m10 +  pe11m10 +  pe13m10 + pe25m10 
-          si12 =~ NA*pe2m12 + a*pe2m12 + pe4m12 + pe7m12 +  pe11m12 +  pe13m12 + pe25m12
+The configural model is the least stringent test of invariance, it is designed to test if the constructs have the same pattern of free and fixed loadings. Configural *non*invariance means that the pattern of loadings of items on the latent factors differs over the time points. This would then suggest that a slightly different concept is being measured at each time point (Putnick and Bornstein, 2016). To test if the configural variance holds, we will look at the fit of the configural model (S1).
 
-          #means/intercepts
-          si05 ~ 0*1                  #set the intercept of latent factor at the first time point to 0 by pre- multiplying the intercept (1) by 0. 
-          si07 ~ start(0)*1           #specifying a starting value can assist with model convergence or reduce model run time
-          si10 ~ start(0)*1
-          si12 ~ start(0)*1
-          pe2m5 ~ b*1                 #setting the intercepts (first time point) to be equal across time
-          pe2m7 ~ b*1
-          pe2m10 ~ b*1
-          pe2m12 ~ b*1
-
-          #variances/covariances
-          si05 ~~ 1*si05
-          si07 ~~ start(1)*si07
-          si10 ~~ start(1)*si10
-          si12 ~~ start(1)*si12
-          
-          pe2m5 ~~ pe2m7 + pe2m10 + pe2m12
-          pe2m7 ~~ pe2m10 + pe2m12
-          pe2m10 ~~ pe2m12
-        
-          pe4m5 ~~ pe4m7 + pe4m10 + pe4m12
-          pe4m7 ~~ pe4m10 + pe4m12
-          pe4m10 ~~ pe4m12
-          
-          pe7m5 ~~ pe7m7 + pe7m10 + pe7m12
-          pe7m7 ~~ pe7m10 + pe7m12
-          pe7m10 ~~ pe7m12
-          
-          pe11m5 ~~ pe11m7 + pe11m10 + pe11m12
-          pe11m7 ~~ pe11m10 + pe11m12
-          pe11m10 ~~ pe11m12
-          
-          pe13m5 ~~ pe13m7 + pe13m10 + pe13m12
-          pe13m7 ~~ pe13m10 + pe13m12
-          pe13m10 ~~ pe13m12
-          
-          pe25m5 ~~ pe25m7 + pe25m10 + pe25m12
-          pe25m7 ~~ pe25m10 + pe25m12
-          pe25m10 ~~ pe25m12
-    
-         '
-
-config.si.fit <- sem(config.si, 
-                  data = dat, 
-                  meanstructure = TRUE,
-                  ordered = TRUE) # tells lavaan that all variables are ordinal
-
-summary(config.si.fit, 
-        fit.measures = TRUE, 
-        estimates = TRUE)
-```
-
-As this is the first model in a series, we are primarily interested in model fit to the observed data:
-Comparative Fit Index (CFI)                    0.917 (≥ 0.95)
-Tucker-Lewis Index (TLI)                       0.891 (≥ 0.95)
-Akaike (AIC)                                   35460.072
-Bayesian (BIC)                                 36102.055
-Sample-size adjusted Bayesian (BIC)            35739.867
-RMSEA                                          0.053 (≤ 0.06)
-SRMR                                           0.045 (≤ 0.08) 
-- All measures indicate good (not excellent) fit of the model to the data, and we conclude configural invariance holds. This implies the construct itself is the same over time, but we do not know if we can measure it comparably at each time point. Prior to examining model results in detail (e.g., loadings, variances, etc.) we must first evaluate higher forms of invariance. We will begin with weak invariance.
-
-#### Weak invariance 
-
-Whereas configural invariance is satisfied if the same pattern of zero and non-zero parameter values holds across time, weak invariance requires that the numerical values of the factor loadings are equal over time within item. In effect, all we need to do is modify the prior chunk to impose equality constraints on all of the factor loadings, not simply for the mother items. Any parameter sharing the same label is constrained to be equal, so the extra pre-multiplication imposes equal factor loadings over time, implying weak invariance.
-
-```{r weak invariance social isolation}
-weak.invar.si <- '#factor loadings - NA stops setting first item as a loading of 1
-          si05 =~ NA*pe2m5 + a*pe2m5 + b*pe4m5 + c*pe7m5 + d*pe11m5 + e*pe13m5 + f*pe25m5 
-          si07 =~ NA*pe2m7 + a*pe2m7 + b*pe4m7 + c*pe7m7 +  d*pe11m7 + e*pe13m7 + f*pe25m7  
-          si10 =~ NA*pe2m10 + a*pe2m10 + b*pe4m10 + c*pe7m10 + d*pe11m10 + e*pe13m10 + f*pe25m10 
-          si12 =~ NA*pe2m12 + a*pe2m12 + b*pe4m12 + c*pe7m12 + d*pe11m12 + e*pe13m12 + f*pe25m12
-
-          #means/intercepts
-          si05 ~ 0*1                  #set the intercept of latent factor at the first time point to 0 by pre- multiplying the intercept (1) by 0. 
-          si07 ~ start(0)*1           #specifying a starting value can assist with model convergence or reduce model run time
-          si10 ~ start(0)*1
-          si12 ~ start(0)*1
-          pe2m5 ~ g*1              #setting the intercepts (first time point) to be equal across time
-          pe2m7 ~ g*1
-          pe2m10 ~ g*1
-          pe2m12 ~ g*1
-
-          #variances/covariances
-          si05 ~~ 1*si05
-          si07 ~~ start(1)*si07
-          si10 ~~ start(1)*si10
-          si12 ~~ start(1)*si12
-          
-          pe2m5 ~~ pe2m7 + pe2m10 + pe2m12
-          pe2m7 ~~ pe2m10 + pe2m12
-          pe2m10 ~~ pe2m12
-        
-          pe4m5 ~~ pe4m7 + pe4m10 + pe4m12
-          pe4m7 ~~ pe4m10 + pe4m12
-          pe4m10 ~~ pe4m12
-          
-          pe7m5 ~~ pe7m7 + pe7m10 + pe7m12
-          pe7m7 ~~ pe7m10 + pe7m12
-          pe7m10 ~~ pe7m12
-          
-          pe11m5 ~~ pe11m7 + pe11m10 + pe11m12
-          pe11m7 ~~ pe11m10 + pe11m12
-          pe11m10 ~~ pe11m12
-          
-          pe13m5 ~~ pe13m7 + pe13m10 + pe13m12
-          pe13m7 ~~ pe13m10 + pe13m12
-          pe13m10 ~~ pe13m12
-          
-          pe25m5 ~~ pe25m7 + pe25m10 + pe25m12
-          pe25m7 ~~ pe25m10 + pe25m12
-          pe25m10 ~~ pe25m12
-    
-         '
-
-weak.invar.si.fit <- sem(weak.invar.si, 
-                  data = dat, 
-                  meanstructure = TRUE,
-                  ordered = TRUE)
-
-summary(weak.invar.si.fit, 
-        fit.measures = TRUE, 
-        estimates = TRUE)
-```
-
-We are primarily concerned with model fit at this point, so we focus on that output for the time being:
-  Comparative Fit Index (CFI)                    0.903
-  Tucker-Lewis Index (TLI)                       0.880
-  Akaike (AIC)                               35658.740
-  Bayesian (BIC)                             36216.252
-  Sample-size adjusted Bayesian (BIC)        35901.720
-  RMSEA                                          0.061
-  SRMR                                           0.056
+```{r specify RICLPMt_multi_hyp_S1}
+RICLPMt_multi_hyp_S1 <- '
+  ################
+  # BETWEEN PART #
+  ################
   
-The overall fit of the weak invariance model is reasonably good. 
-We can compute the likelihood ratio test to compare the change in fit between the configural (config) and the weak (weak) invariance models:
+  # Create between factors (random intercepts) for each item of hyperactivity (teacher report)
+  RIhyp1 =~ 1*trf92e5 + 1*trf92e7 + 1*trf92e10 + 1*trf92e12
+  RIhyp2 =~ 1*trf93e5 + 1*trf93e7 + 1*trf93e10 + 1*trf93e12
+  RIhyp3 =~ 1*trf104e5 + 1*trf104e7 + 1*trf104e10 + 1*trf104e12
+  RIhyp4 =~ 1*trf105e5 + 1*trf105e7 + 1*trf105e10 + 1*trf105e12
+  RIhyp5 =~ 1*trf100e5 + 1*trf100e7 + 1*trf100e10 + 1*trf100e12
+  RIhyp6 =~ 1*trf101e5 + 1*trf101e7 + 1*trf101e10 + 1*trf101e12
+  RIhyp7 =~ 1*trf102e5 + 1*trf102e7 + 1*trf102e10 + 1*trf102e12
+  RIhyp8 =~ 1*trf103e5 + 1*trf103e7 + 1*trf103e10 + 1*trf103e12
+  RIhyp9 =~ 1*trf66e5 + 1*trf66e7 + 1*trf66e10 + 1*trf66e12
   
-```{r LRT config.si and weak.invar.si}
-lavTestLRT(config.si.fit, weak.invar.si.fit)
-```
+  # Create between factors (random intercepts) for each item of social isolation (teacher report)
+  RIsi1 =~ 1*trf11e5 + 1*trf11e7 + 1*trf11e10 + 1*trf11e12 
+  RIsi2 =~ 1*trf19e5 + 1*trf19e7 + 1*trf19e10 + 1*trf19e12
+  RIsi3 =~ 1*trf24e5 + 1*trf24e7 + 1*trf24e10 + 1*trf24e12
+  RIsi4 =~ 1*trf30e5 + 1*trf30e7 + 1*trf30e10 + 1*trf30e12
+  RIsi5 =~ 1*trf34e5 + 1*trf34e7 + 1*trf34e10 + 1*trf34e12
+  RIsi6 =~ 1*trf77e5 + 1*trf77e7 + 1*trf77e10 + 1*trf77e12
   
-The LRT shows **significant loss in fit** associated with imposing equality on the factor loadings over time. Since weak invariance does not hold, we can NOT conclude that we are measuring the same construct over time, and we are NOT measuring this construct in comparable units. As we cannot show weak invariance, we cannot make comparisons between factor variances and covariances for social isolation. 
-
-#### ADHD: Inattention
-
-##### Configural invariance
-
-```{r config invariance inattention}
-config.inat <- '#factor loadings - NA stops setting first item as a loading of 1
-          inat05 =~ NA*pe81m5 + a*pe81m5 + pe82m5 + pe83m5 + pe86m5 + pe87m5 + pe88m5 + pe89m5 + pe90m5 + pe91m5
-          inat07 =~ NA*pe81m7 + a*pe81m7 + pe82m7 + pe83m7 + pe86m7 + pe87m7 + pe88m7 + pe89m7 + pe90m7 + pe91m7
-          inat10 =~ NA*pe81m10 + a*pe81m10 + pe82m10 + pe83m10 + pe86m10 + pe87m10 + pe88m10 + pe89m10 + pe90m10 + pe91m10
-          inat12 =~ NA*pe81m12 + a*pe81m12 + pe82m12 + pe83m12 + pe86m12 + pe87m12 + pe88m12 + pe89m12 + pe90m12 + pe91m12
-
-          #means/intercepts
-          inat05 ~ 0*1                  #set the intercept of latent factor at the first time point to 0 by pre- multiplying the intercept (1) by 0. 
-          inat07 ~ start(0)*1           #specifying a starting value can assist with model convergence or reduce model run time
-          inat10 ~ start(0)*1
-          inat12 ~ start(0)*1
-          pe81m5 ~ b*1              #setting the intercepts to be equal across time
-          pe81m7 ~ b*1
-          pe81m10 ~ b*1
-          pe81m12 ~ b*1
-
-          #variances/covariances
-          inat05 ~~ 1*inat05
-          inat07 ~~ start(1)*inat07
-          inat10 ~~ start(1)*inat10
-          inat12 ~~ start(1)*inat12
-          
-          pe81m5 ~~ pe81m7 + pe81m10 + pe81m12
-          pe81m7 ~~ pe81m10 + pe81m12
-          pe81m10 ~~ pe81m12
-          
-          pe82m5 ~~ pe82m7 + pe82m10 + pe82m12
-          pe82m7 ~~ pe82m10 + pe82m12
-          pe82m10 ~~ pe82m12
-          
-          pe83m5 ~~ pe83m7 + pe83m10 + pe83m12
-          pe83m7 ~~ pe83m10 + pe83m12
-          pe83m10 ~~ pe83m12
-          
-          pe86m5 ~~ pe86m7 + pe86m10 + pe86m12
-          pe86m7 ~~ pe86m10 + pe86m12
-          pe86m10 ~~ pe86m12
-          
-          pe87m5 ~~ pe87m7 + pe87m10 + pe87m12
-          pe87m7 ~~ pe87m10 + pe87m12
-          pe87m10 ~~ pe87m12
-          
-          pe88m5 ~~ pe88m7 + pe88m10 + pe88m12
-          pe88m7 ~~ pe88m10 + pe88m12
-          pe88m10 ~~ pe88m12
-          
-          pe89m5 ~~ pe89m7 + pe89m10 + pe89m12
-          pe89m7 ~~ pe89m10 + pe89m12
-          pe89m10 ~~ pe89m12
-          
-          pe90m5 ~~ pe90m7 + pe90m10 + pe90m12
-          pe90m7 ~~ pe90m10 + pe90m12
-          pe90m10 ~~ pe90m12
-          
-          pe91m5 ~~ pe91m7 + pe91m10 + pe91m12
-          pe91m7 ~~ pe91m10 + pe91m12
-          pe91m10 ~~ pe91m12
-         '
-
-config.inat.fit <- sem(config.inat, 
-                  data = dat, 
-                  meanstructure = TRUE,
-                  ordered = TRUE)
-
-summary(config.inat.fit, 
-        fit.measures = TRUE, 
-        estimates = TRUE)
+  ##################################
+  # WITHIN PART: MEASUREMENT MODEL #
+  ##################################
+  
+  # Factor models for hyperactivity symptoms at 4 waves
+  WFhyp5 =~ trf92e5 + trf93e5 + trf104e5 + trf105e5 + trf100e5 + trf101e5 + trf102e5 + trf103e5 + trf66e5
+  WFhyp7 =~ trf92e7 + trf93e7 + trf104e7 + trf105e7 + trf100e7 + trf101e7 + trf102e7 + trf103e7 + trf66e7
+  WFhyp10 =~ trf92e10 + trf93e10 + trf104e10 + trf105e10 + trf100e10 + trf101e10 + trf102e10 + trf103e10 + trf66e10
+  WFhyp12 =~ trf92e12 + trf93e12 + trf104e12 + trf105e12 + trf100e12 + trf101e12 + trf102e12 + trf103e12 + trf66e12
+  
+  # Factor models for social isolation at 4 waves
+  WFsi5 =~ trf11e5 + trf19e5 + trf24e5 + trf30e5 + trf34e5 + trf77e5 
+  WFsi7 =~ trf11e7 + trf19e7 + trf24e7 + trf30e7 + trf34e7 + trf77e7 
+  WFsi10 =~ trf11e10 + trf19e10 + trf24e10 + trf30e10 + trf34e10 + trf77e10 
+  WFsi12 =~ trf11e12 + trf19e12 + trf24e12 + trf30e12 + trf34e12 + trf77e12
+  
+  #########################
+  # WITHIN PART: DYNAMICS #
+  #########################
+  
+  # Specify the lagged effects between the within-person centered latent variables
+  WFhyp7 + WFsi7 ~ WFhyp5 + WFsi5
+  WFhyp10 + WFsi10 ~ WFhyp7 + WFsi7
+  WFhyp12 + WFsi12 ~ WFhyp10 + WFsi10
+  
+  # Estimate the correlations within the same wave
+  WFhyp5 ~~ WFsi5
+  WFhyp7 ~~ WFsi7
+  WFhyp10 ~~ WFsi10 
+  WFhyp12 ~~ WFsi12
+  
+  ##########################
+  # ADDITIONAL CONSTRAINTS #
+  ##########################
+  
+  # Constrain covariance of the between factors and exogenous within factors to 0
+  RIhyp1 + RIhyp2 + RIhyp3 + RIhyp4 + RIhyp5 + RIhyp6 + RIhyp7 + RIhyp8 + RIhyp9 + RIsi1 + RIsi2 + RIsi3 + RIsi4 + RIsi5 + RIsi6 ~~ 0*WFsi5 + 0*WFhyp5
+'
 ```
 
-As this is the first model in a series, we are primarily interested in model fit to the observed data:
-Comparative Fit Index (CFI)                    0.923 (≥ 0.95)
-Tucker-Lewis Index (TLI)                       0.909 (≥ 0.95)
-Akaike (AIC)                              116070.664
-Bayesian (BIC)                            117013.952
-Sample-size adjusted Bayesian (BIC)       116480.204
-RMSEA                                          0.051 (≤ 0.06)
-SRMR                                           0.046 (≤ 0.08) 
-- All measures indicate an adequate fit of the model to the data, and we conclude configural invariance holds (just!). This implies the construct itself is the same over time, but we do not know if we can measure it comparably at each time point. Prior to examining model results in detail (e.g., loadings, variances, etc.) we must first evaluate higher forms of invariance. We will begin with weak invariance.
+```{r fit RICLPMt_multi_hyp_S1}
+RICLPMt_multi_hyp_S1.fit <- cfa(RICLPMt_multi_hyp_S1, 
+                           data = dat, 
+                          # se = "robust",          # computes robust standard errors to account for use of twins
+                           ordered = TRUE,          # using the "ordered" option will use DWLS with polychoric correlations for the ordinal variables
+                           missing = 'pairwise'   # only excludes people who are missing both variables
+)
 
-#### Weak invariance 
-
-```{r weak invariance inattention}
-weak.invar.inat <- '#factor loadings - NA stops setting first item as a loading of 1
-          inat05 =~ NA*pe81m5 + a*pe81m5 + b*pe82m5 + c*pe83m5 + d*pe86m5 + e*pe87m5 + f*pe88m5 + g*pe89m5 + h*pe90m5 + i*pe91m5
-          inat07 =~ NA*pe81m7 + a*pe81m7 + b*pe82m7 + c*pe83m7 + d*pe86m7 + e*pe87m7 + f*pe88m7 + g*pe89m7 + h*pe90m7 + i*pe91m7
-          inat10 =~ NA*pe81m10 + a*pe81m10 + b*pe82m10 + c*pe83m10 + d*pe86m10 + e*pe87m10 + f*pe88m10 + g*pe89m10 + h*pe90m10 + i*pe91m10
-          inat12 =~ NA*pe81m12 + a*pe81m12 + b*pe82m12 + c*pe83m12 + d*pe86m12 + e*pe87m12 + f*pe88m12 + g*pe89m12 + h*pe90m12 + i*pe91m12
-
-          #means/intercepts
-          inat05 ~ 0*1                  #set the intercept of latent factor at the first time point to 0 by pre- multiplying the intercept (1) by 0. 
-          inat07 ~ start(0)*1           #specifying a starting value can assist with model convergence or reduce model run time
-          inat10 ~ start(0)*1
-          inat12 ~ start(0)*1
-          pe81m5 ~ j*1              #setting the intercepts to be equal across time
-          pe81m7 ~ j*1
-          pe81m10 ~ j*1
-          pe81m12 ~ j*1
-
-          #variances/covariances
-          inat05 ~~ 1*inat05
-          inat07 ~~ start(1)*inat07
-          inat10 ~~ start(1)*inat10
-          inat12 ~~ start(1)*inat12
-          
-          pe81m5 ~~ pe81m7 + pe81m10 + pe81m12
-          pe81m7 ~~ pe81m10 + pe81m12
-          pe81m10 ~~ pe81m12
-          
-          pe82m5 ~~ pe82m7 + pe82m10 + pe82m12
-          pe82m7 ~~ pe82m10 + pe82m12
-          pe82m10 ~~ pe82m12
-          
-          pe83m5 ~~ pe83m7 + pe83m10 + pe83m12
-          pe83m7 ~~ pe83m10 + pe83m12
-          pe83m10 ~~ pe83m12
-          
-          pe86m5 ~~ pe86m7 + pe86m10 + pe86m12
-          pe86m7 ~~ pe86m10 + pe86m12
-          pe86m10 ~~ pe86m12
-          
-          pe87m5 ~~ pe87m7 + pe87m10 + pe87m12
-          pe87m7 ~~ pe87m10 + pe87m12
-          pe87m10 ~~ pe87m12
-          
-          pe88m5 ~~ pe88m7 + pe88m10 + pe88m12
-          pe88m7 ~~ pe88m10 + pe88m12
-          pe88m10 ~~ pe88m12
-          
-          pe89m5 ~~ pe89m7 + pe89m10 + pe89m12
-          pe89m7 ~~ pe89m10 + pe89m12
-          pe89m10 ~~ pe89m12
-          
-          pe90m5 ~~ pe90m7 + pe90m10 + pe90m12
-          pe90m7 ~~ pe90m10 + pe90m12
-          pe90m10 ~~ pe90m12
-          
-          pe91m5 ~~ pe91m7 + pe91m10 + pe91m12
-          pe91m7 ~~ pe91m10 + pe91m12
-          pe91m10 ~~ pe91m12
-         '
-
-weak.invar.inat.fit <- sem(weak.invar.inat, 
-                  data = dat, 
-                  meanstructure = TRUE,
-                  ordered = TRUE)
-
-summary(weak.invar.inat.fit, 
-        fit.measures = TRUE, 
-        estimates = TRUE)
+summary(RICLPMt_multi_hyp_S1.fit, 
+        fit.measures = TRUE,
+        standardized = TRUE)
 ```
 
-Comparative Fit Index (CFI)                    0.922
-Tucker-Lewis Index (TLI)                       0.912
-Akaike (AIC)                              116083.972
-Bayesian (BIC)                            116892.504
-Sample-size adjusted Bayesian (BIC)       116435.007
-RMSEA                                          0.050
-SRMR                                           0.047
+S1 Model fit:
+Comparative Fit Index (CFI)                    0.992 (>0.95)
+Tucker-Lewis Index (TLI)                       0.991 (>0.95)      
+RMSEA                                          0.015 (≤ 0.06)         
+90 Percent confidence interval - lower         0.014 
+90 Percent confidence interval - upper         0.017       
+SRMR                                           0.058 (≤ 0.08)      
 
-Still adequate fit. 
+We can conclude that the model shows good fit. 
 
-We can compute the likelihood ratio test to compare the change in fit between the configural (config) and the weak (weak) invariance models:
+## RICLPMt_multi_hyp_S2: Hyperactivity step 2 
+
+**Multiple response items RICLPMt mother report hyperactivity ADHD symptoms and social isolation: Step 2**.
+If configural variance is supported, we next test for weak invariance (sometimes called metric invariance). This tests for the equivalence of the item loadings on the factors. Weak (metric) invariance means that each item contributes to the latent construct to a similar degree across groups. this is tested by constraining factor loadings (i.e., the loadings of the items on the constructs) to be equivalent in the two time points (Putnick and Bornstein, 2016). The model with constrained factor loadings (S2) is then compared to the configural invariance model (S1) to determine fit. If the overall model fit is significantly worse in the weak invariance model compared to the configural invariance model, it indicates that at least one loading is not equivalent across the groups, and weak invariance is not supported.
+
+In our second  step model, we constrain the factor loadings to be invariant over time using the labels `a*`, `b*`, `c*`, `d*` etc, in the "within" part of the model. 
+
+```{r specify RICLPMt_multi_hyp_S2}
+RICLPMt_multi_hyp_S2 <- '
+  ################
+  # BETWEEN PART #
+  ################
   
-```{r LRT config.inat and weak.invar.inat}
-lavTestLRT(config.inat.fit, weak.invar.inat.fit)
+  # Create between factors (random intercepts) for each item of hyperactivity (teacher report)
+  RIhyp1 =~ 1*trf92e5 + 1*trf92e7 + 1*trf92e10 + 1*trf92e12
+  RIhyp2 =~ 1*trf93e5 + 1*trf93e7 + 1*trf93e10 + 1*trf93e12
+  RIhyp3 =~ 1*trf104e5 + 1*trf104e7 + 1*trf104e10 + 1*trf104e12
+  RIhyp4 =~ 1*trf105e5 + 1*trf105e7 + 1*trf105e10 + 1*trf105e12
+  RIhyp5 =~ 1*trf100e5 + 1*trf100e7 + 1*trf100e10 + 1*trf100e12
+  RIhyp6 =~ 1*trf101e5 + 1*trf101e7 + 1*trf101e10 + 1*trf101e12
+  RIhyp7 =~ 1*trf102e5 + 1*trf102e7 + 1*trf102e10 + 1*trf102e12
+  RIhyp8 =~ 1*trf103e5 + 1*trf103e7 + 1*trf103e10 + 1*trf103e12
+  RIhyp9 =~ 1*trf66e5 + 1*trf66e7 + 1*trf66e10 + 1*trf66e12
+  
+  # Create between factors (random intercepts) for each item of social isolation (teacher report)
+  RIsi1 =~ 1*trf11e5 + 1*trf11e7 + 1*trf11e10 + 1*trf11e12 
+  RIsi2 =~ 1*trf19e5 + 1*trf19e7 + 1*trf19e10 + 1*trf19e12
+  RIsi3 =~ 1*trf24e5 + 1*trf24e7 + 1*trf24e10 + 1*trf24e12
+  RIsi4 =~ 1*trf30e5 + 1*trf30e7 + 1*trf30e10 + 1*trf30e12
+  RIsi5 =~ 1*trf34e5 + 1*trf34e7 + 1*trf34e10 + 1*trf34e12
+  RIsi6 =~ 1*trf77e5 + 1*trf77e7 + 1*trf77e10 + 1*trf77e12
+  
+  ##################################
+  # WITHIN PART: MEASUREMENT MODEL #
+  ##################################
+  
+  # Factor models for hyperactivity symptoms at 4 waves
+  WFhyp5 =~ a*trf92e5 + b*trf93e5 + c*trf104e5 + d*trf105e5 + e*trf100e5 + f*trf101e5 + g*trf102e5 + h*trf103e5 + i*trf66e5
+  WFhyp7 =~ a*trf92e7 + b*trf93e7 + c*trf104e7 + d*trf105e7 + e*trf100e7 + f*trf101e7 + g*trf102e7 + h*trf103e7 + i*trf66e7
+  WFhyp10 =~ a*trf92e10 + b*trf93e10 + c*trf104e10 + d*trf105e10 + e*trf100e10 + f*trf101e10 + g*trf102e10 + h*trf103e10 + i*trf66e10
+  WFhyp12 =~ a*trf92e12 + b*trf93e12 + c*trf104e12 + d*trf105e12 + e*trf100e12 + f*trf101e12 + g*trf102e12 + h*trf103e12 + i*trf66e12
+  
+  # Factor models for social isolation at 4 waves
+  WFsi5 =~ j*trf11e5 + k*trf19e5 + l*trf24e5 + m*trf30e5 + n*trf34e5 + o*trf77e5 
+  WFsi7 =~ j*trf11e7 + k*trf19e7 + l*trf24e7 + m*trf30e7 + n*trf34e7 + o*trf77e7 
+  WFsi10 =~ j*trf11e10 + k*trf19e10 + l*trf24e10 + m*trf30e10 + n*trf34e10 + o*trf77e10 
+  WFsi12 =~ j*trf11e12 + k*trf19e12 + l*trf24e12 + m*trf30e12 + n*trf34e12 + o*trf77e12
+  
+  #########################
+  # WITHIN PART: DYNAMICS #
+  #########################
+  
+  # Specify the lagged effects between the within-person centered latent variables
+  WFhyp7 + WFsi7 ~ WFhyp5 + WFsi5
+  WFhyp10 + WFsi10 ~ WFhyp7 + WFsi7
+  WFhyp12 + WFsi12 ~ WFhyp10 + WFsi10
+  
+  # Estimate the correlations within the same wave
+  WFhyp5 ~~ WFsi5
+  WFhyp7 ~~ WFsi7
+  WFhyp10 ~~ WFsi10 
+  WFhyp12 ~~ WFsi12
+  
+  ##########################
+  # ADDITIONAL CONSTRAINTS #
+  ##########################
+  
+  # Constrain covariance of the between factors and exogenous within factors to 0
+  RIhyp1 + RIhyp2 + RIhyp3 + RIhyp4 + RIhyp5 + RIhyp6 + RIhyp7 + RIhyp8 + RIhyp9 + RIsi1 + RIsi2 + RIsi3 + RIsi4 + RIsi5 + RIsi6 ~~ 0*WFsi5 + 0*WFhyp5
+'
 ```
+
+```{r fit RICLPMt_multi_hyp_S2}
+RICLPMt_multi_hyp_S2.fit <- cfa(RICLPMt_multi_hyp_S2, 
+                           data = dat, 
+                         #  se = "robust",
+                           ordered = TRUE,
+                           missing = 'pairwise'
+                           )
+
+summary(RICLPMt_multi_hyp_S2.fit, 
+        fit.measures = TRUE,
+        standardized = TRUE)
+```
+
+S2 Model fit (without robust se):
+(We have included here the change in CFI, TLI and RMSEA compared to the S1 model)
+Comparative Fit Index (CFI)                    0.991 (>0.95)    Change in CFI:   0.001 (decrease) - worse fit 
+Tucker-Lewis Index (TLI)                       0.990 (>0.95)    Change in TLI:   0.001 (decrease) - worse fit 
+RMSEA                                          0.016 (≤ 0.06)   Change in RMSEA: 0.001 (increase) - worse fit
+90 Percent confidence interval - lower         0.014 
+90 Percent confidence interval - upper         0.017       
+SRMR                                           0.060 (≤ 0.08)   Change in SRMR: 0.002 (increase)  - worse fit
+
+Now we need to conduct a Likelihood ratio test to see if the constrained model is a significantly worse fit than the free loading model. By constraining the factor loadings over time we can assume that the items load onto the same construct in the same way at each time point. We use the compareFit command which gives the LRT with the comparison in model fit for the two models. 
+
+```{r LRT for RICLPMt_multi_hyp_S1.fit and RICLPMt_multi_hyp_S2.fit}
+lavTestLRT(RICLPMt_multi_hyp_S1.fit, RICLPMt_multi_hyp_S2.fit)
+```
+
+```{r compare fit RICLPMt_multi_hyp_S1 and RICLPMt_hyp_S2}
+summary(semTools::compareFit(RICLPMt_multi_hyp_S1.fit, RICLPMt_multi_hyp_S2.fit, nested = TRUE)) #† indicates the best fitting model 
+```
+
+Significantly worse fit to include the restrictions, p<0.0001.
+
+*The difference in model fit is still smaller than 0.01 - so we can assume that weak invariance holds - even though there is a significant chi square test.*
+
+We will now go onto strong invariance testing. 
+
+## RICLPMt_multi_hyp_S3
+
+**Multiple response items RICLPMt mother report hyperactivity ADHD symptoms and social isolation: Step 3** 
+
+If full or partial weak invariance is supported, the next step is to test for strong (scalar) invariance, or equivalence of item intercepts, for weak invariant items. Strong invariance means that mean differences in the latent construct capture all mean differences in the shared variance of the items. Strong invariance is tested by constraining the item intercepts to be equivalent in the two groups - with the restarint applied in the weak invariance model retained. *Any items that had unequal loadings in the weak invariance model (and were allowed to vary) should be allowed to vary in the strong invariance model because it is meaningless to test for equal item intercepts if the factor loadings of the items differs across groups* (Putnick and Bornstein, 2016). 
+
+Fitting a model with constraints to ensure strong factorial invariance, with a random intercept for each indicator separately.
+
+```{r specify RICLPMt_multi_hyp_S3}
+RICLPMt_multi_hyp_S3 <- '
+  ################
+  # BETWEEN PART #
+  ################
   
-Thus the LRT shows **significant loss in fit** associated with imposing equality on the factor loadings over time. 
-Since weak invariance does not holds, we can NOT conclude that we are measuring the same construct over time, and we are NOT measuring this construct in comparable units. As we cannot show weak invariance, we cannot make comparisons between factor variances and covariances for ADHD. 
+  # Create between factors (random intercepts) for each item of hyperactivity (teacher report)
+  RIhyp1 =~ 1*trf92e5 + 1*trf92e7 + 1*trf92e10 + 1*trf92e12
+  RIhyp2 =~ 1*trf93e5 + 1*trf93e7 + 1*trf93e10 + 1*trf93e12
+  RIhyp3 =~ 1*trf104e5 + 1*trf104e7 + 1*trf104e10 + 1*trf104e12
+  RIhyp4 =~ 1*trf105e5 + 1*trf105e7 + 1*trf105e10 + 1*trf105e12
+  RIhyp5 =~ 1*trf100e5 + 1*trf100e7 + 1*trf100e10 + 1*trf100e12
+  RIhyp6 =~ 1*trf101e5 + 1*trf101e7 + 1*trf101e10 + 1*trf101e12
+  RIhyp7 =~ 1*trf102e5 + 1*trf102e7 + 1*trf102e10 + 1*trf102e12
+  RIhyp8 =~ 1*trf103e5 + 1*trf103e7 + 1*trf103e10 + 1*trf103e12
+  RIhyp9 =~ 1*trf66e5 + 1*trf66e7 + 1*trf66e10 + 1*trf66e12
+  
+  # Create between factors (random intercepts) for each item of social isolation (teacher report)
+  RIsi1 =~ 1*trf11e5 + 1*trf11e7 + 1*trf11e10 + 1*trf11e12 
+  RIsi2 =~ 1*trf19e5 + 1*trf19e7 + 1*trf19e10 + 1*trf19e12
+  RIsi3 =~ 1*trf24e5 + 1*trf24e7 + 1*trf24e10 + 1*trf24e12
+  RIsi4 =~ 1*trf30e5 + 1*trf30e7 + 1*trf30e10 + 1*trf30e12
+  RIsi5 =~ 1*trf34e5 + 1*trf34e7 + 1*trf34e10 + 1*trf34e12
+  RIsi6 =~ 1*trf77e5 + 1*trf77e7 + 1*trf77e10 + 1*trf77e12
+  
+  ##################################
+  # WITHIN PART: MEASUREMENT MODEL #
+  ##################################
+  
+  # Factor models for hyperactivity symptoms at 4 waves (constrained)
+  WFhyp5 =~ a*trf92e5 + b*trf93e5 + c*trf104e5 + d*trf105e5 + e*trf100e5 + f*trf101e5 + g*trf102e5 + h*trf103e5 + i*trf66e5
+  WFhyp7 =~ a*trf92e7 + b*trf93e7 + c*trf104e7 + d*trf105e7 + e*trf100e7 + f*trf101e7 + g*trf102e7 + h*trf103e7 + i*trf66e7
+  WFhyp10 =~ a*trf92e10 + b*trf93e10 + c*trf104e10 + d*trf105e10 + e*trf100e10 + f*trf101e10 + g*trf102e10 + h*trf103e10 + i*trf66e10
+  WFhyp12 =~ a*trf92e12 + b*trf93e12 + c*trf104e12 + d*trf105e12 + e*trf100e12 + f*trf101e12 + g*trf102e12 + h*trf103e12 + i*trf66e12
+  
+  # Factor models for social isolation at 4 waves (constrained)
+  WFsi5 =~ j*trf11e5 + k*trf19e5 + l*trf24e5 + m*trf30e5 + n*trf34e5 + o*trf77e5 
+  WFsi7 =~ j*trf11e7 + k*trf19e7 + l*trf24e7 + m*trf30e7 + n*trf34e7 + o*trf77e7 
+  WFsi10 =~ j*trf11e10 + k*trf19e10 + l*trf24e10 + m*trf30e10 + n*trf34e10 + o*trf77e10 
+  WFsi12 =~ j*trf11e12 + k*trf19e12 + l*trf24e12 + m*trf30e12 + n*trf34e12 + o*trf77e12
+  
+  # Constrained intercepts over time (this is necessary for strong factorial invariance; without these contraints we have week factorial invariance). 
+  trf92e5 + trf92e7 + trf92e10 + trf92e12 ~ p*1
+  trf93e5 + trf93e7 + trf93e10 + trf93e12 ~ q*1
+  trf104e5 + trf104e7 + trf104e10 + trf104e12 ~ r*1
+  trf105e5 + trf105e7 + trf105e10 + trf105e12 ~ s*1
+  trf100e5 + trf100e7 + trf100e10 + trf100e12 ~ t*1
+  trf101e5 + trf101e7 + trf101e10 + trf101e12 ~ u*1
+  trf102e5 + trf102e7 + trf102e10 + trf102e12 ~ v*1
+  trf103e5 + trf103e7 + trf103e10 + trf103e12 ~ w*1
+  trf66e5 + trf66e7 + trf66e10 + trf66e12 ~ x*1
+  
+  trf11e5 + trf11e7 + trf11e10 + trf11e12 ~ y*1
+  trf19e5 + trf19e7 + trf19e10 + trf19e12 ~ z*1
+  trf24e5 + trf24e7 + trf24e10 + trf24e12 ~ aa*1
+  trf30e5 + trf30e7 + trf30e10 + trf30e12 ~ ab*1
+  trf34e5 + trf34e7 + trf34e10 + trf34e12 ~ ac*1
+  trf77e5 + trf77e7 + trf77e10 + trf77e12 ~ ad*1
+  
+  # Free latent means from t = 2 onward (only do this in combination with the constraints on the intercepts; without these, this would not be specified).
+  WFhyp7 + WFhyp10 + WFhyp12 + WFsi7 + WFsi10 + WFsi12 ~ 1
+  
+  #########################
+  # WITHIN PART: DYNAMICS #
+  #########################
+  
+  # Specify the lagged effects between the within-person centered latent variables
+  WFhyp7 + WFsi7 ~ WFhyp5 + WFsi5
+  WFhyp10 + WFsi10 ~ WFhyp7 + WFsi7
+  WFhyp12 + WFsi12 ~ WFhyp10 + WFsi10
+  
+  # Estimate the correlations within the same wave
+  WFhyp5 ~~ WFsi5
+  WFhyp7 ~~ WFsi7
+  WFhyp10 ~~ WFsi10 
+  WFhyp12 ~~ WFsi12
+  
+  ##########################
+  # ADDITIONAL CONSTRAINTS #
+  ##########################
+  
+  # Constrain covariance of the between factors and exogenous within factors to 0
+  RIhyp1 + RIhyp2 + RIhyp3 + RIhyp4 + RIhyp5 + RIhyp6 + RIhyp7 + RIhyp8 + RIhyp9 + RIsi1 + RIsi2 + RIsi3 + RIsi4 + RIsi5 + RIsi6 ~~ 0*WFsi5 + 0*WFhyp5
+'
+```
+
+```{r fit RICLPMt_multi_hyp_S3}
+RICLPMt_multi_hyp_S3.fit <- cfa(RICLPMt_multi_hyp_S3, 
+                           data = dat, 
+                        #   se = "robust",
+                           ordered = TRUE,
+                           missing = 'pairwise'
+                           )
+
+RICLPMt_multi_hyp_S3.fit.summary <- summary(RICLPMt_multi_hyp_S3.fit, 
+                                            fit.measures = TRUE,
+                                            standardized = TRUE)
+```
+
+S3 Model fit:
+(We have included here the change in CFI, TLI and RMSEA compared to the S2 model)
+Comparative Fit Index (CFI)                    0.991 (>0.95)    Change in CFI:   0.000 (increase) - same fit 
+Tucker-Lewis Index (TLI)                       0.990 (>0.95)    Change in TLI:   0.000 (increase) - same fit 
+RMSEA                                          0.016 (≤ 0.06)   Change in RMSEA: 0.000 (decrease) - same fit
+90 Percent confidence interval - lower         0.014
+90 Percent confidence interval - upper         0.017     
+SRMR                                           0.060 (≤ 0.08)   Change in SRMR:  0.000 (increase)  - same fit 
+
+Now we need to conduct a Likelihood ratio test to see if the constrained model is a significantly worse fit than the free loading model. By constraining the factor loadings over time we can assume that the items load onto the same construct in the same way at each time point. We use the compareFit command which gives the LRT with the comparison in model fit for the two models. 
+
+```{r compare fit RICLPMt_multi_hyp_S2 and RICLPMt_hyp_S3}
+# summary(semTools::compareFit(RICLPMt_multi_hyp_S2.fit, RICLPMt_multi_hyp_S3.fit, nested = TRUE)) #† indicates the best fitting model - hashed out to keep script running
+```
+
+Again this function does not run - perhaps there is something wrong with the way we are running the S3 code.
+
+**But the model shows almost no change in model fit from S2 - so we assume strong measurement invariance.**
+
+## RICLPMt_multi_hyp_S4: Hyperactivity step 4 - *Full model*
+
+From Mulder and Hamaker (2021):
+A significant chi-square difference test would mean strong factorial invariance does not hold, implying that the actual scores cannot be compared over time, but individual differences in scores can still be meaningfully compared since weak factorial invariance holds. As the focus in cross-lagged panel modeling is primarily on comparing individual differences (by decomposing the observed scores into between-unit and withinunit components) rather than mean scores over time, weak factorial invariance may be enough. However, from a measurement point of view, having strong factorial invariance would be considered more ideal.
+
+Instead of including a random intercept at the observed level for each indicator separately (as done so far and in the upper part of the figure at the beginning of this document), we can also choose to specify the entire RI-CLPM at the latent level; this is illustrated in the lower part of the beginning figure. This can be done in either a model with weak or strong factorial invariance over time. To this end, we specify the common factors that capture both trait-like and state-like common variance, and thereby make the assumption that the trait- and state structures coincide. We then decompose these latent variables into a stable, between-unit part and the within-unit components.
+
+We set the factor loadings of these second-order factors to be identical to the corresponding factor loadings of the withinunit factors. Additionally, we constrain the residual variances for the first-order factors to zero. This model is nested under the model we just presented (top panel of the figure), and is statistically equivalent to the model presented in the lower panel of the figure. This implies that we can use a chi-square difference test to compare. 
+
+Multiple indicator RI-CLPM, 5 waves with 3 indicators for each variable at each wave (30 observed variables). Fitting a model with constraints to ensure strong factorial invariance, with the RI-CLPM at the latent level.
+
+```{r specify RICLPMt_multi_hyp_S4}
+RICLPMt_multi_hyp_S4 <- '
+  
+  #####################
+  # MEASUREMENT MODEL #
+  #####################
+  
+  # Factor models for hyperactivity symptoms at 4 waves (constrained)
+  Fhyp5 =~ a*trf92e5 + b*trf93e5 + c*trf104e5 + d*trf105e5 + e*trf100e5 + f*trf101e5 + g*trf102e5 + h*trf103e5 + i*trf66e5
+  Fhyp7 =~ a*trf92e7 + b*trf93e7 + c*trf104e7 + d*trf105e7 + e*trf100e7 + f*trf101e7 + g*trf102e7 + h*trf103e7 + i*trf66e7
+  Fhyp10 =~ a*trf92e10 + b*trf93e10 + c*trf104e10 + d*trf105e10 + e*trf100e10 + f*trf101e10 + g*trf102e10 + h*trf103e10 + i*trf66e10
+  Fhyp12 =~ a*trf92e12 + b*trf93e12 + c*trf104e12 + d*trf105e12 + e*trf100e12 + f*trf101e12 + g*trf102e12 + h*trf103e12 + i*trf66e12
+  
+  # Factor models for social isolation at 4 waves (constrained)
+  Fsi5 =~ j*trf11e5 + k*trf19e5 + l*trf24e5 + m*trf30e5 + n*trf34e5 + o*trf77e5 
+  Fsi7 =~ j*trf11e7 + k*trf19e7 + l*trf24e7 + m*trf30e7 + n*trf34e7 + o*trf77e7 
+  Fsi10 =~ j*trf11e10 + k*trf19e10 + l*trf24e10 + m*trf30e10 + n*trf34e10 + o*trf77e10 
+  Fsi12 =~ j*trf11e12 + k*trf19e12 + l*trf24e12 + m*trf30e12 + n*trf34e12 + o*trf77e12
+  
+  # Constrained intercepts over time (this is necessary for strong factorial invariance; without these contraints we have week factorial invariance). 
+  trf92e5 + trf92e7 + trf92e10 + trf92e12 ~ p*1
+  trf93e5 + trf93e7 + trf93e10 + trf93e12 ~ q*1
+  trf104e5 + trf104e7 + trf104e10 + trf104e12 ~ r*1
+  trf105e5 + trf105e7 + trf105e10 + trf105e12 ~ s*1
+  trf100e5 + trf100e7 + trf100e10 + trf100e12 ~ t*1
+  trf101e5 + trf101e7 + trf101e10 + trf101e12 ~ u*1
+  trf102e5 + trf102e7 + trf102e10 + trf102e12 ~ v*1
+  trf103e5 + trf103e7 + trf103e10 + trf103e12 ~ w*1
+  trf66e5 + trf66e7 + trf66e10 + trf66e12 ~ x*1
+  
+  trf11e5 + trf11e7 + trf11e10 + trf11e12 ~ y*1
+  trf19e5 + trf19e7 + trf19e10 + trf19e12 ~ z*1
+  trf24e5 + trf24e7 + trf24e10 + trf24e12 ~ aa*1
+  trf30e5 + trf30e7 + trf30e10 + trf30e12 ~ ab*1
+  trf34e5 + trf34e7 + trf34e10 + trf34e12 ~ ac*1
+  trf77e5 + trf77e7 + trf77e10 + trf77e12 ~ ad*1
+  
+  # Free latent means from t = 2 onward (only do this in combination with the constraints on the intercepts; without these, this would not be specified).
+  Fhyp7 + Fhyp10 + Fhyp12 + Fsi7 + Fsi10 + Fsi12 ~ 1
+  
+  ################
+  # BETWEEN PART #
+  ################
+  
+  # Create between factors (random intercepts) 
+  RIhyp =~ 1*Fhyp5 + 1*Fhyp7 + 1*Fhyp10 + 1*Fhyp12
+  RIsi =~ 1*Fsi5 + 1*Fsi7 + 1*Fsi10 + 1*Fsi12
+  
+  # Set the residual variances of all Fhyp and Fsi variables to 0. 
+  Fhyp5 ~~ 0*Fhyp5
+  Fhyp7 ~~ 0*Fhyp7
+  Fhyp10 ~~ 0*Fhyp10
+  Fhyp12 ~~ 0*Fhyp12
+  Fsi5 ~~ 0*Fsi5
+  Fsi7 ~~ 0*Fsi7
+  Fsi10 ~~ 0*Fsi10
+  Fsi12 ~~ 0*Fsi12
+  
+  ###############
+  # WITHIN PART #
+  ###############
+  
+  # Create the within-part
+  WFhyp5 =~ 1*Fhyp5
+  WFhyp7 =~ 1*Fhyp7
+  WFhyp10 =~ 1*Fhyp10
+  WFhyp12 =~ 1*Fhyp12
+  
+  WFsi5 =~ 1*Fsi5
+  WFsi7 =~ 1*Fsi7
+  WFsi10 =~ 1*Fsi10
+  WFsi12 =~ 1*Fsi12
+  
+  # Specify the lagged effects between the within-person centered latent variables
+  WFhyp7 + WFsi7 ~ WFhyp5 + WFsi5
+  WFhyp10 + WFsi10 ~ WFhyp7 + WFsi7
+  WFhyp12 + WFsi12 ~ WFhyp10 + WFsi10
+  
+  # Estimate the correlations within the same wave
+  WFhyp5 ~~ WFsi5
+  WFhyp7 ~~ WFsi7
+  WFhyp10 ~~ WFsi10 
+  WFhyp12 ~~ WFsi12
+  
+  ##########################
+  # ADDITIONAL CONSTRAINTS #
+  ##########################
+  
+  # Set correlations between the between-factors (random intercepts) and within-factors at wave 1 (age 5) at 0
+  RIhyp + RIsi ~~ 0*WFhyp5 + 0*WFsi5
+'
+```
+
+```{r fit RICLPMt_multi_hyp_S4}
+RICLPMt_multi_hyp_S4.fit <- cfa(RICLPMt_multi_hyp_S4, 
+                           data = dat, 
+                         #  se = "robust",
+                           ordered = TRUE,
+                           missing = 'pairwise'
+                           )
+
+summary(RICLPMt_multi_hyp_S4.fit, 
+        fit.measures = TRUE,
+        standardized = TRUE)
+```
+
+S4 Model fit:
+(We have included here the change in CFI, TLI and RMSEA compared to the S3 model)
+Comparative Fit Index (CFI)                    0.956 (>0.95)    Change in CFI:   0. (decrease) - worse fit 
+Tucker-Lewis Index (TLI)                       0.955 (>0.95)    Change in TLI:   0. (decrease) - worse fit 
+RMSEA                                          0. (≤ 0.06)   Change in RMSEA: 0. (increase) - worse fit
+90 Percent confidence interval - lower         0. 
+90 Percent confidence interval - upper         0.       
+SRMR                                           0. (≤ 0.08)   Change in SRMR: 0. (increase)  - worse fit 
+
+Now we need to conduct a Likelihood ratio test to see if the constrained model is a significantly worse fit than the free loading model. By constraining the factor loadings over time we can assume that the items load onto the same construct in the same way at each time point. We use the compareFit command which gives the LRT with the comparison in model fit for the two models. 
+
+```{r compare fit RICLPMt_multi_hyp_S3 and RICLPMt_hyp_inat_S4}
+summary(semTools::compareFit(RICLPMt_multi_hyp_S3.fit, RICLPMt_multi_hyp_S4.fit, nested = TRUE)) #† indicates the best fitting model
+```
+
+**As all fit indices changed by more than 0.01 - we cannot accept this measurement model.**
 
 ***
 
-#### ADHD: Hyperactivity/Impulsivity
-
-##### Configural invariance
-
-```{r config invariance hyperactivity}
-config.hyp <- '
-          #factor loadings - NA stops setting first item as a loading of 1
-          hyp05 =~ NA*pe84m5 + a*pe84m5 + pe85m5 + pe96m5 + pe97m5 + pe92m5 + pe93m5 + pe94m5 + pe95m5 + pe64m5
-          hyp07 =~ NA*pe84m7 + a*pe84m7 + pe85m7 + pe96m7 + pe97m7 + pe92m7 + pe93m7 + pe94m7 + pe95m7 + pe64m5
-          hyp10 =~ NA*pe84m10 + a*pe84m10 + pe85m10 + pe96m10 + pe97m10 + pe92m10 + pe93m10 + pe94m10 + pe95m10 + pe64m5
-          hyp12 =~ NA*pe84m12 + a*pe84m12 + pe85m12 + pe96m12 + pe97m12 + pe92m12 + pe93m12 + pe94m10 + pe95m10 + pe64m5
-          
-          #means/intercepts
-          hyp05 ~ 0*1            #set the intercept of latent factor at the first time point to 0 by pre- multiplying the intercept (1) by 0. 
-          hyp07 ~ start(0)*1     #specifying a starting value can assist with model convergence or reduce model run time
-          hyp10 ~ start(0)*1
-          hyp12 ~ start(0)*1
-          pe84m5 ~ b*1           #setting the intercepts to be equal across time
-          pe84m7 ~ b*1
-          pe84m10 ~ b*1
-          pe84m12 ~ b*1
-
-          #variances/covariances
-          hyp05 ~~ 1*hyp05
-          hyp07 ~~ start(1)*hyp07
-          hyp10 ~~ start(1)*hyp10
-          hyp12 ~~ start(1)*hyp12
-          
-          pe84m5 ~~ pe84m7 + pe84m10 + pe84m12
-          pe84m7 ~~ pe84m10 + pe84m12
-          pe84m10 ~~ pe84m12
-          
-          pe85m5 ~~ pe85m7 + pe85m10 + pe85m12
-          pe85m7 ~~ pe85m10 + pe85m12
-          pe85m10 ~~ pe85m12
-          
-          pe96m5 ~~ pe96m7 + pe96m10 + pe96m12
-          pe96m7 ~~ pe96m10 + pe96m12
-          pe96m10 ~~ pe96m12
-          
-          pe97m5 ~~ pe97m7 + pe97m10 + pe97m12
-          pe97m7 ~~ pe97m10 + pe97m12
-          pe97m10 ~~ pe97m12
-          
-          pe92m5 ~~ pe92m7 + pe92m10 + pe92m12
-          pe92m7 ~~ pe92m10 + pe92m12
-          pe92m10 ~~ pe92m12
-          
-          pe93m5 ~~ pe93m7 + pe93m10 + pe93m12
-          pe93m7 ~~ pe93m10 + pe93m12
-          pe93m10 ~~ pe93m12
-          
-          pe94m5 ~~ pe94m7 + pe94m10 + pe94m12
-          pe94m7 ~~ pe94m10 + pe94m12
-          pe94m10 ~~ pe94m12
-          
-          pe95m5 ~~ pe95m7 + pe95m10 + pe95m12
-          pe95m7 ~~ pe95m10 + pe95m12
-          pe95m10 ~~ pe95m12
-          
-          pe64m5 ~~ pe64m7 + pe64m10 + pe64m12
-          pe64m7 ~~ pe64m10 + pe64m12
-          pe64m10 ~~ pe64m12
-         '
-
-config.hyp.fit <- sem(config.hyp, 
-                  data = dat, 
-                  meanstructure = TRUE,
-                  ordered = TRUE)
-
-summary(config.hyp.fit, 
-        fit.measures = TRUE, 
-        estimates = TRUE)
-```
-
-As this is the first model in a series, we are primarily interested in model fit to the observed data:
-Comparative Fit Index (CFI)                    0.817 (≥ 0.95)
-Tucker-Lewis Index (TLI)                       0.784 (≥ 0.95)
-Akaike (AIC)                              128298.712
-Bayesian (BIC)                            129242.660
-Sample-size adjusted Bayesian (BIC)       128708.912
-RMSEA                                          0.081 (≤ 0.06)
-SRMR                                           0.164 (≤ 0.08) 
-- All measures indicate a poor fit of the model to the data. 
-
-#### Weak invariance 
-
-```{r weak invariance hyperactivity}
-weak.invar.hyp <- '
-          #factor loadings - NA stops setting first item as a loading of 1
-          hyp05 =~ NA*pe84m5 + a*pe84m5 + b*pe85m5 + c*pe96m5 + d*pe97m5 + e*pe92m5 + f*pe93m5 + g*pe94m5 + h*pe95m5 + i*pe64m5
-          hyp07 =~ NA*pe84m7 + a*pe84m7 + b*pe85m7 + c*pe96m7 + d*pe97m7 + e*pe92m7 + f*pe93m7 + g*pe94m7 + h*pe95m7 + i*pe64m5
-          hyp10 =~ NA*pe84m10 + a*pe84m10 + b*pe85m10 + c*pe96m10 + d*pe97m10 + e*pe92m10 + f*pe93m10 + g*pe94m10 + h*pe95m10 + i*pe64m5
-          hyp12 =~ NA*pe84m12 + a*pe84m12 + b*pe85m12 + c*pe96m12 + d*pe97m12 + e*pe92m12 + f*pe93m12 + g*pe94m10 + h*pe95m10 + i*pe64m5
-          
-          #means/intercepts
-          hyp05 ~ 0*1            #set the intercept of latent factor at the first time point to 0 by pre- multiplying the intercept (1) by 0. 
-          hyp07 ~ start(0)*1     #specifying a starting value can assist with model convergence or reduce model run time
-          hyp10 ~ start(0)*1
-          hyp12 ~ start(0)*1
-          pe84m5 ~ j*1           #setting the intercepts to be equal across time
-          pe84m7 ~ j*1
-          pe84m10 ~ j*1
-          pe84m12 ~ j*1
-
-          #variances/covariances
-          hyp05 ~~ 1*hyp05
-          hyp07 ~~ start(1)*hyp07
-          hyp10 ~~ start(1)*hyp10
-          hyp12 ~~ start(1)*hyp12
-          
-          pe84m5 ~~ pe84m7 + pe84m10 + pe84m12
-          pe84m7 ~~ pe84m10 + pe84m12
-          pe84m10 ~~ pe84m12
-          
-          pe85m5 ~~ pe85m7 + pe85m10 + pe85m12
-          pe85m7 ~~ pe85m10 + pe85m12
-          pe85m10 ~~ pe85m12
-          
-          pe96m5 ~~ pe96m7 + pe96m10 + pe96m12
-          pe96m7 ~~ pe96m10 + pe96m12
-          pe96m10 ~~ pe96m12
-          
-          pe97m5 ~~ pe97m7 + pe97m10 + pe97m12
-          pe97m7 ~~ pe97m10 + pe97m12
-          pe97m10 ~~ pe97m12
-          
-          pe92m5 ~~ pe92m7 + pe92m10 + pe92m12
-          pe92m7 ~~ pe92m10 + pe92m12
-          pe92m10 ~~ pe92m12
-          
-          pe93m5 ~~ pe93m7 + pe93m10 + pe93m12
-          pe93m7 ~~ pe93m10 + pe93m12
-          pe93m10 ~~ pe93m12
-          
-          pe94m5 ~~ pe94m7 + pe94m10 + pe94m12
-          pe94m7 ~~ pe94m10 + pe94m12
-          pe94m10 ~~ pe94m12
-          
-          pe95m5 ~~ pe95m7 + pe95m10 + pe95m12
-          pe95m7 ~~ pe95m10 + pe95m12
-          pe95m10 ~~ pe95m12
-          
-          pe64m5 ~~ pe64m7 + pe64m10 + pe64m12
-          pe64m7 ~~ pe64m10 + pe64m12
-          pe64m10 ~~ pe64m12
-         '
-
-weak.invar.hyp.fit <- sem(weak.invar.hyp, 
-                  data = dat, 
-                  meanstructure = TRUE,
-                  ordered = TRUE)
-
-summary(weak.invar.hyp.fit, 
-        fit.measures = TRUE, 
-        estimates = TRUE)
-```
-
-Comparative Fit Index (CFI)                    0.776
-Tucker-Lewis Index (TLI)                       0.747
-Akaike (AIC)                              129842.843
-Bayesian (BIC)                            130651.942
-Sample-size adjusted Bayesian (BIC)       130194.443
-RMSEA                                          0.087
-SRMR                                           0.178
-Still poor fit. 
-
-We can compute the likelihood ratio test to compare the change in fit between the configural (config) and the weak (weak) invariance models:
-  
-```{r LRT config.hyp and weak.invar.hyp}
-lavTestLRT(config.hyp.fit, weak.invar.hyp.fit)
-```
-  
-Thus the LRT shows **significant loss in fit** associated with imposing equality on the factor loadings over time. 
-Since weak invariance does not holds, we can NOT conclude that we are measuring the same construct over time, and we are NOT measuring this construct in comparable units. As we cannot show weak invariance, we cannot make comparisons between factor variances and covariances for ADHD. 
+So if the S3 model is the way to go here - then I need to figure out how to interpret this 
 
 ***
+NOW NEED TO EXPORT THE TABLES OF THE MODEL THAT WE'VE CHOSEN 
+```{r tables for inattention ADHD S3}
+# Table of model fit 
+RICLPMt_multi_hyp_S3.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPMt_multi_hyp_S3.fit.summary$FIT)))[,c(6,7,19,20,27,28,29,35)]
 
-#### ADHD: Inattention **AND** Hyperactivity/Impulsivity
-
-##### Configural invariance
-
-```{r config invariance total}
-config.totadhd <- '
-          #factor loadings - NA stops setting first item as a loading of 1
-          adhd05 =~ NA*pe84m5 + a*pe84m5 + pe85m5 + pe96m5 + pe97m5 + pe92m5 + pe93m5 + pe94m5 + pe95m5 + pe64m5 + pe81m5 + pe82m5 + pe83m5 + pe86m5 + pe87m5 + pe88m5 + pe89m5 + pe90m5 + pe91m5
-          adhd07 =~ NA*pe84m7 + a*pe84m7 + pe85m7 + pe96m7 + pe97m7 + pe92m7 + pe93m7 + pe94m7 + pe95m7 + pe64m5 + pe81m7 + pe82m7 + pe83m7 + pe86m7 + pe87m7 + pe88m7 + pe89m7 + pe90m7 + pe91m7
-          adhd10 =~ NA*pe84m10 + a*pe84m10 + pe85m10 + pe96m10 + pe97m10 + pe92m10 + pe93m10 + pe94m10 + pe95m10 + pe64m5 + pe81m10 + pe82m10 + pe83m10 + pe86m10 + pe87m10 + pe88m10 + pe89m10 + pe90m10 + pe91m10
-          adhd12 =~ NA*pe84m12 + a*pe84m12 + pe85m12 + pe96m12 + pe97m12 + pe92m12 + pe93m12 + pe94m10 + pe95m10 + pe64m5 + pe81m12 + pe82m12 + pe83m12 + pe86m12 + pe87m12 + pe88m12 + pe89m12 + pe90m12 + pe91m12
-          
-          #means/intercepts
-          adhd05 ~ 0*1            #set the intercept of latent factor at the first time point to 0 by pre- multiplying the intercept (1) by 0. 
-          adhd07 ~ start(0)*1     #specifying a starting value can assist with model convergence or reduce model run time
-          adhd10 ~ start(0)*1
-          adhd12 ~ start(0)*1
-          pe84m5 ~ b*1           #setting the intercepts to be equal across time
-          pe84m7 ~ b*1
-          pe84m10 ~ b*1
-          pe84m12 ~ b*1
-
-          #variances/covariances
-          adhd05 ~~ 1*adhd05
-          adhd07 ~~ start(1)*adhd07
-          adhd10 ~~ start(1)*adhd10
-          adhd12 ~~ start(1)*adhd12
-          
-          pe84m5 ~~ pe84m7 + pe84m10 + pe84m12
-          pe84m7 ~~ pe84m10 + pe84m12
-          pe84m10 ~~ pe84m12
-          
-          pe85m5 ~~ pe85m7 + pe85m10 + pe85m12
-          pe85m7 ~~ pe85m10 + pe85m12
-          pe85m10 ~~ pe85m12
-          
-          pe96m5 ~~ pe96m7 + pe96m10 + pe96m12
-          pe96m7 ~~ pe96m10 + pe96m12
-          pe96m10 ~~ pe96m12
-          
-          pe97m5 ~~ pe97m7 + pe97m10 + pe97m12
-          pe97m7 ~~ pe97m10 + pe97m12
-          pe97m10 ~~ pe97m12
-          
-          pe92m5 ~~ pe92m7 + pe92m10 + pe92m12
-          pe92m7 ~~ pe92m10 + pe92m12
-          pe92m10 ~~ pe92m12
-          
-          pe93m5 ~~ pe93m7 + pe93m10 + pe93m12
-          pe93m7 ~~ pe93m10 + pe93m12
-          pe93m10 ~~ pe93m12
-          
-          pe94m5 ~~ pe94m7 + pe94m10 + pe94m12
-          pe94m7 ~~ pe94m10 + pe94m12
-          pe94m10 ~~ pe94m12
-          
-          pe95m5 ~~ pe95m7 + pe95m10 + pe95m12
-          pe95m7 ~~ pe95m10 + pe95m12
-          pe95m10 ~~ pe95m12
-          
-          pe64m5 ~~ pe64m7 + pe64m10 + pe64m12
-          pe64m7 ~~ pe64m10 + pe64m12
-          pe64m10 ~~ pe64m12
-          
-          pe81m5 ~~ pe81m7 + pe81m10 + pe81m12
-          pe81m7 ~~ pe81m10 + pe81m12
-          pe81m10 ~~ pe81m12
-          
-          pe82m5 ~~ pe82m7 + pe82m10 + pe82m12
-          pe82m7 ~~ pe82m10 + pe82m12
-          pe82m10 ~~ pe82m12
-          
-          pe83m5 ~~ pe83m7 + pe83m10 + pe83m12
-          pe83m7 ~~ pe83m10 + pe83m12
-          pe83m10 ~~ pe83m12
-          
-          pe86m5 ~~ pe86m7 + pe86m10 + pe86m12
-          pe86m7 ~~ pe86m10 + pe86m12
-          pe86m10 ~~ pe86m12
-          
-          pe87m5 ~~ pe87m7 + pe87m10 + pe87m12
-          pe87m7 ~~ pe87m10 + pe87m12
-          pe87m10 ~~ pe87m12
-          
-          pe88m5 ~~ pe88m7 + pe88m10 + pe88m12
-          pe88m7 ~~ pe88m10 + pe88m12
-          pe88m10 ~~ pe88m12
-          
-          pe89m5 ~~ pe89m7 + pe89m10 + pe89m12
-          pe89m7 ~~ pe89m10 + pe89m12
-          pe89m10 ~~ pe89m12
-          
-          pe90m5 ~~ pe90m7 + pe90m10 + pe90m12
-          pe90m7 ~~ pe90m10 + pe90m12
-          pe90m10 ~~ pe90m12
-          
-          pe91m5 ~~ pe91m7 + pe91m10 + pe91m12
-          pe91m7 ~~ pe91m10 + pe91m12
-          pe91m10 ~~ pe91m12
-         '
-
-config.totadhd.fit <- sem(config.totadhd, 
-                  data = dat, 
-                  meanstructure = TRUE,
-                  ordered = TRUE)
-
-summary(config.totadhd.fit, 
-        fit.measures = TRUE, 
-        estimates = TRUE)
+# Table of regression coefficients and covariances 
+RICLPMt_multi_hyp_S3.fit.summary.reg <- as.tibble(RICLPMt_multi_hyp_S3.fit.summary$PE[c(187:202),-c(4,5)])
 ```
-
-As this is the first model in a series, we are primarily interested in model fit to the observed data:
-Comparative Fit Index (CFI)                    0.815 (≥ 0.95)
-Tucker-Lewis Index (TLI)                       0.801 (≥ 0.95)
-Akaike (AIC)                              238496.306
-Bayesian (BIC)                            240344.109
-Sample-size adjusted Bayesian (BIC)       239295.681
-RMSEA                                          0.056 (≤ 0.06)
-SRMR                                           0.112 (≤ 0.08) 
-- All measures indicate a poor fit of the model to the data (to b expected for one factor model as we have inattention and hyperactive symptoms)
-
-#### Weak invariance 
-
-```{r weak invariance total}
-weak.invar.totadhd <- '
-          #factor loadings - NA stops setting first item as a loading of 1
-          adhd05 =~ NA*pe84m5 + a*pe84m5 + b*pe85m5 + c*pe96m5 + d*pe97m5 + e*pe92m5 + f*pe93m5 + g*pe94m5 + h*pe95m5 + i*pe64m5 + j*pe81m5 + k*pe82m5 + l*pe83m5 + m*pe86m5 + n*pe87m5 + o*pe88m5 + p*pe89m5 + q*pe90m5 + r*pe91m5
-          adhd07 =~ NA*pe84m7 + a*pe84m7 + b*pe85m7 + c*pe96m7 + d*pe97m7 + e*pe92m7 + f*pe93m7 + g*pe94m7 + h*pe95m7 + i*pe64m5 + j*pe81m7 + k*pe82m7 + l*pe83m7 + m*pe86m7 + n*pe87m7 + o*pe88m7 + p*pe89m7 + q*pe90m7 + r*pe91m7
-          adhd10 =~ NA*pe84m10 + a*pe84m10 + b*pe85m10 + c*pe96m10 + d*pe97m10 + e*pe92m10 + f*pe93m10 + g*pe94m10 + h*pe95m10 + i*pe64m5 + j*pe81m10 + k*pe82m10 + l*pe83m10 + m*pe86m10 + n*pe87m10 + o*pe88m10 + p*pe89m10 + q*pe90m10 + r*pe91m10
-          adhd12 =~ NA*pe84m12 + a*pe84m12 + b*pe85m12 + c*pe96m12 + d*pe97m12 + e*pe92m12 + f*pe93m12 + g*pe94m10 + h*pe95m10 + i*pe64m5 + j*pe81m12 + k*pe82m12 + l*pe83m12 + m*pe86m12 + n*pe87m12 + o*pe88m12 + p*pe89m12 + q*pe90m12 + r*pe91m12
-          
-          #means/intercepts
-          adhd05 ~ 0*1            #set the intercept of latent factor at the first time point to 0 by pre- multiplying the intercept (1) by 0. 
-          adhd07 ~ start(0)*1     #specifying a starting value can assist with model convergence or reduce model run time
-          adhd10 ~ start(0)*1
-          adhd12 ~ start(0)*1
-          pe84m5 ~ b*1           #setting the intercepts to be equal across time
-          pe84m7 ~ b*1
-          pe84m10 ~ b*1
-          pe84m12 ~ b*1
-
-          #variances/covariances
-          adhd05 ~~ 1*adhd05
-          adhd07 ~~ start(1)*adhd07
-          adhd10 ~~ start(1)*adhd10
-          adhd12 ~~ start(1)*adhd12
-          
-          pe84m5 ~~ pe84m7 + pe84m10 + pe84m12
-          pe84m7 ~~ pe84m10 + pe84m12
-          pe84m10 ~~ pe84m12
-          
-          pe85m5 ~~ pe85m7 + pe85m10 + pe85m12
-          pe85m7 ~~ pe85m10 + pe85m12
-          pe85m10 ~~ pe85m12
-          
-          pe96m5 ~~ pe96m7 + pe96m10 + pe96m12
-          pe96m7 ~~ pe96m10 + pe96m12
-          pe96m10 ~~ pe96m12
-          
-          pe97m5 ~~ pe97m7 + pe97m10 + pe97m12
-          pe97m7 ~~ pe97m10 + pe97m12
-          pe97m10 ~~ pe97m12
-          
-          pe92m5 ~~ pe92m7 + pe92m10 + pe92m12
-          pe92m7 ~~ pe92m10 + pe92m12
-          pe92m10 ~~ pe92m12
-          
-          pe93m5 ~~ pe93m7 + pe93m10 + pe93m12
-          pe93m7 ~~ pe93m10 + pe93m12
-          pe93m10 ~~ pe93m12
-          
-          pe94m5 ~~ pe94m7 + pe94m10 + pe94m12
-          pe94m7 ~~ pe94m10 + pe94m12
-          pe94m10 ~~ pe94m12
-          
-          pe95m5 ~~ pe95m7 + pe95m10 + pe95m12
-          pe95m7 ~~ pe95m10 + pe95m12
-          pe95m10 ~~ pe95m12
-          
-          pe64m5 ~~ pe64m7 + pe64m10 + pe64m12
-          pe64m7 ~~ pe64m10 + pe64m12
-          pe64m10 ~~ pe64m12
-          
-          pe81m5 ~~ pe81m7 + pe81m10 + pe81m12
-          pe81m7 ~~ pe81m10 + pe81m12
-          pe81m10 ~~ pe81m12
-          
-          pe82m5 ~~ pe82m7 + pe82m10 + pe82m12
-          pe82m7 ~~ pe82m10 + pe82m12
-          pe82m10 ~~ pe82m12
-          
-          pe83m5 ~~ pe83m7 + pe83m10 + pe83m12
-          pe83m7 ~~ pe83m10 + pe83m12
-          pe83m10 ~~ pe83m12
-          
-          pe86m5 ~~ pe86m7 + pe86m10 + pe86m12
-          pe86m7 ~~ pe86m10 + pe86m12
-          pe86m10 ~~ pe86m12
-          
-          pe87m5 ~~ pe87m7 + pe87m10 + pe87m12
-          pe87m7 ~~ pe87m10 + pe87m12
-          pe87m10 ~~ pe87m12
-          
-          pe88m5 ~~ pe88m7 + pe88m10 + pe88m12
-          pe88m7 ~~ pe88m10 + pe88m12
-          pe88m10 ~~ pe88m12
-          
-          pe89m5 ~~ pe89m7 + pe89m10 + pe89m12
-          pe89m7 ~~ pe89m10 + pe89m12
-          pe89m10 ~~ pe89m12
-          
-          pe90m5 ~~ pe90m7 + pe90m10 + pe90m12
-          pe90m7 ~~ pe90m10 + pe90m12
-          pe90m10 ~~ pe90m12
-          
-          pe91m5 ~~ pe91m7 + pe91m10 + pe91m12
-          pe91m7 ~~ pe91m10 + pe91m12
-          pe91m10 ~~ pe91m12
-         '
-
-weak.invar.totadhd.fit <- sem(weak.invar.totadhd, 
-                  data = dat, 
-                  meanstructure = TRUE,
-                  ordered = TRUE)
-
-summary(weak.invar.totadhd.fit, 
-        fit.measures = TRUE, 
-        estimates = TRUE)
-```
-
-Comparative Fit Index (CFI)                    0.794
-Tucker-Lewis Index (TLI)                       0.782
-Akaike (AIC)                              240131.832
-Bayesian (BIC)                            241688.466
-Sample-size adjusted Bayesian (BIC)       240805.245
-RMSEA                                          0.058
-SRMR                                           0.127
-Still poor fit. 
-
-We can compute the likelihood ratio test to compare the change in fit between the configural (config) and the weak (weak) invariance models:
-  
-```{r LRT config.ad and weak.invar.ad}
-lavTestLRT(config.totadhd.fit, weak.invar.totadhd.fit)
-```
-Thus the LRT shows **significant loss in fit** associated with imposing equality on the factor loadings over time. 
-Since weak invariance does not hold, we can NOT conclude that we are measuring the same construct over time, and we are NOT measuring this construct in comparable units. As we cannot show weak invariance, we cannot make comparisons between factor variances and covariances for ADHD. 
-
-***
-
-# NEXT STEPS
-
-- Use raw scores to look at measurement invariance across time. Does weak invariance hold when only looking at mother report? If so, may only use those reports??
-  *The answer is no - weak measurement invariance does not hold for social isolation or inattentive ADHD symptoms.* 
-- Do some reading around assessing measurement invariance when using different reporters across time (different teachers).
-
-
-
-
-
-
 
 
 

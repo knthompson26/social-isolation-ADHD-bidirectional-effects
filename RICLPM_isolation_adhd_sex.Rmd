@@ -88,6 +88,33 @@ dat <- dat.raw %>%
 colnames(dat)
 ```
 
+Functions
+
+```{r functions}
+# Table of model fit 
+table.model.fit <- function(model){
+  model.fit <- as.data.frame(t(as.data.frame(model$FIT))) %>%
+    select(chisq, df, chisq.scaled, cfi.robust, tli.robust, aic, bic, bic2, rmsea.robust, rmsea.ci.lower.robust, rmsea.ci.upper.robust, srmr) #can only be used with "MLR" estimator
+  return(model.fit)
+}
+
+# Table of regression and correlation (standardised covariance) coefficients
+table.model.coef <- function(model, sex, constraints){
+  if (sex == "Male" & constraints == "No"){
+    model.coef <- as.tibble(model$PE[c(86:101),]) %>% select(-block, -group, -exo, -std.lv, -std.nox)
+    return(model.coef)
+  } else if(sex == "Female" & constraints == "No"){
+    model.coef <- as.tibble(model$PE[c(17:32),]) %>% select(-block, -group, -exo, -std.lv, -std.nox)
+    return(model.coef)
+  } else if(sex == "Male" & constraints == "Yes"){
+    model.coef <- as.tibble(model$PE[c(86:101),]) %>% select(-block, -group, -exo, -label, -std.lv, -std.nox)
+    return(model.coef)
+  } else if(sex == "Female" & constraints == "Yes"){
+    model.coef <- as.tibble(model$PE[c(17:32),]) %>% select(-block, -group, -exo, -label, -std.lv, -std.nox)
+    return(model.coef)
+  } else {model.coef <- NULL}
+}
+```
 
 To check for group differences in parameter estimates between girls and boys (sex), we can run the same model but test group differences in the lavaan command.
 
@@ -163,7 +190,9 @@ RICLPM.sex.fit <- lavaan(RICLPM,
                       group = "sex",
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+)
 
 RICLPM.sex.fit.summary <- summary(RICLPM.sex.fit, 
                                 fit.measures = TRUE,
@@ -228,7 +257,9 @@ RICLPM.sex2.fit <- lavaan(RICLPM.sex2,
                       group = "sex",
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 ```
 
 Now we see if there is a significantly worse fit when the lagged-parameters are constrained to be equal across groups. 
@@ -294,14 +325,16 @@ RICLPM_hyp.sex.fit <- lavaan(RICLPM_hyp,
                       group = "sex",
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 
 RICLPM_hyp.sex.fit.summary <- summary(RICLPM_hyp.sex.fit, 
                                 fit.measures = TRUE,
                                 standardized = TRUE)
 ```
 
-Now we want to aaply constraints over time to test if lagged parameters are invariant across groups, if the chi square is significant then the lagged effects for boys and girls are different.  
+Now we want to apply constraints over time to test if lagged parameters are invariant across groups, if the chi square is significant then the lagged effects for boys and girls are different.  
 
 ```{r specify RICLPM_hyp.sex2}
 RICLPM_hyp.sex2 <- '
@@ -359,7 +392,9 @@ RICLPM_hyp.sex2.fit <- lavaan(RICLPM_hyp.sex2,
                       group = "sex",
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 ```
 
 Now we see if there is a significantly worse fit when the lagged-parameters are constrained to be equal across groups. 
@@ -425,27 +460,19 @@ RICLPM_inat.sex.fit <- lavaan(RICLPM_inat,
                       group = "sex",
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
-
-RICLPM_inat.sex.fit <- lavaan(RICLPM_inat, 
-                      data = dat, 
-                      missing = 'ML', 
-                      group = "sex",
-                      meanstructure = TRUE, 
-                      int.ov.free = TRUE,
-                      se = "robust") 
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 
 RICLPM_inat.sex.fit.summary <- summary(RICLPM_inat.sex.fit, 
                                 fit.measures = TRUE,
                                 standardized = TRUE)
 
 #Table of model fit 
-RICLPM_inat.sex.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPM_inat.sex.fit.summary$FIT)))[,c(3,4,9,10,13,14,16,17,18,19,21)]
-
-#Table of regression coefficients and covariances - FEMALE
-RICLPM_inat.sex.fit.summary.reg.female <- as.tibble(RICLPM_inat.sex.fit.summary$PE)[c(17:32),-c(4,5,6)]
-#Table of regression coefficients and covariances - MALE
-RICLPM_inat.sex.fit.summary.reg.male <- as.tibble(RICLPM_inat.sex.fit.summary$PE[c(86:101),-c(4,5,6)])
+RICLPM_inat.sex.fit.summary.fit <- table.model.fit(RICLPM_inat.sex.fit.summary)
+#Table of regression coefficients and covariances for females and males separately
+RICLPM_inat.sex.fit.summary.reg.female <- table.model.coef(model = RICLPM_inat.sex.fit.summary, sex = "Female", constraints = "No")
+RICLPM_inat.sex.fit.summary.reg.male <- table.model.coef(model = RICLPM_inat.sex.fit.summary, sex = "Male", constraints = "No")
 ```
 
 ```{r specify RICLPM_inat.sex2}
@@ -504,7 +531,9 @@ RICLPM_inat.sex2.fit <- lavaan(RICLPM_inat.sex2,
                       group = "sex",
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 ```
 
 Now we see if there is a significantly worse fit when the lagged-parameters are constrained to be equal across groups. 
@@ -517,7 +546,7 @@ The chi-square difference test of these two nested models is *significant* (p=0.
 
 ## Teacher report
 
-# RI-CLPM - total ADHD scores
+### RI-CLPM - total ADHD scores
 
 ```{r specify RICLPMt, class.source = 'fold-show'}
 RICLPMt <- '
@@ -572,19 +601,19 @@ RICLPMt.sex.fit <- lavaan(RICLPMt,
                       group = "sex",
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 
 RICLPMt.sex.fit.summary <- summary(RICLPMt.sex.fit, 
                                 fit.measures = TRUE,
                                 standardized = TRUE)
 
 #Table of model fit 
-RICLPMt.sex.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPMt.sex.fit.summary$FIT)))[,c(3,4,9,10,13,14,16,17,18,19,21)]
-
-#Table of regression coefficients and covariances - FEMALE
-RICLPMt.sex.fit.summary.reg.female <- as.tibble(RICLPMt.sex.fit.summary$PE)[c(17:32),-c(4,5,6)]
-#Table of regression coefficients and covariances - MALE
-RICLPMt.sex.fit.summary.reg.male <- as.tibble(RICLPMt.sex.fit.summary$PE[c(86:101),-c(4,5,6)])
+RICLPMt.sex.fit.summary.fit <- table.model.fit(RICLPMt.sex.fit.summary)
+# Table of regression and correlation (standardised covariances) coefficients
+RICLPMt.sex.fit.summary.reg.female <- table.model.coef(RICLPMt.sex.fit.summary, sex = "Female", constraints = "No")
+RICLPMt.sex.fit.summary.reg.male <- table.model.coef(RICLPMt.sex.fit.summary, sex = "Male", constraints = "No")
 ```
 
 ```{r specify RICLPMt.sex2}
@@ -643,7 +672,9 @@ RICLPMt.sex2.fit <- lavaan(RICLPMt.sex2,
                       group = "sex",
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 ```
 
 Now we see if there is a significantly worse fit when the lagged-parameters are constrained to be equal across groups. 
@@ -654,7 +685,7 @@ lavTestLRT(RICLPMt.sex.fit, RICLPMt.sex2.fit)
 
 The chi-square difference test of these two nested models is *significant* (p=0.001178), which implies that lagged effects appear to be **different for girls and boys.** 
 
-# RI-CLPM - Hyperactivity ADHD scores
+### RI-CLPM - Hyperactivity ADHD scores
 
 ```{r specify RICLPMt_hyp}
 RICLPMt_hyp <- '
@@ -709,19 +740,19 @@ RICLPMt_hyp.sex.fit <- lavaan(RICLPMt_hyp,
                       group = "sex",
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 
 RICLPMt_hyp.sex.fit.summary <- summary(RICLPMt_hyp.sex.fit, 
                                 fit.measures = TRUE,
                                 standardized = TRUE)
 
 #Table of model fit 
-RICLPMt_hyp.sex.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPMt_hyp.sex.fit.summary$FIT)))[,c(3,4,9,10,13,14,16,17,18,19,21)]
-
-#Table of regression coefficients and covariances - FEMALE
-RICLPMt_hyp.sex.fit.summary.reg.female <- as.tibble(RICLPMt_hyp.sex.fit.summary$PE)[c(17:32),-c(4,5,6)]
-#Table of regression coefficients and covariances - MALE
-RICLPMt_hyp.sex.fit.summary.reg.male <- as.tibble(RICLPMt_hyp.sex.fit.summary$PE[c(86:101),-c(4,5,6)])
+RICLPMt_hyp.sex.fit.summary.fit <- table.model.fit(RICLPMt_hyp.sex.fit.summary)
+# Table of regression and correlation (standardised covariances) coefficients
+RICLPMt_hyp.sex.fit.summary.reg.female <- table.model.coef(RICLPMt_hyp.sex.fit.summary, sex = "Female", constraints = "No")
+RICLPMt_hyp.sex.fit.summary.reg.male <- table.model.coef(RICLPMt_hyp.sex.fit.summary, sex = "Male", constraints = "No")
 ```
 
 ```{r specify RICLPMt_hyp.sex2}
@@ -780,7 +811,9 @@ RICLPMt_hyp.sex2.fit <- lavaan(RICLPMt_hyp.sex2,
                       group = "sex",
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 ```
 
 Now we see if there is a significantly worse fit when the lagged-parameters are constrained to be equal across groups. 
@@ -791,7 +824,7 @@ lavTestLRT(RICLPMt_hyp.sex.fit, RICLPMt_hyp.sex2.fit)
 
 The chi-square difference test of these two nested models is *significant* (p=0.0000009), which implies that lagged effects appear to be **different for girls and boys.** 
 
-# RI-CLPM - Inattention ADHD scores
+### RI-CLPM - Inattention ADHD scores
 
 ```{r specify RICLPMt_inat}
 RICLPMt_inat <- '
@@ -846,7 +879,9 @@ RICLPMt_inat.sex.fit <- lavaan(RICLPMt_inat,
                       group = "sex",
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 ```
 
 ```{r specify RICLPMt_inat.sex2}
@@ -905,7 +940,9 @@ RICLPMt_inat.sex2.fit <- lavaan(RICLPMt_inat.sex2,
                       group = "sex",
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 ```
 
 Now we see if there is a significantly worse fit when the lagged-parameters are constrained to be equal across groups. 
@@ -918,7 +955,7 @@ The chi-square difference test of these two nested models is *not* significant (
 
 ***
 
-# Comparing with constraints over time 
+# Constrained models 
 
 **We have previously compared our freed model to the sex constraints model, showing if there are sex group differences between each freed model. Now, we will compare the sex constraints model to our with already set constrainted on the lagged parameters** Mother report will have only cross-lags constrained, and teacher report will have both cross-lags and autoregressive lags constrained across groups.
 
@@ -953,14 +990,15 @@ Naming:
   sex.lag.c = sex and lag constrained model
 
 We will text for sex differences in two steps: 
-  1) We want to apply constraints over time to test if lagged parameters are invariant across groups, if the chi square is significant then the lagged effects for boys and girls are different.  
+  1) We want to apply constraints to the lagged parameters, but allow these to vary between groups. If the chi square is significant then the lagged effects for boys and girls are different.
+  2) We want to apply sex group constraints to the lag constraints from step 1, where the lagged parameters are the same across groups. If the chi square is significant then the lagged effects for boys and girls are different.
 
-Here we want to contrain the lagged parameters to be the same - as well as to be the same across groups. To do this I have made the "b" and "c" constraints the same. So rather than having b1, b2, b3 they are all now labelled b. (the b and c paths were previously labelled d and c)
+Here we want to constrain the lagged parameters to be the same. For example with lag c, I have constrained each lag to be set to c1 for females and c2 for males. They layout for group specification is c(group 1, group 2). 
 
 ## Mother report: inattention ADHD symptoms 
 
-```{r specify RICLPM_inat_lag.c}
-RICLPM_inat_lag.c <- '
+```{r specify RICLPM_inat.lag.c}
+RICLPM_inat.lag.c <- '
   # Create between components (random intercepts treated as factors here)
   RIad =~ 1*inem5 + 1*inem7 + 1*inem10 + 1*inem12 #x
   RIsi =~ 1*sisoem5 + 1*sisoem7 + 1*sisoem10 + 1*sisoem12 #y
@@ -1010,16 +1048,18 @@ RICLPM_inat_lag.c <- '
 '
 ```
 
-```{r fit RICLPM_inat_lag.c.fit split by sex}
-RICLPM_inat_lag.c.fit <- lavaan(RICLPM_inat_lag.c, 
+```{r fit RICLPM_inat.lag.c.fit split by sex}
+RICLPM_inat.lag.c.fit <- lavaan(RICLPM_inat.lag.c, 
                       data = dat, 
                       missing = 'ML',
                       group = "sex",
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 
-summary(RICLPM_inat_lag.c.fit, 
+summary(RICLPM_inat.lag.c.fit, 
         fit.measures = TRUE,
         standardized = TRUE)
 ```
@@ -1041,14 +1081,14 @@ RICLPM_inat.sex.lag.c <- '
   wsi12 =~ 1*sisoem12
   
   # Estimate the lagged effects between the within-person centered variables. Constrain the autoregressive effects across groups AND the lagged effects between the within-person centered variables. 
-  wad7 ~ c(a1, a1)*wad5 + c(d1, d1)*wsi5
-  wsi7 ~ c(c, c)*wad5 + c(b, b)*wsi5
+  wad7 ~ c(a1, a1)*wad5 + c(d, d)*wsi5
+  wsi7 ~ c(c, c)*wad5 + c(b1, b1)*wsi5
   
-  wad10 ~ c(a2, a2)*wad7 + c(d2, d2)*wsi7
-  wsi10 ~ c(c, c)*wad7 + c(b, b)*wsi7
+  wad10 ~ c(a2, a2)*wad7 + c(d, d)*wsi7
+  wsi10 ~ c(c, c)*wad7 + c(b2, b2)*wsi7
   
-  wad12 ~ c(a3, a3)*wad10 + c(d3, d3)*wsi10
-  wsi12 ~ c(c, c)*wad10 + c(b, b)*wsi10 
+  wad12 ~ c(a3, a3)*wad10 + c(d, d)*wsi10
+  wsi12 ~ c(c, c)*wad10 + c(b3, b3)*wsi10 
 
   # Estimate the covariance between the within-person centered variables at the first wave
   wad5 ~~ wsi5 # Covariance
@@ -1082,21 +1122,18 @@ RICLPM_inat.sex.lag.c.fit <- lavaan(RICLPM_inat.sex.lag.c,
                       group = "sex",
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 ```
 
 Now we see if there is a significantly worse fit when the lagged-parameters are constrained to be equal across groups. 
 
 ```{r LRT for RICLPM_inat_lag.c.fit and RICLPM_inat.sex.lag.c.fit}
-lavTestLRT(RICLPM_inat_lag.c.fit, RICLPM_inat.sex.lag.c.fit)
+lavTestLRT(RICLPM_inat.lag.c.fit, RICLPM_inat.sex.lag.c.fit)
 ```
 
-The chi-square difference test of these two nested models is *significant* (p<0.00001). 
-
-Inattention mother report sex differences:
-- No significant cross-lags for females
-- No signifgicant cross-lags for males (but significance was 0.096)
-- Similar effects sizes across groups - *conclude there are no major sex differences in these models*
+The chi-square difference test of these two nested models is *non significant* (p=0.254). 
 
 **Therefore, we conclude there are no sex differences in the constrained RICLPM mother report for inattention ADHD symptoms.** 
 
@@ -1160,7 +1197,9 @@ RICLPMt.lag.c.fit <- lavaan(RICLPMt.lag.c,
                       group = "sex",
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 
 summary(RICLPMt.lag.c.fit,
         fit.measures = TRUE,
@@ -1225,7 +1264,9 @@ RICLPMt.sex.lag.c.fit <- lavaan(RICLPMt.sex.lag.c,
                       group = "sex",
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 ```
 
 Now we see if there is a significantly worse fit when the lagged-parameters are constrained to be equal across groups. 
@@ -1234,7 +1275,7 @@ Now we see if there is a significantly worse fit when the lagged-parameters are 
 lavTestLRT(RICLPMt.lag.c.fit, RICLPMt.sex.lag.c.fit)
 ```
 
-The chi-square difference test of these two nested models is *NON significant* (p=0.104). **Therefore, we conclude there are no sex differences in the constrained RICLPM teacher report, total ADHD symptoms.** 
+The chi-square difference test of these two nested models is *NON significant* (p=0.543). **Therefore, we conclude there are no sex differences in the constrained RICLPM teacher report, total ADHD symptoms.** 
 
 ## Teacher report: hyperactivity ADHD symptoms 
 
@@ -1296,19 +1337,19 @@ RICLPMt_hyp.lag.c.fit <- lavaan(RICLPMt_hyp.lag.c,
                       group = "sex",
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
+                      se = "robust",
+                     estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 
 RICLPMt_hyp.lag.c.fit.summary <- summary(RICLPMt_hyp.lag.c.fit,
                                           fit.measures = TRUE,
                                           standardized = TRUE)
 
 #Table of model fit 
-RICLPMt_hyp.lag.c.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPMt_hyp.lag.c.fit.summary$FIT)))[,c(3,4,9,10,13,14,16,17,18,19,21)]
-
-#Table of regression coefficients and covariances - FEMALE
-RICLPMt_hyp.lag.c.fit.summary.reg.female <- as.tibble(RICLPMt_hyp.lag.c.fit.summary$PE)[c(17:32),-c(4,5,6,7)]
-#Table of regression coefficients and covariances - MALE
-RICLPMt_hyp.lag.c.fit.summary.reg.male <- as.tibble(RICLPMt_hyp.lag.c.fit.summary$PE[c(86:101),-c(4,5,6,7)])
+RICLPMt_hyp.lag.c.fit.summary.fit <- table.model.fit(RICLPMt_hyp.lag.c.fit.summary)
+# Table of regression and correlation (standardised covariances) coefficients
+RICLPMt_hyp.lag.c.fit.summary.reg.female <- table.model.coef(RICLPMt_hyp.lag.c.fit.summary, sex = "Female", constraints = "Yes")
+RICLPMt_hyp.lag.c.fit.summary.reg.male <- table.model.coef(RICLPMt_hyp.lag.c.fit.summary, sex = "Male", constraints = "Yes")
 ```
 
 ```{r specify RICLPMt_hyp.sex.lag.c, class.source = 'fold-show'}
@@ -1369,13 +1410,15 @@ RICLPMt_hyp.sex.lag.c.fit <- lavaan(RICLPMt_hyp.sex.lag.c,
                       group = "sex",
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
-                      se = "robust") 
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
 ```
 
 Now we see if there is a significantly worse fit when the lagged-parameters are constrained to be equal across groups. 
 
 ```{r LRT for RICLPMt_hyp.lag.c.fit and RICLPMt_hyp.sex.lag.c.fit}
-lavTestLRT(RICLPMt_hyp.lag.c.fit, RICLPMt_hyp.sex.lag.c.fit)
+lavTestLRT(RICLPMt_hyp.lag.c.fit, RICLPMt_hyp.sex.lag.c.fit, method = "satorra.bentler.2010")
 ```
 
 The chi-square difference test of these two nested models is *significant* (p=0.01516). 
