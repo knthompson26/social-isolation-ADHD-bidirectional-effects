@@ -276,9 +276,6 @@ cronbach.alpha(dat[isolation.teacher.age10], standardized = TRUE, CI = TRUE, na.
 cronbach.alpha(dat[isolation.teacher.age12], standardized = TRUE, CI = TRUE, na.rm = TRUE)
 ```
 
-Teacher report Cronbach's alpha (standardized): 0.596
-Mother report Cronbach's alpha (standardized): 0.785
-
 ***
 
 The loaded data is for se = robust and listwise deletion models.
@@ -391,15 +388,12 @@ RICLPM_multi_inat_S1 <- '
 '
 ```
 
-When running se = "robust" the error comes up as: Error in inherits(NVarCov, "try-error") : object 'NVarCov' not found
-Not sure how to fix this so for the moment running without robust standard errors. 
-
 ```{r fit RICLPM_multi_inat_S1}
 RICLPM_multi_inat_S1.fit <- cfa(RICLPM_multi_inat_S1, 
-                           data = dat, 
-                        #   se = "robust",         # computes robust standard errors to account for use of twins
-                           ordered = TRUE,        # using the "ordered" option will use DWLS with polychoric correlations for the ordinal variables
-                           missing = 'pairwise'    # only excludes people who are missing both variables
+                           data = dat,            
+                           ordered = TRUE,          # using the "ordered" option will use DWLS with polychoric correlations for the ordinal variables
+                           missing = 'pairwise',    # only excludes people who are missing both variables
+                           estimator = "WLSMV"      # DWLS to estimate the model parameters using full weight matrix to compute robust se, and mean/variance-adjusted test statistic. 
 )
 
 summary(RICLPM_multi_inat_S1.fit, fit.measures = TRUE, standardized = TRUE)
@@ -492,14 +486,12 @@ RICLPM_multi_inat_S2 <- '
 ```{r fit RICLPM_multi_inat_S2}
 RICLPM_multi_inat_S2.fit <- cfa(RICLPM_multi_inat_S2, 
                            data = dat, 
-                          # se = "robust",
+                           estimator = "WLSMV", 
                            ordered = TRUE,
                            missing = 'pairwise'
                            )
 
-summary(RICLPM_multi_inat_S2.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+summary(RICLPM_multi_inat_S2.fit, fit.measures = TRUE, standardized = TRUE)
 ```
 
 S2 Model fit:
@@ -630,13 +622,11 @@ RICLPM_multi_inat_S3 <- '
 ```{r fit RICLPM_multi_inat_S3}
 RICLPM_multi_inat_S3.fit <- cfa(RICLPM_multi_inat_S3, 
                            data = dat, 
-                       #    se = "robust",
+                           estimator = "WLSMV",
                            ordered = TRUE,
                            missing = 'pairwise')
 
-RICLPM_multi_inat_S3.fit.summary <- summary(RICLPM_multi_inat_S3.fit, 
-                                            fit.measures = TRUE,
-                                            standardized = TRUE)
+RICLPM_multi_inat_S3.fit.summary <- summary(RICLPM_multi_inat_S3.fit, fit.measures = TRUE, standardized = TRUE)
 ```  
 
 S3 Model fit:
@@ -651,7 +641,7 @@ SRMR                                           0.036 (≤ 0.08)   Change in SRMR
 We attempted to view the fit differences using semTools but it gives the error "a dimention is zero". We aren't sure why this is the case, but there is no difference in model fit between S2 and S3, so we can assume that **strong invariance holds here.**
 
 ```{r compare fit RICLPM_multi_inat_S2 and RICLPM_multi_inat_S3}
-summary(semTools::compareFit(RICLPM_multi_inat_S2.fit, RICLPM_multi_inat_S3.fit, nested = TRUE)) #† indicates the best fitting model - have hashed out here
+#summary(semTools::compareFit(RICLPM_multi_inat_S2.fit, RICLPM_multi_inat_S3.fit, nested = TRUE)) #† indicates the best fitting model - have hashed out here
 ```
 
 ```{r tables for inattention ADHD S3}
@@ -774,13 +764,11 @@ RICLPM_multi_inat_S4 <- '
 ```{r fit RICLPM_multi_S4}
 RICLPM_multi_inat_S4.fit <- cfa(RICLPM_multi_inat_S4, 
                            data = dat, 
-                       #    se = "robust",
+                           estimator = "WLSMV",
                            ordered = TRUE,
                            missing = 'pairwise')
 
-summary(RICLPM_multi_inat_S4.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+summary(RICLPM_multi_inat_S4.fit, fit.measures = TRUE, standardized = TRUE)
 ``` 
 
 S4 Model fit:
@@ -890,14 +878,12 @@ RICLPM_multi_hyp_S1 <- '
 ```{r fit RICLPM_multi_hyp_S1}
 RICLPM_multi_hyp_S1.fit <- cfa(RICLPM_multi_hyp_S1, 
                            data = dat, 
-                          # se = "robust",          # computes robust standard errors to account for use of twins
-                           ordered = TRUE,          # using the "ordered" option will use DWLS with polychoric correlations for the ordinal variables
-                           missing = 'pairwise'   # only excludes people who are missing both variables
+                           estimator = "WLSMV",
+                           ordered = TRUE,         
+                           missing = 'pairwise'  
 )
 
-summary(RICLPM_multi_hyp_S1.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+summary(RICLPM_multi_hyp_S1.fit, fit.measures = TRUE, standardized = TRUE)
 ```
 
 S1 Model fit:
@@ -985,14 +971,12 @@ RICLPM_multi_hyp_S2 <- '
 ```{r fit RICLPM_multi_hyp_S2}
 RICLPM_multi_hyp_S2.fit <- cfa(RICLPM_multi_hyp_S2, 
                            data = dat, 
-                          # se = "robust",
+                           estimator = "WLSMV",
                            ordered = TRUE,
                            missing = 'pairwise'
                            )
 
-summary(RICLPM_multi_hyp_S2.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+summary(RICLPM_multi_hyp_S2.fit, fit.measures = TRUE, standardized = TRUE)
 ```
 
 S2 Model fit:
@@ -1113,14 +1097,12 @@ RICLPM_multi_hyp_S3 <- '
 ```{r fit RICLPM_multi_hyp_S3}
 RICLPM_multi_hyp_S3.fit <- cfa(RICLPM_multi_hyp_S3, 
                            data = dat, 
-                         #  se = "robust",
+                           estimator = "WLSMV",
                            ordered = TRUE,
                            missing = 'pairwise'
                            )
 
-RICLPM_multi_hyp_S3.fit.summary <- summary(RICLPM_multi_hyp_S3.fit, 
-                                            fit.measures = TRUE,
-                                            standardized = TRUE)
+RICLPM_multi_hyp_S3.fit.summary <- summary(RICLPM_multi_hyp_S3.fit, fit.measures = TRUE, standardized = TRUE)
 ```
 
 S3 Model fit:
@@ -1257,14 +1239,12 @@ RICLPM_multi_hyp_S4 <- '
 ```{r fit RICLPM_multi_hyp_S4}
 RICLPM_multi_hyp_S4.fit <- cfa(RICLPM_multi_hyp_S4, 
                            data = dat, 
-                         #  se = "robust",
+                           estimator = "WLSMV",
                            ordered = TRUE,
                            missing = 'pairwise'
                            )
 
-summary(RICLPM_multi_hyp_S4.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+summary(RICLPM_multi_hyp_S4.fit, fit.measures = TRUE, standardized = TRUE)
 ```
 
 S4 Model fit:
@@ -1377,14 +1357,12 @@ RICLPM_multi_adhd_S1 <- '
 ```{r fit RICLPM_multi_adhd_S1}
 RICLPM_multi_adhd_S1.fit <- cfa(RICLPM_multi_adhd_S1, 
                            data = dat, 
-                          # se = "robust",          # computes robust standard errors to account for use of twins
-                           ordered = TRUE,          # using the "ordered" option will use DWLS with polychoric correlations for the ordinal variables
-                           missing = 'pairwise'  # only excludes people who are missing both variables
+                           estimator = "WLSMV",
+                           ordered = TRUE,        
+                           missing = 'pairwise'  
 )
 
-summary(RICLPM_multi_adhd_S1.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+summary(RICLPM_multi_adhd_S1.fit, fit.measures = TRUE, standardized = TRUE)
 ```
 
 S1 Model fit:
@@ -1484,14 +1462,12 @@ RICLPM_multi_adhd_S2 <- '
 ```{r fit RICLPM_multi_adhd_S2}
 RICLPM_multi_adhd_S2.fit <- cfa(RICLPM_multi_adhd_S2, 
                            data = dat, 
-                          # se = "robust",
+                           estimator = "WLSMV",
                            ordered = TRUE,
                            missing = 'pairwise'
                            )
 
-summary(RICLPM_multi_adhd_S2.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+summary(RICLPM_multi_adhd_S2.fit, fit.measures = TRUE, standardized = TRUE)
 ```
 
 S2 Model fit:
@@ -1636,14 +1612,12 @@ RICLPM_multi_adhd_S3 <- '
 ```{r fit RICLPM_multi_adhd_S3}
 RICLPM_multi_adhd_S3.fit <- cfa(RICLPM_multi_adhd_S3, 
                            data = dat, 
-                          # se = "robust",
+                           estimator = "WLSMV",
                            ordered = TRUE,
                            missing = 'pairwise'
                            )
 
-RICLPM_multi_adhd_S3.fit.summary <- summary(RICLPM_multi_adhd_S3.fit, 
-                                            fit.measures = TRUE,
-                                            standardized = TRUE)
+RICLPM_multi_adhd_S3.fit.summary <- summary(RICLPM_multi_adhd_S3.fit, fit.measures = TRUE, standardized = TRUE)
 ```
 
 S3 Model fit:
@@ -1663,6 +1637,7 @@ summary(semTools::compareFit(RICLPM_multi_adhd_S2.fit, RICLPM_multi_adhd_S3.fit,
 *** 
 below table rows need updating 
 ***
+
 ```{r tables for total ADHD S3}
 # Table of model fit 
 RICLPM_multi_adhd_S3.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPM_multi_adhd_S3.fit.summary$FIT)))[,c(3,4,9,10,13,14,16,17,18,19,21)]
@@ -1792,7 +1767,7 @@ RICLPM_multi_adhd_S4 <- '
 ```{r fit RICLPM_multi_adhd_S4}
 RICLPM_multi_adhd_S4.fit <- cfa(RICLPM_multi_adhd_S4, 
                            data = dat, 
-                         #  se = "robust",
+                           estimator = "WLSMV",
                            ordered = TRUE,
                            missing = 'pairwise'
                            )
@@ -1901,9 +1876,9 @@ RICLPMt_multi_inat_S1 <- '
 ```{r fit RICLPMt_multi_inat_S1}
 RICLPMt_multi_inat_S1.fit <- cfa(RICLPMt_multi_inat_S1, 
                            data = dat, 
-                        #   se = "robust",         # computes robust standard errors to account for use of twins
-                           ordered = TRUE,        # using the "ordered" option will use DWLS with polychoric correlations for the ordinal variables
-                           missing = 'pairwise'    # only excludes people who are missing both variables
+                           estimator = "WLSMV",
+                           ordered = TRUE,        
+                           missing = 'pairwise' 
 )
 
 summary(RICLPMt_multi_inat_S1.fit, fit.measures = TRUE, standardized = TRUE)
@@ -1995,14 +1970,12 @@ RICLPMt_multi_inat_S2 <- '
 ```{r fit RICLPMt_multi_inat_S2}
 RICLPMt_multi_inat_S2.fit <- cfa(RICLPMt_multi_inat_S2, 
                            data = dat, 
-                          # se = "robust",
+                           estimator = "WLSMV",
                            ordered = TRUE,
                            missing = 'pairwise'
                            )
 
-summary(RICLPMt_multi_inat_S2.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+summary(RICLPMt_multi_inat_S2.fit, fit.measures = TRUE, standardized = TRUE)
 ```
 
 S2 for the pairwise deletion model without robust standard errors:
@@ -2132,13 +2105,11 @@ RICLPMt_multi_inat_S3 <- '
 ```{r fit RICLPMt_multi_inat_S3}
 RICLPMt_multi_inat_S3.fit <- cfa(RICLPMt_multi_inat_S3, 
                            data = dat, 
-                       #    se = "robust",
+                           estimator = "WLSMV",
                            ordered = TRUE,
                            missing = 'pairwise')
 
-RICLPMt_multi_inat_S3.fit.summary <- summary(RICLPMt_multi_inat_S3.fit, 
-                                            fit.measures = TRUE,
-                                            standardized = TRUE)
+RICLPMt_multi_inat_S3.fit.summary <- summary(RICLPMt_multi_inat_S3.fit, fit.measures = TRUE, standardized = TRUE)
 ```  
 
 S3 Model fit (no robust se):
@@ -2272,13 +2243,11 @@ RICLPMt_multi_inat_S4 <- '
 ```{r fit RICLPMt_multi_S4}
 RICLPMt_multi_inat_S4.fit <- cfa(RICLPMt_multi_inat_S4, 
                            data = dat, 
-                       #    se = "robust",
+                           estimator = "WLSMV",
                            ordered = TRUE,
                            missing = 'pairwise')
 
-RICLPM_multi_inat_S4.fit.summary <- summary(RICLPMt_multi_inat_S4.fit, 
-                                            fit.measures = TRUE,
-                                            standardized = TRUE)
+RICLPM_multi_inat_S4.fit.summary <- summary(RICLPMt_multi_inat_S4.fit, fit.measures = TRUE, standardized = TRUE)
 ``` 
 
 S4 Model fit (no robust se):
@@ -2311,7 +2280,8 @@ To key points from [Hamaker et al., 2015](https://www.tandfonline.com/doi/pdf/10
 1. The disadvantage of using sum and mean scores however is that one assumes an absence of measurement error, which often is an unrealistic assumption, especially within the social sciences (Griliches & Hausman, 1986). Failing to properly account for measurement error can bias lagged-parameter estimates downward, leading to a loss of power. Also, the estimation of factor scores is difficult due to the problem of factor indeterminacy (i.e., there are multiple ways to obtain factor scores, each with their own set of advantages and disadvantages), and it is unclear how this affects the results of the RI-CLPM.
 2. The procedure described above for establishing measurement invariance relies heavily on chi-square difference testing which, as mentioned before, can have serious disadvantages such as an increased Type I and Type II error rate when the base model is misspecified (Yuan & Bentler, 2004). Alternatively, researchers can use equivalence testing **(Yuan & Chan, 2016)**, which allows researchers to explicitly specify an acceptable level of model misfit. 
 
-#### Exported tables for this model - **this does not include robust standard errors at the moment**
+#### Exported tables for this model 
+
 ```{r tables for RICLPMt_multi_inat_S4}
 # Table of model fit 
 RICLPM_multi_inat_S4.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPM_multi_inat_S4.fit.summary$FIT)))[,c(6,7,19,20,27,28,29,35)]
@@ -2398,14 +2368,12 @@ RICLPMt_multi_hyp_S1 <- '
 ```{r fit RICLPMt_multi_hyp_S1}
 RICLPMt_multi_hyp_S1.fit <- cfa(RICLPMt_multi_hyp_S1, 
                            data = dat, 
-                          # se = "robust",          # computes robust standard errors to account for use of twins
-                           ordered = TRUE,          # using the "ordered" option will use DWLS with polychoric correlations for the ordinal variables
-                           missing = 'pairwise'   # only excludes people who are missing both variables
+                           estimator = "WLSMV",
+                           ordered = TRUE,         
+                           missing = 'pairwise' 
 )
 
-summary(RICLPMt_multi_hyp_S1.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+summary(RICLPMt_multi_hyp_S1.fit, fit.measures = TRUE, standardized = TRUE)
 ```
 
 S1 Model fit:
@@ -2493,14 +2461,12 @@ RICLPMt_multi_hyp_S2 <- '
 ```{r fit RICLPMt_multi_hyp_S2}
 RICLPMt_multi_hyp_S2.fit <- cfa(RICLPMt_multi_hyp_S2, 
                            data = dat, 
-                         #  se = "robust",
+                           estimator = "WLSMV",
                            ordered = TRUE,
                            missing = 'pairwise'
                            )
 
-summary(RICLPMt_multi_hyp_S2.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+summary(RICLPMt_multi_hyp_S2.fit, fit.measures = TRUE, standardized = TRUE)
 ```
 
 S2 Model fit (without robust se):
@@ -2625,14 +2591,12 @@ RICLPMt_multi_hyp_S3 <- '
 ```{r fit RICLPMt_multi_hyp_S3}
 RICLPMt_multi_hyp_S3.fit <- cfa(RICLPMt_multi_hyp_S3, 
                            data = dat, 
-                        #   se = "robust",
+                           estimator = "WLSMV",
                            ordered = TRUE,
                            missing = 'pairwise'
                            )
 
-RICLPMt_multi_hyp_S3.fit.summary <- summary(RICLPMt_multi_hyp_S3.fit, 
-                                            fit.measures = TRUE,
-                                            standardized = TRUE)
+RICLPMt_multi_hyp_S3.fit.summary <- summary(RICLPMt_multi_hyp_S3.fit, fit.measures = TRUE, standardized = TRUE)
 ```
 
 S3 Model fit:
@@ -2761,14 +2725,12 @@ RICLPMt_multi_hyp_S4 <- '
 ```{r fit RICLPMt_multi_hyp_S4}
 RICLPMt_multi_hyp_S4.fit <- cfa(RICLPMt_multi_hyp_S4, 
                            data = dat, 
-                         #  se = "robust",
+                           estimator = "WLSMV",
                            ordered = TRUE,
                            missing = 'pairwise'
                            )
 
-summary(RICLPMt_multi_hyp_S4.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+summary(RICLPMt_multi_hyp_S4.fit, fit.measures = TRUE, standardized = TRUE)
 ```
 
 S4 Model fit:
@@ -2801,17 +2763,4 @@ RICLPMt_multi_hyp_S3.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPMt_mu
 # Table of regression coefficients and covariances 
 RICLPMt_multi_hyp_S3.fit.summary.reg <- as.tibble(RICLPMt_multi_hyp_S3.fit.summary$PE[c(187:202),-c(4,5)])
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
 
