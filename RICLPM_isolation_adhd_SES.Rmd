@@ -48,7 +48,7 @@ source("../isolation_ADHD_data_path.R")
 dat.raw <- read_dta(paste0(data.raw_path, "Katie_19Jan22.dta"))
 
 dat <- dat.raw %>%
-  select(id = atwinid,
+  dplyr::select(id = atwinid,
          sampsex,
          seswq35,
          sisoem5,  # social isolation mother report
@@ -94,20 +94,20 @@ Functions
 # Table of model fit 
 table.model.fit <- function(model){
   model.fit <- as.data.frame(t(as.data.frame(model$FIT))) %>%
-    select(chisq, df, chisq.scaled, cfi.robust, tli.robust, aic, bic, bic2, rmsea.robust, rmsea.ci.lower.robust, rmsea.ci.upper.robust, srmr) #can only be used with "MLR" estimator
+    dplyr::select(chisq, df, chisq.scaled, cfi.robust, tli.robust, aic, bic, bic2, rmsea.robust, rmsea.ci.lower.robust, rmsea.ci.upper.robust, srmr) #can only be used with "MLR" estimator
   return(model.fit)
 }
 
 # Table of regression and correlation (standardised covariance) - only constrained models have been made into tables. 
 table.model.coef <- function(model, ses){
   if (ses == "Low"){
-    model.coef <- as.tibble(model$PE[c(86:101),-c(4,5,6,7)])
+    model.coef <- as.tibble(model$PE[c(86:101),]) %>% dplyr::select(-block, -group, -exo, -label, -std.lv, -std.nox)
     return(model.coef)
   } else if(ses == "Middle"){
-    model.coef <- as.tibble(model$PE[c(17:32),-c(4,5,6,7)])
+    model.coef <- as.tibble(model$PE[c(17:32),]) %>% dplyr::select(-block, -group, -exo, -label, -std.lv, -std.nox)
     return(model.coef)
   } else if(ses == "High"){
-    model.coef <- as.tibble(model$PE[c(155:170),-c(4,5,6,7)])
+    model.coef <- as.tibble(model$PE[c(155:170),]) %>% dplyr::select(-block, -group, -exo, -label, -std.lv, -std.nox)
     return(model.coef)
   } else {model.coef <- NULL}
 }
@@ -193,10 +193,6 @@ RICLPM.ses.fit <- lavaan(RICLPM,
                       se = "robust",
                       estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
                       ) 
-
-RICLPM.ses.fit.summary <- summary(RICLPM.ses.fit, 
-                                fit.measures = TRUE,
-                                standardized = TRUE)
 ```
 
 Now we want to apply constraints over time to test if lagged parameters are invariant across groups, if the chi square is significant then the lagged effects for boys and girls are different.  
@@ -267,7 +263,10 @@ Now we see if there is a significantly worse fit when the lagged-parameters are 
 ```{r LRT for RICLPM.ses and RICLPM.ses2}
 lavTestLRT(RICLPM.ses.fit, RICLPM.ses2.fit, method = "satorra.bentler.2010")
 ```
+When using robust statistics:
+The chi-square difference test of these two nested models is **non significant** (p=0.4232).
 
+When using non-robust statistics:
 The chi-square difference test of these two nested models is **significant** (p=0.0006471), which implies that the lagged effects appear to be the **different for different levels of SES** 
 
 ### RI-CLPM - Hyperactivity ADHD scores
@@ -328,10 +327,6 @@ RICLPM_hyp.ses.fit <- lavaan(RICLPM_hyp,
                       se = "robust",
                       estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
                       ) 
-
-RICLPM_hyp.ses.fit.summary <- summary(RICLPM_hyp.ses.fit, 
-                                fit.measures = TRUE,
-                                standardized = TRUE)
 ```
 
 Now we want to apply constraints over time to test if lagged parameters are invariant across groups, if the chi square is significant then the lagged effects for boys and girls are different.  
@@ -403,7 +398,11 @@ Now we see if there is a significantly worse fit when the lagged-parameters are 
 lavTestLRT(RICLPM_hyp.ses.fit, RICLPM_hyp.ses2.fit, method = "satorra.bentler.2010")
 ```
 
-The chi-square difference test of these two nested models is **significant** (p=0.003791), which implies that the lagged effects appear to be the **different for different levels of SES** 
+For robust statistics:
+The chi-square difference test of these two nested models is **non significant** (p=0.4785). 
+
+For non-robust statistics: 
+The chi-square difference test of these two nested models is **significant** (p=0.003791), which implies that the lagged effects appear to be the **different for different levels of SES.** 
 
 ### RI-CLPM - Inattention ADHD scores
 
@@ -463,10 +462,6 @@ RICLPM_inat.ses.fit <- lavaan(RICLPM_inat,
                       se = "robust",
                       estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
                       ) 
-
-RICLPM_inat.ses.fit.summary <- summary(RICLPM_inat.ses.fit, 
-                                fit.measures = TRUE,
-                                standardized = TRUE)
 ```
 
 ```{r specify RICLPM_inat.ses2}
@@ -536,6 +531,10 @@ Now we see if there is a significantly worse fit when the lagged-parameters are 
 lavTestLRT(RICLPM_inat.ses.fit, RICLPM_inat.ses2.fit, method = "satorra.bentler.2010")
 ```
 
+For robust statistics:
+The chi-square difference test of these two nested models is **significant** (p=0.4983).
+
+For non-robust statistics:
 The chi-square difference test of these two nested models is **significant** (p=0.00123), which implies that the lagged effects appear to be the **different for different levels of SES** 
 
 ## Teacher report
@@ -598,10 +597,6 @@ RICLPMt.ses.fit <- lavaan(RICLPMt,
                       se = "robust",
                       estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
                       ) 
-
-RICLPMt.ses.fit.summary <- summary(RICLPMt.ses.fit, 
-                                fit.measures = TRUE,
-                                standardized = TRUE)
 ```
 
 ```{r specify RICLPMt.ses2}
@@ -671,6 +666,10 @@ Now we see if there is a significantly worse fit when the lagged-parameters are 
 lavTestLRT(RICLPMt.ses.fit, RICLPMt.ses2.fit, method = "satorra.bentler.2010")
 ```
 
+For robust statistics:
+The chi-square difference test of these two nested models is **non significant** (p=0.2749).
+
+For non-robust statistics:
 The chi-square difference test of these two nested models is **significant** (p<0.000001), which implies that the lagged effects appear to be the **different for different levels of SES** 
 
 ### RI-CLPM - Hyperactivity ADHD scores
@@ -731,10 +730,6 @@ RICLPMt_hyp.ses.fit <- lavaan(RICLPMt_hyp,
                       se = "robust",
                       estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
                       ) 
-
-RICLPMt_hyp.ses.fit.summary <- summary(RICLPMt_hyp.ses.fit, 
-                                fit.measures = TRUE,
-                                standardized = TRUE)
 ```
 
 ```{r specify RICLPMt_hyp.ses2}
@@ -804,6 +799,10 @@ Now we see if there is a significantly worse fit when the lagged-parameters are 
 lavTestLRT(RICLPMt_hyp.ses.fit, RICLPMt_hyp.ses2.fit, method = "satorra.bentler.2010")
 ```
 
+For robust statistics:
+The chi-square difference test of these two nested models is **nonsignificant** (p=0.1305)
+
+For non-robust statistics:
 The chi-square difference test of these two nested models is **significant** (p<0.000001), which implies that the lagged effects appear to be the **different for different levels of SES** 
 
 ### RI-CLPM - Inattention ADHD scores
@@ -933,6 +932,10 @@ Now we see if there is a significantly worse fit when the lagged-parameters are 
 lavTestLRT(RICLPMt_inat.ses.fit, RICLPMt_inat.ses2.fit, method = "satorra.bentler.2010")
 ```
 
+For robust statistics:
+The chi-square difference test of these two nested models is **non significant** (p=0.7082),
+
+For non-robust statistics:
 The chi-square difference test of these two nested models is **significant** (p=0.0001883), which implies that the lagged effects appear to be the **different for different levels of SES** 
 
 ***
@@ -1112,8 +1115,11 @@ Now we see if there is a significantly worse fit when the lagged-parameters are 
 lavTestLRT(RICLPM.lag.c.fit, RICLPM.ses.lag.c.fit, method = "satorra.bentler.2010")
 ```
 
+For robust test statistics (MLR estimation and satorra.bentler.2010 LRT method): 
+The chi-square difference test of these two nested models is **non significant** (p=0.5758).
+
+For non-rubust statistics:
 The chi-square difference test of these two nested models is **significant** (p=0.009818), which implies that the lagged effects appear to be the **different for different levels of SES** 
-When using robust test statictics (MLR estimation and satorra.bentler.2010 LRT method) this becomes non-significant (p=0.5758)
 
 SES differences found:
 - Low SES has significant ADHD -> social isolation cross-lag (p=0.022)
@@ -1270,6 +1276,10 @@ Now we see if there is a significantly worse fit when the lagged-parameters are 
 lavTestLRT(RICLPM_hyp.lag.c.fit, RICLPM_hyp.ses.lag.c.fit, method = "satorra.bentler.2010")
 ```
 
+For robust statistics:
+The chi-square difference test of these two nested models is **non significant** (p=0.6128). 
+
+Fro non-robust statistics: 
 The chi-square difference test of these two nested models is **significant** (p=0.02456), which implies that the lagged effects appear to be the **different for different levels of SES** 
 
 SES differences found:
@@ -1427,6 +1437,10 @@ Now we see if there is a significantly worse fit when the lagged-parameters are 
 lavTestLRT(RICLPM_inat.lag.c.fit, RICLPM_inat.ses.lag.c.fit, method = "satorra.bentler.2010")
 ```
 
+For robust statistics:
+The chi-square difference test of these two nested models is **non significant** (p=0.4287),
+
+For non-robust statistics:
 The chi-square difference test of these two nested models is **significant** (p=0.002148), which implies that the lagged effects appear to be the **different for different levels of SES** 
 
 SES differences found:
@@ -1588,6 +1602,10 @@ Now we see if there is a significantly worse fit when the lagged-parameters are 
 lavTestLRT(RICLPMt.lag.c.fit, RICLPMt.ses.lag.c.fit, method = "satorra.bentler.2010")
 ```
 
+For robust statistics:
+The chi-square difference test of these two nested models is **non significant** (p=0.3931). 
+
+For non-robust statistics: 
 The chi-square difference test of these two nested models is **significant** (p=0.004629), which implies that the lagged effects appear to be the **different for different levels of SES** 
 
 SES differences found:
@@ -1746,6 +1764,10 @@ Now we see if there is a significantly worse fit when the lagged-parameters are 
 lavTestLRT(RICLPMt_hyp.lag.c.fit, RICLPMt_hyp.ses.lag.c.fit, method = "satorra.bentler.2010")
 ```
 
+For robust statistics:
+The chi-square difference test of these two nested models is **non significant** (p=0.3033). 
+
+For non-robust statistics
 The chi-square difference test of these two nested models is **significant** (p=0.001871), which implies that the lagged effects appear to be the **different for different levels of SES** 
 
 SES differences found:
@@ -1904,6 +1926,10 @@ Now we see if there is a significantly worse fit when the lagged-parameters are 
 lavTestLRT(RICLPMt_inat.lag.c.fit, RICLPMt_inat.ses.lag.c.fit, method = "satorra.bentler.2010")
 ```
 
+For robust statistics:
+The chi-square difference test of these two nested models is **non significant** (p=0.5639). 
+
+For non-robust statistics:
 The chi-square difference test of these two nested models is **significant** (p=0.02542), which implies that the lagged effects appear to be the **different for different levels of SES** 
 
 SES differences found:

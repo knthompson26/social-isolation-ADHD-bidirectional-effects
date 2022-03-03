@@ -247,6 +247,8 @@ dat <- dat.raw %>%
 colnames(dat)
 ```
 
+***
+
 # Cronbach alpha for social isolation items 
 
 ```{r identifying items}
@@ -277,6 +279,7 @@ cronbach.alpha(dat[isolation.teacher.age12], standardized = TRUE, CI = TRUE, na.
 Teacher report Cronbach's alpha (standardized): 0.596
 Mother report Cronbach's alpha (standardized): 0.785
 
+***
 
 The loaded data is for se = robust and listwise deletion models.
 Need to create a new saved dataset where all models are robust standard errors and pairwise deletion. 

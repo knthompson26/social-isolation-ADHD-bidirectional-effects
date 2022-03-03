@@ -48,7 +48,7 @@ source("../isolation_ADHD_data_path.R")
 dat.raw <- read_dta(paste0(data.raw_path, "Katie_19Jan22.dta"))
 
 dat <- dat.raw %>%
-  select(id = atwinid,
+  dplyr::select(id = atwinid,
          sampsex,
          seswq35,
          sisoem5,  # social isolation mother report
@@ -94,23 +94,23 @@ Functions
 # Table of model fit 
 table.model.fit <- function(model){
   model.fit <- as.data.frame(t(as.data.frame(model$FIT))) %>%
-    select(chisq, df, chisq.scaled, cfi.robust, tli.robust, aic, bic, bic2, rmsea.robust, rmsea.ci.lower.robust, rmsea.ci.upper.robust, srmr) #can only be used with "MLR" estimator
+    dplyr::select(chisq, df, chisq.scaled, cfi.robust, tli.robust, aic, bic, bic2, rmsea.robust, rmsea.ci.lower.robust, rmsea.ci.upper.robust, srmr) #can only be used with "MLR" estimator
   return(model.fit)
 }
 
 # Table of regression and correlation (standardised covariance) coefficients
 table.model.coef <- function(model, sex, constraints){
   if (sex == "Male" & constraints == "No"){
-    model.coef <- as.tibble(model$PE[c(86:101),]) %>% select(-block, -group, -exo, -std.lv, -std.nox)
+    model.coef <- as.tibble(model$PE[c(86:101),]) %>% dplyr::select(-block, -group, -exo, -std.lv, -std.nox)
     return(model.coef)
   } else if(sex == "Female" & constraints == "No"){
-    model.coef <- as.tibble(model$PE[c(17:32),]) %>% select(-block, -group, -exo, -std.lv, -std.nox)
+    model.coef <- as.tibble(model$PE[c(17:32),]) %>% dplyr::select(-block, -group, -exo, -std.lv, -std.nox)
     return(model.coef)
   } else if(sex == "Male" & constraints == "Yes"){
-    model.coef <- as.tibble(model$PE[c(86:101),]) %>% select(-block, -group, -exo, -label, -std.lv, -std.nox)
+    model.coef <- as.tibble(model$PE[c(86:101),]) %>% dplyr::select(-block, -group, -exo, -label, -std.lv, -std.nox)
     return(model.coef)
   } else if(sex == "Female" & constraints == "Yes"){
-    model.coef <- as.tibble(model$PE[c(17:32),]) %>% select(-block, -group, -exo, -label, -std.lv, -std.nox)
+    model.coef <- as.tibble(model$PE[c(17:32),]) %>% dplyr::select(-block, -group, -exo, -label, -std.lv, -std.nox)
     return(model.coef)
   } else {model.coef <- NULL}
 }
@@ -193,10 +193,6 @@ RICLPM.sex.fit <- lavaan(RICLPM,
                       se = "robust",
                       estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
 )
-
-RICLPM.sex.fit.summary <- summary(RICLPM.sex.fit, 
-                                fit.measures = TRUE,
-                                standardized = TRUE)
 ```
 
 Now we want to apply constraints over time to test if lagged parameters are invariant across groups, if the chi square is significant then the lagged effects for boys and girls are different.  
@@ -265,10 +261,10 @@ RICLPM.sex2.fit <- lavaan(RICLPM.sex2,
 Now we see if there is a significantly worse fit when the lagged-parameters are constrained to be equal across groups. 
 
 ```{r LRT for RICLPM.sex.fit and RICLPM.sex2.fit}
-lavTestLRT(RICLPM.sex.fit, RICLPM.sex2.fit)
+lavTestLRT(RICLPM.sex.fit, RICLPM.sex2.fit, method = "satorra.bentler.2010")
 ```
 
-The chi-square difference test of these two nested models is non-significant (p=0.1118), which implies that the  lagged effects appear to be the **same for girls and boys.** 
+The chi-square difference test of these two nested models is non-significant (p=0.7441), which implies that the  lagged effects appear to be the **same for girls and boys.** 
 
 ### RI-CLPM - Hyperactivity ADHD scores
 
@@ -328,10 +324,6 @@ RICLPM_hyp.sex.fit <- lavaan(RICLPM_hyp,
                       se = "robust",
                       estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
                       ) 
-
-RICLPM_hyp.sex.fit.summary <- summary(RICLPM_hyp.sex.fit, 
-                                fit.measures = TRUE,
-                                standardized = TRUE)
 ```
 
 Now we want to apply constraints over time to test if lagged parameters are invariant across groups, if the chi square is significant then the lagged effects for boys and girls are different.  
@@ -400,10 +392,10 @@ RICLPM_hyp.sex2.fit <- lavaan(RICLPM_hyp.sex2,
 Now we see if there is a significantly worse fit when the lagged-parameters are constrained to be equal across groups. 
 
 ```{r LRT for RICLPM_hyp.sex.fit and RICLPM_hyp.sex2.fit}
-lavTestLRT(RICLPM_hyp.sex.fit, RICLPM_hyp.sex2.fit)
+lavTestLRT(RICLPM_hyp.sex.fit, RICLPM_hyp.sex2.fit, method = "satorra.bentler.2010")
 ```
 
-The chi-square difference test of these two nested models is non-significant (p=0.7304), which implies that the lagged effects appear to be the **same for girls and boys.** 
+The chi-square difference test of these two nested models is non-significant (p=0.9723), which implies that the lagged effects appear to be the **same for girls and boys.** 
 
 ### RI-CLPM - Inattention ADHD scores
 
@@ -539,10 +531,10 @@ RICLPM_inat.sex2.fit <- lavaan(RICLPM_inat.sex2,
 Now we see if there is a significantly worse fit when the lagged-parameters are constrained to be equal across groups. 
 
 ```{r LRT for RICLPM_inat.sex.fit and RICLPM_inat.sex2.fit}
-lavTestLRT(RICLPM_inat.sex.fit, RICLPM_inat.sex2.fit)
+lavTestLRT(RICLPM_inat.sex.fit, RICLPM_inat.sex2.fit, method = "satorra.bentler.2010")
 ```
 
-The chi-square difference test of these two nested models is *significant* (p=0.001605), which implies that lagged effects appear to be **different for girls and boys.** 
+The chi-square difference test of these two nested models is *non-significant*.
 
 ## Teacher report
 
@@ -680,10 +672,10 @@ RICLPMt.sex2.fit <- lavaan(RICLPMt.sex2,
 Now we see if there is a significantly worse fit when the lagged-parameters are constrained to be equal across groups. 
 
 ```{r LRT for RICLPMt.sex.fit and RICLPMt.sex2.fit}
-lavTestLRT(RICLPMt.sex.fit, RICLPMt.sex2.fit)
+lavTestLRT(RICLPMt.sex.fit, RICLPMt.sex2.fit, method = "satorra.bentler.2010")
 ```
 
-The chi-square difference test of these two nested models is *significant* (p=0.001178), which implies that lagged effects appear to be **different for girls and boys.** 
+The chi-square difference test of these two nested models is *non significant* (p=0.5203)
 
 ### RI-CLPM - Hyperactivity ADHD scores
 
@@ -819,10 +811,10 @@ RICLPMt_hyp.sex2.fit <- lavaan(RICLPMt_hyp.sex2,
 Now we see if there is a significantly worse fit when the lagged-parameters are constrained to be equal across groups. 
 
 ```{r LRT for RICLPM.sex and RICLPMt_hyp.sex2.fit}
-lavTestLRT(RICLPMt_hyp.sex.fit, RICLPMt_hyp.sex2.fit)
+lavTestLRT(RICLPMt_hyp.sex.fit, RICLPMt_hyp.sex2.fit, method = "satorra.bentler.2010")
 ```
 
-The chi-square difference test of these two nested models is *significant* (p=0.0000009), which implies that lagged effects appear to be **different for girls and boys.** 
+The chi-square difference test of these two nested models is *non significant* (p=0.2146).
 
 ### RI-CLPM - Inattention ADHD scores
 
@@ -948,10 +940,10 @@ RICLPMt_inat.sex2.fit <- lavaan(RICLPMt_inat.sex2,
 Now we see if there is a significantly worse fit when the lagged-parameters are constrained to be equal across groups. 
 
 ```{r LRT for RICLPMt_inat.sex.fit and RICLPMt_inat.sex2.fit}
-lavTestLRT(RICLPMt_inat.sex.fit, RICLPMt_inat.sex2.fit)
+lavTestLRT(RICLPMt_inat.sex.fit, RICLPMt_inat.sex2.fit, method = "satorra.bentler.2010")
 ```
 
-The chi-square difference test of these two nested models is *not* significant (p=0.06844), which implies that the lagged effects appear to be **the same for girls and boys.** 
+The chi-square difference test of these two nested models is *not* significant (p=0.8206).
 
 ***
 
@@ -959,7 +951,7 @@ The chi-square difference test of these two nested models is *not* significant (
 
 **We have previously compared our freed model to the sex constraints model, showing if there are sex group differences between each freed model. Now, we will compare the sex constraints model to our with already set constrainted on the lagged parameters** Mother report will have only cross-lags constrained, and teacher report will have both cross-lags and autoregressive lags constrained across groups.
 
-The following sex differences were observed for the unconstrained models:
+The following sex differences were observed for the unconstrained models (**WITHOUT** using robust statistics):
 
 |  Model                                         | Sex differences                                                                                                                                                                                 | 
 | ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -970,7 +962,19 @@ The following sex differences were observed for the unconstrained models:
 |   Teacher report, hyperactivity ADHD symptoms  |  Girls no autoregressive paths ADHD 5&7. Boys bidirectional at 5-7 lag, girls isolation to ADHD. ADHD7 -> isolation10 in boys. ADHD10 -> isolation12 in girls. Girls no concurrent 7, 10 and 12 |
 |   Teacher report, inattention ADHD symptoms    |  No significant sex differences                                                                                                                                                                 |
 
-Now, we will test for sex differences using the constrained model. Where significant sex differences were found for the unconstrained model, we will check for sex differences in the best fitting constrained model through further constraining the autoregressive and cross-lagged parameters to be the same across groups of boys and girls. 
+The following sex differences were observed for the unconstrained models (**WITH**  robust statistics):
+
+|  Model                                         | Sex differences                                                                                                                                                                                 | 
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|   Mother report, total ADHD symptoms           |  No significant sex differences                                                                                                                                                                 |
+|   Mother report, hyperactivity ADHD symptoms   |  No significant sex differences                                                                                                                                                                 |
+|   Mother report, inattention ADHD symptoms     |  No significant sex differences                                                                                                                                                                 |
+|   Teacher report, total ADHD symptoms          |  No significant sex differences                                                                                                                                                                 |
+|   Teacher report, hyperactivity ADHD symptoms  |  No significant sex differences                                                                                                                                                                 |
+|   Teacher report, inattention ADHD symptoms    |  No significant sex differences                                                                                                                                                                 |
+
+
+Now, we will test for sex differences using the constrained model. Where significant sex differences were found for the unconstrained model (nonrobust statistics), we will check for sex differences in the best fitting constrained model through further constraining the autoregressive and cross-lagged parameters to be the same across groups of boys and girls. 
 
 The following models will be tested for sex differences in the constrained model:
  - Mother report, inattention ADHD symptoms 
@@ -1058,10 +1062,6 @@ RICLPM_inat.lag.c.fit <- lavaan(RICLPM_inat.lag.c,
                       se = "robust",
                       estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
                       ) 
-
-summary(RICLPM_inat.lag.c.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
 ```
 
 ```{r specify RICLPM_inat.sex.lag.c, class.source = 'fold-show'}
@@ -1130,12 +1130,16 @@ RICLPM_inat.sex.lag.c.fit <- lavaan(RICLPM_inat.sex.lag.c,
 Now we see if there is a significantly worse fit when the lagged-parameters are constrained to be equal across groups. 
 
 ```{r LRT for RICLPM_inat_lag.c.fit and RICLPM_inat.sex.lag.c.fit}
-lavTestLRT(RICLPM_inat.lag.c.fit, RICLPM_inat.sex.lag.c.fit)
+lavTestLRT(RICLPM_inat.lag.c.fit, RICLPM_inat.sex.lag.c.fit, method = "satorra.bentler.2010")
 ```
 
-The chi-square difference test of these two nested models is *non significant* (p=0.254). 
+For the robust model:
+The chi-square difference test of these two nested models is *non significant* (p=0.2656). 
 
-**Therefore, we conclude there are no sex differences in the constrained RICLPM mother report for inattention ADHD symptoms.** 
+For the non-robust model: 
+The chi-square difference test of these two nested models is *significant* (p=0.003691). 
+
+**However, there were no differences in significance in the cross-lagged paths so we conclude there are no sex differences in the constrained RICLPM mother report for inattention ADHD symptoms.** 
 
 ## Teacher report: total ADHD symptoms 
 
@@ -1200,10 +1204,6 @@ RICLPMt.lag.c.fit <- lavaan(RICLPMt.lag.c,
                       se = "robust",
                       estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
                       ) 
-
-summary(RICLPMt.lag.c.fit,
-        fit.measures = TRUE,
-        standardized = TRUE)
 ```
 
 ```{r specify RICLPMt.sex.lag.c, class.source = 'fold-show'}
@@ -1272,10 +1272,10 @@ RICLPMt.sex.lag.c.fit <- lavaan(RICLPMt.sex.lag.c,
 Now we see if there is a significantly worse fit when the lagged-parameters are constrained to be equal across groups. 
 
 ```{r LRT for RICLPMt.lag.c.fit and RICLPMt.sex.lag.c.fit}
-lavTestLRT(RICLPMt.lag.c.fit, RICLPMt.sex.lag.c.fit)
+lavTestLRT(RICLPMt.lag.c.fit, RICLPMt.sex.lag.c.fit, method = "satorra.bentler.2010")
 ```
 
-The chi-square difference test of these two nested models is *NON significant* (p=0.543). **Therefore, we conclude there are no sex differences in the constrained RICLPM teacher report, total ADHD symptoms.** 
+The chi-square difference test of these two nested models is *NON significant* (p=0.5833). **Therefore, we conclude there are no sex differences in the constrained RICLPM teacher report, total ADHD symptoms.** 
 
 ## Teacher report: hyperactivity ADHD symptoms 
 
@@ -1338,7 +1338,7 @@ RICLPMt_hyp.lag.c.fit <- lavaan(RICLPMt_hyp.lag.c,
                       meanstructure = TRUE, 
                       int.ov.free = TRUE,
                       se = "robust",
-                     estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
                       ) 
 
 RICLPMt_hyp.lag.c.fit.summary <- summary(RICLPMt_hyp.lag.c.fit,
@@ -1421,11 +1421,15 @@ Now we see if there is a significantly worse fit when the lagged-parameters are 
 lavTestLRT(RICLPMt_hyp.lag.c.fit, RICLPMt_hyp.sex.lag.c.fit, method = "satorra.bentler.2010")
 ```
 
-The chi-square difference test of these two nested models is *significant* (p=0.01516). 
+For robust models:
+The chi-square difference test of these two nested models is *non significant* (p=0.3255) but this was significant when using non-robust statistics (p=0.01516). 
 
-Inattention mother report sex differences:
+For non-robust models:
+The chi-square difference test of these two nested models is *significant* (p=0.01516) 
+
+For non-robust model - Inattention mother report sex differences:
 - No significant cross-lags (or auto-regressive lags) for females
 - **Significant cross-lags for Hyperactivity -> social isolation for males (p=0.001)**
 
-**Therefore, we conclude there are sex differences in the constrained RICLPM teacher report for hyperactivity ADHD symptoms and social isolation.** 
+**Therefore, we conclude there are sex differences in the constrained RICLPM teacher report for hyperactivity ADHD symptoms and social isolation - but these differences are not highly significant.** 
 
