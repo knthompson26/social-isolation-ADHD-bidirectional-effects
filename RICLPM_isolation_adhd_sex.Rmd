@@ -1,0 +1,1435 @@
+---
+title: "Random intercept cross lagged panel models for social isolation and ADHD symptoms in childhood - sex differences"
+output:  
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: 2
+    toc_float:
+      collapsed: false
+    number_sections: false
+    highlight: monochrome
+    theme: flatly
+    code_folding: hide
+    includes:
+      after_body: footer.html
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      comment = NA,
+                      prompt = FALSE,
+                      cache = FALSE,
+                      message = FALSE,
+                      warning = FALSE,
+                      results = 'asis')
+
+options(bitmapType = 'quartz') # to render fonts better
+```
+
+```{r Clear global environment, include=FALSE}
+remove(list = ls())
+```
+
+```{r Load packages, include=FALSE}
+library(knitr)
+library(haven)
+library(lavaan)
+library(tidyverse)
+library(dplyr) #conflicts with tidyverse for e.g. rename and row_number
+```
+
+```{r source the data file path, include=FALSE}
+#source raw data directory: data_raw and data included
+source("../isolation_ADHD_data_path.R")
+```
+
+```{r read in dta data file}
+dat.raw <- read_dta(paste0(data.raw_path, "Katie_19Jan22.dta"))
+
+dat <- dat.raw %>%
+  dplyr::select(id = atwinid,
+         sampsex,
+         seswq35,
+         sisoem5,  # social isolation mother report
+         sisoem7,
+         sisoem10,
+         sisoem12,
+         sisoet5,  # social isolation teacher report
+         sisoet7, 
+         sisoet10,
+         sisoet12,
+         tadhdem5,  # total ADHD mother report
+         tadhdem7,
+         tadhdem10,
+         tadhdem12,
+         tadhdet5,  # total ADHD teacher report
+         tadhdet7,
+         tadhdet10,
+         tadhdet12,
+         hyem5,     # hyperactivity ADHD mother report
+         hyem7,
+         hyem10,
+         hyem12, 
+         hyet5,     # hyperactivity ADHD teacher report
+         hyet7,
+         hyet10,
+         hyet12,
+         inem5,    # inattention ADHD mother report
+         inem7,
+         inem10,
+         inem12,
+         inet5,    # inattention ADHD teacher report
+         inet7,
+         inet10,
+         inet12
+  )
+
+colnames(dat)
+```
+
+Functions
+
+```{r functions}
+# Table of model fit 
+table.model.fit <- function(model){
+  model.fit <- as.data.frame(t(as.data.frame(model$FIT))) %>%
+    dplyr::select(chisq, df, chisq.scaled, cfi.robust, tli.robust, aic, bic, bic2, rmsea.robust, rmsea.ci.lower.robust, rmsea.ci.upper.robust, srmr) #can only be used with "MLR" estimator
+  return(model.fit)
+}
+
+# Table of regression and correlation (standardised covariance) coefficients
+table.model.coef <- function(model, sex, constraints){
+  if (sex == "Male" & constraints == "No"){
+    model.coef <- as.tibble(model$PE[c(86:101),]) %>% dplyr::select(-block, -group, -exo, -std.lv, -std.nox)
+    return(model.coef)
+  } else if(sex == "Female" & constraints == "No"){
+    model.coef <- as.tibble(model$PE[c(17:32),]) %>% dplyr::select(-block, -group, -exo, -std.lv, -std.nox)
+    return(model.coef)
+  } else if(sex == "Male" & constraints == "Yes"){
+    model.coef <- as.tibble(model$PE[c(86:101),]) %>% dplyr::select(-block, -group, -exo, -label, -std.lv, -std.nox)
+    return(model.coef)
+  } else if(sex == "Female" & constraints == "Yes"){
+    model.coef <- as.tibble(model$PE[c(17:32),]) %>% dplyr::select(-block, -group, -exo, -label, -std.lv, -std.nox)
+    return(model.coef)
+  } else {model.coef <- NULL}
+}
+```
+
+To check for group differences in parameter estimates between girls and boys (sex), we can run the same model but test group differences in the lavaan command.
+
+```{r recode sex variable}
+dat <- dat %>%
+  mutate(
+    sex = 
+      recode_factor(as_factor(sampsex),
+        "1" = "Male",
+        "2" = "Female"))
+
+table(dat$sex)
+```
+
+***
+
+# Unconstrained RI-CLPM 
+
+## Mother report
+
+### RI-CLPM - total ADHD scores
+
+```{r specify RICLPM, class.source = 'fold-show'}
+RICLPM <- '
+  # Create between components (random intercepts treated as factors here)
+  RIad =~ 1*tadhdem5 + 1*tadhdem7 + 1*tadhdem10 + 1*tadhdem12 #x
+  RIsi =~ 1*sisoem5 + 1*sisoem7 + 1*sisoem10 + 1*sisoem12 #y
+
+  # Create within-person centered variables
+  wad5 =~ 1*tadhdem5
+  wad7 =~ 1*tadhdem7
+  wad10 =~ 1*tadhdem10 
+  wad12 =~ 1*tadhdem12
+  wsi5 =~ 1*sisoem5
+  wsi7 =~ 1*sisoem7
+  wsi10 =~ 1*sisoem10
+  wsi12 =~ 1*sisoem12
+  
+  # Estimate the lagged effects between the within-person centered variables
+  wad7 + wsi7 ~ wad5 + wsi5
+  wad10 + wsi10 ~ wad7 + wsi7
+  wad12 + wsi12 ~ wad10 + wsi10
+  
+  # Estimate the covariance between the within-person centered variables at the first wave
+  wad5 ~~ wsi5 # Covariance
+  
+  # Estimate the covariances between the residuals of the within-person centered variables (the innovations)
+  wad7 ~~ wsi7
+  wad10 ~~ wsi10
+  wad12 ~~ wsi12
+  
+  # Estimate the variance and covariance of the random intercepts
+  RIad ~~ RIad
+  RIsi ~~ RIsi
+  RIad ~~ RIsi
+  
+  # Estimate the (residual) variance of the within-person centered variables.
+  wad5 ~~ wad5 # Variances
+  wsi5 ~~ wsi5 
+  wad7 ~~ wad7 # Residual variances
+  wsi7 ~~ wsi7 
+  wad10 ~~ wad10 
+  wsi10 ~~ wsi10 
+  wad12 ~~ wad12 
+  wsi12 ~~ wsi12
+'
+```
+
+```{r fit RICLPM grouped by sex}
+RICLPM.sex.fit <- lavaan(RICLPM, 
+                      data = dat, 
+                      missing = 'ML', 
+                      group = "sex",
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+)
+```
+
+Now we want to apply constraints over time to test if lagged parameters are invariant across groups, if the chi square is significant then the lagged effects for boys and girls are different.  
+
+```{r specify RICLPM.sex2, class.source = 'fold-show'}
+RICLPM.sex2 <- '
+  # Create between components (random intercepts treated as factors here)
+  RIad =~ 1*tadhdem5 + 1*tadhdem7 + 1*tadhdem10 + 1*tadhdem12 #x
+  RIsi =~ 1*sisoem5 + 1*sisoem7 + 1*sisoem10 + 1*sisoem12 #y
+
+  # Create within-person centered variables
+  wad5 =~ 1*tadhdem5
+  wad7 =~ 1*tadhdem7
+  wad10 =~ 1*tadhdem10 
+  wad12 =~ 1*tadhdem12
+  wsi5 =~ 1*sisoem5
+  wsi7 =~ 1*sisoem7
+  wsi10 =~ 1*sisoem10
+  wsi12 =~ 1*sisoem12
+  
+  # Estimate the lagged effects between the within-person centered variables. Constrain the autoregressive effects across groups. 
+  wad7 ~ c(a1, a1)*wad5 + c(b1, b1)*wsi5
+  wsi7 ~ c(c1, c1)*wad5 + c(d1, d1)*wsi5
+  wad10 ~ c(a2, a2)*wad7 + c(b2, b2)*wsi7
+  wsi10 ~ c(c2, c2)*wad7 + c(d2, d2)*wsi7
+  wad12 ~ c(a3, a3)*wad10 + c(b3, b3)*wsi10
+  wsi12 ~ c(c3, c3)*wad10 + c(d3, d3)*wsi10 
+
+  # Estimate the covariance between the within-person centered variables at the first wave
+  wad5 ~~ wsi5 # Covariance
+  
+  # Estimate the covariances between the residuals of the within-person centered variables (the innovations)
+  wad7 ~~ wsi7
+  wad10 ~~ wsi10
+  wad12 ~~ wsi12
+  
+  # Estimate the variance and covariance of the random intercepts
+  RIad ~~ RIad
+  RIsi ~~ RIsi
+  RIad ~~ RIsi
+  
+  # Estimate the (residual) variance of the within-person centered variables.
+  wad5 ~~ wad5 # Variances
+  wsi5 ~~ wsi5 
+  wad7 ~~ wad7 # Residual variances
+  wsi7 ~~ wsi7 
+  wad10 ~~ wad10 
+  wsi10 ~~ wsi10 
+  wad12 ~~ wad12 
+  wsi12 ~~ wsi12
+'
+```
+
+```{r fit RICLPM.sex2 grouped by sex}
+RICLPM.sex2.fit <- lavaan(RICLPM.sex2, 
+                      data = dat, 
+                      missing = 'ML', 
+                      group = "sex",
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
+```
+
+Now we see if there is a significantly worse fit when the lagged-parameters are constrained to be equal across groups. 
+
+```{r LRT for RICLPM.sex.fit and RICLPM.sex2.fit}
+lavTestLRT(RICLPM.sex.fit, RICLPM.sex2.fit, method = "satorra.bentler.2010")
+```
+
+The chi-square difference test of these two nested models is non-significant (p=0.7441), which implies that the  lagged effects appear to be the **same for girls and boys.** 
+
+### RI-CLPM - Hyperactivity ADHD scores
+
+```{r specify RICLPM_hyp}
+RICLPM_hyp <- '
+  # Create between components (random intercepts treated as factors here)
+  RIad =~ 1*hyem5 + 1*hyem7 + 1*hyem10 + 1*hyem12 #x
+  RIsi =~ 1*sisoem5 + 1*sisoem7 + 1*sisoem10 + 1*sisoem12 #y
+
+  # Create within-person centered variables
+  wad5 =~ 1*hyem5
+  wad7 =~ 1*hyem7
+  wad10 =~ 1*hyem10 
+  wad12 =~ 1*hyem12
+  wsi5 =~ 1*sisoem5
+  wsi7 =~ 1*sisoem7
+  wsi10 =~ 1*sisoem10
+  wsi12 =~ 1*sisoem12
+  
+  # Estimate the lagged effects between the within-person centered variables
+  wad7 + wsi7 ~ wad5 + wsi5
+  wad10 + wsi10 ~ wad7 + wsi7
+  wad12 + wsi12 ~ wad10 + wsi10
+  
+  # Estimate the covariance between the within-person centered variables at the first wave
+  wad5 ~~ wsi5 # Covariance
+  
+  # Estimate the covariances between the residuals of the within-person centered variables (the innovations)
+  wad7 ~~ wsi7
+  wad10 ~~ wsi10
+  wad12 ~~ wsi12
+  
+  # Estimate the variance and covariance of the random intercepts
+  RIad ~~ RIad
+  RIsi ~~ RIsi
+  RIad ~~ RIsi
+  
+  # Estimate the (residual) variance of the within-person centered variables.
+  wad5 ~~ wad5 # Variances
+  wsi5 ~~ wsi5 
+  wad7 ~~ wad7 # Residual variances
+  wsi7 ~~ wsi7 
+  wad10 ~~ wad10 
+  wsi10 ~~ wsi10 
+  wad12 ~~ wad12 
+  wsi12 ~~ wsi12
+'
+```
+
+```{r fit RICLPM_hyp grouped by sex}
+RICLPM_hyp.sex.fit <- lavaan(RICLPM_hyp, 
+                      data = dat, 
+                      missing = 'ML', 
+                      group = "sex",
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
+```
+
+Now we want to apply constraints over time to test if lagged parameters are invariant across groups, if the chi square is significant then the lagged effects for boys and girls are different.  
+
+```{r specify RICLPM_hyp.sex2}
+RICLPM_hyp.sex2 <- '
+  # Create between components (random intercepts treated as factors here)
+  RIad =~ 1*hyem5 + 1*hyem7 + 1*hyem10 + 1*hyem12 #x
+  RIsi =~ 1*sisoem5 + 1*sisoem7 + 1*sisoem10 + 1*sisoem12 #y
+
+  # Create within-person centered variables
+  wad5 =~ 1*hyem5
+  wad7 =~ 1*hyem7
+  wad10 =~ 1*hyem10 
+  wad12 =~ 1*hyem12
+  wsi5 =~ 1*sisoem5
+  wsi7 =~ 1*sisoem7
+  wsi10 =~ 1*sisoem10
+  wsi12 =~ 1*sisoem12
+  
+  # Estimate the lagged effects between the within-person centered variables. Constrain the autoregressive effects across groups. 
+  wad7 ~ c(a1, a1)*wad5 + c(b1, b1)*wsi5
+  wsi7 ~ c(c1, c1)*wad5 + c(d1, d1)*wsi5
+  wad10 ~ c(a2, a2)*wad7 + c(b2, b2)*wsi7
+  wsi10 ~ c(c2, c2)*wad7 + c(d2, d2)*wsi7
+  wad12 ~ c(a3, a3)*wad10 + c(b3, b3)*wsi10
+  wsi12 ~ c(c3, c3)*wad10 + c(d3, d3)*wsi10 
+
+  # Estimate the covariance between the within-person centered variables at the first wave
+  wad5 ~~ wsi5 # Covariance
+  
+  # Estimate the covariances between the residuals of the within-person centered variables (the innovations)
+  wad7 ~~ wsi7
+  wad10 ~~ wsi10
+  wad12 ~~ wsi12
+  
+  # Estimate the variance and covariance of the random intercepts
+  RIad ~~ RIad
+  RIsi ~~ RIsi
+  RIad ~~ RIsi
+  
+  # Estimate the (residual) variance of the within-person centered variables.
+  wad5 ~~ wad5 # Variances
+  wsi5 ~~ wsi5 
+  wad7 ~~ wad7 # Residual variances
+  wsi7 ~~ wsi7 
+  wad10 ~~ wad10 
+  wsi10 ~~ wsi10 
+  wad12 ~~ wad12 
+  wsi12 ~~ wsi12
+'
+```
+
+```{r fit RICLPM_hyp.sex2 grouped by sex}
+RICLPM_hyp.sex2.fit <- lavaan(RICLPM_hyp.sex2, 
+                      data = dat, 
+                      missing = 'ML', 
+                      group = "sex",
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
+```
+
+Now we see if there is a significantly worse fit when the lagged-parameters are constrained to be equal across groups. 
+
+```{r LRT for RICLPM_hyp.sex.fit and RICLPM_hyp.sex2.fit}
+lavTestLRT(RICLPM_hyp.sex.fit, RICLPM_hyp.sex2.fit, method = "satorra.bentler.2010")
+```
+
+The chi-square difference test of these two nested models is non-significant (p=0.9723), which implies that the lagged effects appear to be the **same for girls and boys.** 
+
+### RI-CLPM - Inattention ADHD scores
+
+```{r specify RICLPM_inat}
+RICLPM_inat <- '
+  # Create between components (random intercepts treated as factors here)
+  RIad =~ 1*inem5 + 1*inem7 + 1*inem10 + 1*inem12 #x
+  RIsi =~ 1*sisoem5 + 1*sisoem7 + 1*sisoem10 + 1*sisoem12 #y
+
+  # Create within-person centered variables
+  wad5 =~ 1*inem5
+  wad7 =~ 1*inem7
+  wad10 =~ 1*inem10 
+  wad12 =~ 1*inem12
+  wsi5 =~ 1*sisoem5
+  wsi7 =~ 1*sisoem7
+  wsi10 =~ 1*sisoem10
+  wsi12 =~ 1*sisoem12
+  
+  # Estimate the lagged effects between the within-person centered variables
+  wad7 + wsi7 ~ wad5 + wsi5
+  wad10 + wsi10 ~ wad7 + wsi7
+  wad12 + wsi12 ~ wad10 + wsi10
+  
+  # Estimate the covariance between the within-person centered variables at the first wave
+  wad5 ~~ wsi5 # Covariance
+  
+  # Estimate the covariances between the residuals of the within-person centered variables (the innovations)
+  wad7 ~~ wsi7
+  wad10 ~~ wsi10
+  wad12 ~~ wsi12
+  
+  # Estimate the variance and covariance of the random intercepts
+  RIad ~~ RIad
+  RIsi ~~ RIsi
+  RIad ~~ RIsi
+  
+  # Estimate the (residual) variance of the within-person centered variables.
+  wad5 ~~ wad5 # Variances
+  wsi5 ~~ wsi5 
+  wad7 ~~ wad7 # Residual variances
+  wsi7 ~~ wsi7 
+  wad10 ~~ wad10 
+  wsi10 ~~ wsi10 
+  wad12 ~~ wad12 
+  wsi12 ~~ wsi12
+'
+```
+
+```{r fit RICLPM_inat grouped by sex}
+RICLPM_inat.sex.fit <- lavaan(RICLPM_inat, 
+                      data = dat, 
+                      missing = 'ML', 
+                      group = "sex",
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
+
+RICLPM_inat.sex.fit.summary <- summary(RICLPM_inat.sex.fit, 
+                                fit.measures = TRUE,
+                                standardized = TRUE)
+
+#Table of model fit 
+RICLPM_inat.sex.fit.summary.fit <- table.model.fit(RICLPM_inat.sex.fit.summary)
+#Table of regression coefficients and covariances for females and males separately
+RICLPM_inat.sex.fit.summary.reg.female <- table.model.coef(model = RICLPM_inat.sex.fit.summary, sex = "Female", constraints = "No")
+RICLPM_inat.sex.fit.summary.reg.male <- table.model.coef(model = RICLPM_inat.sex.fit.summary, sex = "Male", constraints = "No")
+```
+
+```{r specify RICLPM_inat.sex2}
+RICLPM_inat.sex2 <- '
+  # Create between components (random intercepts treated as factors here)
+  RIad =~ 1*inem5 + 1*inem7 + 1*inem10 + 1*inem12 #x
+  RIsi =~ 1*sisoem5 + 1*sisoem7 + 1*sisoem10 + 1*sisoem12 #y
+
+  # Create within-person centered variables
+  wad5 =~ 1*inem5
+  wad7 =~ 1*inem7
+  wad10 =~ 1*inem10 
+  wad12 =~ 1*inem12
+  wsi5 =~ 1*sisoem5
+  wsi7 =~ 1*sisoem7
+  wsi10 =~ 1*sisoem10
+  wsi12 =~ 1*sisoem12
+  
+  # Estimate the lagged effects between the within-person centered variables. Constrain the autoregressive effects across groups. 
+  wad7 ~ c(a1, a1)*wad5 + c(b1, b1)*wsi5
+  wsi7 ~ c(c1, c1)*wad5 + c(d1, d1)*wsi5
+  wad10 ~ c(a2, a2)*wad7 + c(b2, b2)*wsi7
+  wsi10 ~ c(c2, c2)*wad7 + c(d2, d2)*wsi7
+  wad12 ~ c(a3, a3)*wad10 + c(b3, b3)*wsi10
+  wsi12 ~ c(c3, c3)*wad10 + c(d3, d3)*wsi10 
+  
+  # Estimate the covariance between the within-person centered variables at the first wave
+  wad5 ~~ wsi5 # Covariance
+  
+  # Estimate the covariances between the residuals of the within-person centered variables (the innovations)
+  wad7 ~~ wsi7
+  wad10 ~~ wsi10
+  wad12 ~~ wsi12
+  
+  # Estimate the variance and covariance of the random intercepts
+  RIad ~~ RIad
+  RIsi ~~ RIsi
+  RIad ~~ RIsi
+  
+  # Estimate the (residual) variance of the within-person centered variables.
+  wad5 ~~ wad5 # Variances
+  wsi5 ~~ wsi5 
+  wad7 ~~ wad7 # Residual variances
+  wsi7 ~~ wsi7 
+  wad10 ~~ wad10 
+  wsi10 ~~ wsi10 
+  wad12 ~~ wad12 
+  wsi12 ~~ wsi12
+'
+```
+
+```{r fit RICLPM_inat.sex2 grouped by sex}
+RICLPM_inat.sex2.fit <- lavaan(RICLPM_inat.sex2, 
+                      data = dat, 
+                      missing = 'ML', 
+                      group = "sex",
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
+```
+
+Now we see if there is a significantly worse fit when the lagged-parameters are constrained to be equal across groups. 
+
+```{r LRT for RICLPM_inat.sex.fit and RICLPM_inat.sex2.fit}
+lavTestLRT(RICLPM_inat.sex.fit, RICLPM_inat.sex2.fit, method = "satorra.bentler.2010")
+```
+
+The chi-square difference test of these two nested models is *non-significant*.
+
+## Teacher report
+
+### RI-CLPM - total ADHD scores
+
+```{r specify RICLPMt, class.source = 'fold-show'}
+RICLPMt <- '
+  # Create between components (random intercepts treated as factors here)
+  RIad =~ 1*tadhdet5 + 1*tadhdet7 + 1*tadhdet10 + 1*tadhdet12 #x
+  RIsi =~ 1*sisoet5 + 1*sisoet7 + 1*sisoet10 + 1*sisoet12 #y
+
+  # Create within-person centered variables
+  wad5 =~ 1*tadhdet5
+  wad7 =~ 1*tadhdet7
+  wad10 =~ 1*tadhdet10 
+  wad12 =~ 1*tadhdet12
+  wsi5 =~ 1*sisoet5
+  wsi7 =~ 1*sisoet7
+  wsi10 =~ 1*sisoet10
+  wsi12 =~ 1*sisoet12
+  
+  # Estimate the lagged effects between the within-person centered variables
+  wad7 + wsi7 ~ wad5 + wsi5
+  wad10 + wsi10 ~ wad7 + wsi7
+  wad12 + wsi12 ~ wad10 + wsi10
+  
+  # Estimate the covariance between the within-person centered variables at the first wave
+  wad5 ~~ wsi5 # Covariance
+  
+  # Estimate the covariances between the residuals of the within-person centered variables (the innovations)
+  wad7 ~~ wsi7
+  wad10 ~~ wsi10
+  wad12 ~~ wsi12
+  
+  # Estimate the variance and covariance of the random intercepts
+  RIad ~~ RIad
+  RIsi ~~ RIsi
+  RIad ~~ RIsi
+  
+  # Estimate the (residual) variance of the within-person centered variables.
+  wad5 ~~ wad5 # Variances
+  wsi5 ~~ wsi5 
+  wad7 ~~ wad7 # Residual variances
+  wsi7 ~~ wsi7 
+  wad10 ~~ wad10 
+  wsi10 ~~ wsi10 
+  wad12 ~~ wad12 
+  wsi12 ~~ wsi12
+'
+```
+
+```{r fit RICLPMt grouped by sex}
+RICLPMt.sex.fit <- lavaan(RICLPMt, 
+                      data = dat, 
+                      missing = 'ML', 
+                      group = "sex",
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
+
+RICLPMt.sex.fit.summary <- summary(RICLPMt.sex.fit, 
+                                fit.measures = TRUE,
+                                standardized = TRUE)
+
+#Table of model fit 
+RICLPMt.sex.fit.summary.fit <- table.model.fit(RICLPMt.sex.fit.summary)
+# Table of regression and correlation (standardised covariances) coefficients
+RICLPMt.sex.fit.summary.reg.female <- table.model.coef(RICLPMt.sex.fit.summary, sex = "Female", constraints = "No")
+RICLPMt.sex.fit.summary.reg.male <- table.model.coef(RICLPMt.sex.fit.summary, sex = "Male", constraints = "No")
+```
+
+```{r specify RICLPMt.sex2}
+RICLPMt.sex2 <- '
+  # Create between components (random intercepts treated as factors here)
+  RIad =~ 1*tadhdet5 + 1*tadhdet7 + 1*tadhdet10 + 1*tadhdet12 #x
+  RIsi =~ 1*sisoet5 + 1*sisoet7 + 1*sisoet10 + 1*sisoet12 #y
+
+  # Create within-person centered variables
+  wad5 =~ 1*tadhdet5
+  wad7 =~ 1*tadhdet7
+  wad10 =~ 1*tadhdet10 
+  wad12 =~ 1*tadhdet12
+  wsi5 =~ 1*sisoet5
+  wsi7 =~ 1*sisoet7
+  wsi10 =~ 1*sisoet10
+  wsi12 =~ 1*sisoet12
+  
+  # Estimate the lagged effects between the within-person centered variables. Constrain the autoregressive effects across groups. 
+  wad7 ~ c(a1, a1)*wad5 + c(b1, b1)*wsi5
+  wsi7 ~ c(c1, c1)*wad5 + c(d1, d1)*wsi5
+  wad10 ~ c(a2, a2)*wad7 + c(b2, b2)*wsi7
+  wsi10 ~ c(c2, c2)*wad7 + c(d2, d2)*wsi7
+  wad12 ~ c(a3, a3)*wad10 + c(b3, b3)*wsi10
+  wsi12 ~ c(c3, c3)*wad10 + c(d3, d3)*wsi10 
+  
+  # Estimate the covariance between the within-person centered variables at the first wave
+  wad5 ~~ wsi5 # Covariance
+  
+  # Estimate the covariances between the residuals of the within-person centered variables (the innovations)
+  wad7 ~~ wsi7
+  wad10 ~~ wsi10
+  wad12 ~~ wsi12
+  
+  # Estimate the variance and covariance of the random intercepts
+  RIad ~~ RIad
+  RIsi ~~ RIsi
+  RIad ~~ RIsi
+  
+  # Estimate the (residual) variance of the within-person centered variables.
+  wad5 ~~ wad5 # Variances
+  wsi5 ~~ wsi5 
+  wad7 ~~ wad7 # Residual variances
+  wsi7 ~~ wsi7 
+  wad10 ~~ wad10 
+  wsi10 ~~ wsi10 
+  wad12 ~~ wad12 
+  wsi12 ~~ wsi12
+'
+```
+
+```{r fit RICLPMt.sex2 grouped by sex}
+RICLPMt.sex2.fit <- lavaan(RICLPMt.sex2, 
+                      data = dat, 
+                      missing = 'ML', 
+                      group = "sex",
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
+```
+
+Now we see if there is a significantly worse fit when the lagged-parameters are constrained to be equal across groups. 
+
+```{r LRT for RICLPMt.sex.fit and RICLPMt.sex2.fit}
+lavTestLRT(RICLPMt.sex.fit, RICLPMt.sex2.fit, method = "satorra.bentler.2010")
+```
+
+The chi-square difference test of these two nested models is *non significant* (p=0.5203)
+
+### RI-CLPM - Hyperactivity ADHD scores
+
+```{r specify RICLPMt_hyp}
+RICLPMt_hyp <- '
+  # Create between components (random intercepts treated as factors here)
+  RIad =~ 1*hyet5 + 1*hyet7 + 1*hyet10 + 1*hyet12 #x
+  RIsi =~ 1*sisoet5 + 1*sisoet7 + 1*sisoet10 + 1*sisoet12 #y
+
+  # Create within-person centered variables
+  wad5 =~ 1*hyet5
+  wad7 =~ 1*hyet7
+  wad10 =~ 1*hyet10 
+  wad12 =~ 1*hyet12
+  wsi5 =~ 1*sisoet5
+  wsi7 =~ 1*sisoet7
+  wsi10 =~ 1*sisoet10
+  wsi12 =~ 1*sisoet12
+  
+  # Estimate the lagged effects between the within-person centered variables
+  wad7 + wsi7 ~ wad5 + wsi5
+  wad10 + wsi10 ~ wad7 + wsi7
+  wad12 + wsi12 ~ wad10 + wsi10
+  
+  # Estimate the covariance between the within-person centered variables at the first wave
+  wad5 ~~ wsi5 # Covariance
+  
+  # Estimate the covariances between the residuals of the within-person centered variables (the innovations)
+  wad7 ~~ wsi7
+  wad10 ~~ wsi10
+  wad12 ~~ wsi12
+  
+  # Estimate the variance and covariance of the random intercepts
+  RIad ~~ RIad
+  RIsi ~~ RIsi
+  RIad ~~ RIsi
+  
+  # Estimate the (residual) variance of the within-person centered variables.
+  wad5 ~~ wad5 # Variances
+  wsi5 ~~ wsi5 
+  wad7 ~~ wad7 # Residual variances
+  wsi7 ~~ wsi7 
+  wad10 ~~ wad10 
+  wsi10 ~~ wsi10 
+  wad12 ~~ wad12 
+  wsi12 ~~ wsi12
+'
+```
+
+```{r fit RICLPMt_hyp grouped by sex}
+RICLPMt_hyp.sex.fit <- lavaan(RICLPMt_hyp, 
+                      data = dat, 
+                      missing = 'ML', 
+                      group = "sex",
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
+
+RICLPMt_hyp.sex.fit.summary <- summary(RICLPMt_hyp.sex.fit, 
+                                fit.measures = TRUE,
+                                standardized = TRUE)
+
+#Table of model fit 
+RICLPMt_hyp.sex.fit.summary.fit <- table.model.fit(RICLPMt_hyp.sex.fit.summary)
+# Table of regression and correlation (standardised covariances) coefficients
+RICLPMt_hyp.sex.fit.summary.reg.female <- table.model.coef(RICLPMt_hyp.sex.fit.summary, sex = "Female", constraints = "No")
+RICLPMt_hyp.sex.fit.summary.reg.male <- table.model.coef(RICLPMt_hyp.sex.fit.summary, sex = "Male", constraints = "No")
+```
+
+```{r specify RICLPMt_hyp.sex2}
+RICLPMt_hyp.sex2 <- '
+  # Create between components (random intercepts treated as factors here)
+  RIad =~ 1*hyet5 + 1*hyet7 + 1*hyet10 + 1*hyet12 #x
+  RIsi =~ 1*sisoet5 + 1*sisoet7 + 1*sisoet10 + 1*sisoet12 #y
+
+  # Create within-person centered variables
+  wad5 =~ 1*hyet5
+  wad7 =~ 1*hyet7
+  wad10 =~ 1*hyet10 
+  wad12 =~ 1*hyet12
+  wsi5 =~ 1*sisoet5
+  wsi7 =~ 1*sisoet7
+  wsi10 =~ 1*sisoet10
+  wsi12 =~ 1*sisoet12
+  
+  # Estimate the lagged effects between the within-person centered variables. Constrain the autoregressive effects across groups. 
+  wad7 ~ c(a1, a1)*wad5 + c(b1, b1)*wsi5
+  wsi7 ~ c(c1, c1)*wad5 + c(d1, d1)*wsi5
+  wad10 ~ c(a2, a2)*wad7 + c(b2, b2)*wsi7
+  wsi10 ~ c(c2, c2)*wad7 + c(d2, d2)*wsi7
+  wad12 ~ c(a3, a3)*wad10 + c(b3, b3)*wsi10
+  wsi12 ~ c(c3, c3)*wad10 + c(d3, d3)*wsi10 
+  
+  # Estimate the covariance between the within-person centered variables at the first wave
+  wad5 ~~ wsi5 # Covariance
+  
+  # Estimate the covariances between the residuals of the within-person centered variables (the innovations)
+  wad7 ~~ wsi7
+  wad10 ~~ wsi10
+  wad12 ~~ wsi12
+  
+  # Estimate the variance and covariance of the random intercepts
+  RIad ~~ RIad
+  RIsi ~~ RIsi
+  RIad ~~ RIsi
+  
+  # Estimate the (residual) variance of the within-person centered variables.
+  wad5 ~~ wad5 # Variances
+  wsi5 ~~ wsi5 
+  wad7 ~~ wad7 # Residual variances
+  wsi7 ~~ wsi7 
+  wad10 ~~ wad10 
+  wsi10 ~~ wsi10 
+  wad12 ~~ wad12 
+  wsi12 ~~ wsi12
+'
+```
+
+```{r fit RICLPMt_hyp.sex2 grouped by sex}
+RICLPMt_hyp.sex2.fit <- lavaan(RICLPMt_hyp.sex2, 
+                      data = dat, 
+                      missing = 'ML', 
+                      group = "sex",
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
+```
+
+Now we see if there is a significantly worse fit when the lagged-parameters are constrained to be equal across groups. 
+
+```{r LRT for RICLPM.sex and RICLPMt_hyp.sex2.fit}
+lavTestLRT(RICLPMt_hyp.sex.fit, RICLPMt_hyp.sex2.fit, method = "satorra.bentler.2010")
+```
+
+The chi-square difference test of these two nested models is *non significant* (p=0.2146).
+
+### RI-CLPM - Inattention ADHD scores
+
+```{r specify RICLPMt_inat}
+RICLPMt_inat <- '
+  # Create between components (random intercepts treated as factors here)
+  RIad =~ 1*inet5 + 1*inet7 + 1*inet10 + 1*inet12 #x
+  RIsi =~ 1*sisoet5 + 1*sisoet7 + 1*sisoet10 + 1*sisoet12 #y
+
+  # Create within-person centered variables
+  wad5 =~ 1*inet5
+  wad7 =~ 1*inet7
+  wad10 =~ 1*inet10 
+  wad12 =~ 1*inet12
+  wsi5 =~ 1*sisoet5
+  wsi7 =~ 1*sisoet7
+  wsi10 =~ 1*sisoet10
+  wsi12 =~ 1*sisoet12
+  
+  # Estimate the lagged effects between the within-person centered variables
+  wad7 + wsi7 ~ wad5 + wsi5
+  wad10 + wsi10 ~ wad7 + wsi7
+  wad12 + wsi12 ~ wad10 + wsi10
+  
+  # Estimate the covariance between the within-person centered variables at the first wave
+  wad5 ~~ wsi5 # Covariance
+  
+  # Estimate the covariances between the residuals of the within-person centered variables (the innovations)
+  wad7 ~~ wsi7
+  wad10 ~~ wsi10
+  wad12 ~~ wsi12
+  
+  # Estimate the variance and covariance of the random intercepts
+  RIad ~~ RIad
+  RIsi ~~ RIsi
+  RIad ~~ RIsi
+  
+  # Estimate the (residual) variance of the within-person centered variables.
+  wad5 ~~ wad5 # Variances
+  wsi5 ~~ wsi5 
+  wad7 ~~ wad7 # Residual variances
+  wsi7 ~~ wsi7 
+  wad10 ~~ wad10 
+  wsi10 ~~ wsi10 
+  wad12 ~~ wad12 
+  wsi12 ~~ wsi12
+'
+```
+
+```{r fit RICLPMt_inat grouped by sex}
+RICLPMt_inat.sex.fit <- lavaan(RICLPMt_inat, 
+                      data = dat, 
+                      missing = 'ML', 
+                      group = "sex",
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
+```
+
+```{r specify RICLPMt_inat.sex2}
+RICLPMt_inat.sex2 <- '
+  # Create between components (random intercepts treated as factors here)
+  RIad =~ 1*inet5 + 1*inet7 + 1*inet10 + 1*inet12 #x
+  RIsi =~ 1*sisoet5 + 1*sisoet7 + 1*sisoet10 + 1*sisoet12 #y
+
+  # Create within-person centered variables
+  wad5 =~ 1*inet5
+  wad7 =~ 1*inet7
+  wad10 =~ 1*inet10 
+  wad12 =~ 1*inet12
+  wsi5 =~ 1*sisoet5
+  wsi7 =~ 1*sisoet7
+  wsi10 =~ 1*sisoet10
+  wsi12 =~ 1*sisoet12
+  
+  # Estimate the lagged effects between the within-person centered variables. Constrain the autoregressive effects across groups. 
+  wad7 ~ c(a1, a1)*wad5 + c(b1, b1)*wsi5
+  wsi7 ~ c(c1, c1)*wad5 + c(d1, d1)*wsi5
+  wad10 ~ c(a2, a2)*wad7 + c(b2, b2)*wsi7
+  wsi10 ~ c(c2, c2)*wad7 + c(d2, d2)*wsi7
+  wad12 ~ c(a3, a3)*wad10 + c(b3, b3)*wsi10
+  wsi12 ~ c(c3, c3)*wad10 + c(d3, d3)*wsi10 
+  
+  # Estimate the covariance between the within-person centered variables at the first wave
+  wad5 ~~ wsi5 # Covariance
+  
+  # Estimate the covariances between the residuals of the within-person centered variables (the innovations)
+  wad7 ~~ wsi7
+  wad10 ~~ wsi10
+  wad12 ~~ wsi12
+  
+  # Estimate the variance and covariance of the random intercepts
+  RIad ~~ RIad
+  RIsi ~~ RIsi
+  RIad ~~ RIsi
+  
+  # Estimate the (residual) variance of the within-person centered variables.
+  wad5 ~~ wad5 # Variances
+  wsi5 ~~ wsi5 
+  wad7 ~~ wad7 # Residual variances
+  wsi7 ~~ wsi7 
+  wad10 ~~ wad10 
+  wsi10 ~~ wsi10 
+  wad12 ~~ wad12 
+  wsi12 ~~ wsi12
+'
+```
+
+```{r fit RICLPMt_inat.sex2 grouped by sex}
+RICLPMt_inat.sex2.fit <- lavaan(RICLPMt_inat.sex2, 
+                      data = dat, 
+                      missing = 'ML', 
+                      group = "sex",
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
+```
+
+Now we see if there is a significantly worse fit when the lagged-parameters are constrained to be equal across groups. 
+
+```{r LRT for RICLPMt_inat.sex.fit and RICLPMt_inat.sex2.fit}
+lavTestLRT(RICLPMt_inat.sex.fit, RICLPMt_inat.sex2.fit, method = "satorra.bentler.2010")
+```
+
+The chi-square difference test of these two nested models is *not* significant (p=0.8206).
+
+***
+
+# Constrained models 
+
+**We have previously compared our freed model to the sex constraints model, showing if there are sex group differences between each freed model. Now, we will compare the sex constraints model to our with already set constrainted on the lagged parameters** Mother report will have only cross-lags constrained, and teacher report will have both cross-lags and autoregressive lags constrained across groups.
+
+The following sex differences were observed for the unconstrained models (**WITHOUT** using robust statistics):
+
+|  Model                                         | Sex differences                                                                                                                                                                                 | 
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|   Mother report, total ADHD symptoms           |  No significant sex differences                                                                                                                                                                 |
+|   Mother report, hyperactivity ADHD symptoms   |  No significant sex differences                                                                                                                                                                 |
+|   Mother report, inattention ADHD symptoms     |  Age 5 ADHD predicted age 7 isolation in boys but not girls. Concurrent isolation and ADHD at age 7 were not significantly correlated in girls.                                                 |
+|   Teacher report, total ADHD symptoms          |  Age 5 social isolation predicted age 7 ADHD in girls but not boys. Age 7 ADHD predicted age 10 isolation in boys but not girls. Girls no concurrent associations at ages 7, 10 and 12          |
+|   Teacher report, hyperactivity ADHD symptoms  |  Girls no autoregressive paths ADHD 5&7. Boys bidirectional at 5-7 lag, girls isolation to ADHD. ADHD7 -> isolation10 in boys. ADHD10 -> isolation12 in girls. Girls no concurrent 7, 10 and 12 |
+|   Teacher report, inattention ADHD symptoms    |  No significant sex differences                                                                                                                                                                 |
+
+The following sex differences were observed for the unconstrained models (**WITH**  robust statistics):
+
+|  Model                                         | Sex differences                                                                                                                                                                                 | 
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|   Mother report, total ADHD symptoms           |  No significant sex differences                                                                                                                                                                 |
+|   Mother report, hyperactivity ADHD symptoms   |  No significant sex differences                                                                                                                                                                 |
+|   Mother report, inattention ADHD symptoms     |  No significant sex differences                                                                                                                                                                 |
+|   Teacher report, total ADHD symptoms          |  No significant sex differences                                                                                                                                                                 |
+|   Teacher report, hyperactivity ADHD symptoms  |  No significant sex differences                                                                                                                                                                 |
+|   Teacher report, inattention ADHD symptoms    |  No significant sex differences                                                                                                                                                                 |
+
+
+Now, we will test for sex differences using the constrained model. Where significant sex differences were found for the unconstrained model (nonrobust statistics), we will check for sex differences in the best fitting constrained model through further constraining the autoregressive and cross-lagged parameters to be the same across groups of boys and girls. 
+
+The following models will be tested for sex differences in the constrained model:
+ - Mother report, inattention ADHD symptoms 
+ - Teacher report, total ADHD symptoms 
+ - Teacher report, hyperactivity ADHD symptoms
+
+Imposing constraints to the model can be achieved through **pre-multiplication**. It means that we have to prepend the number that we want to fix the parameter to, and an asterisk, to the parameter in the model specification. For example, `F =~ 0*x1` fixes the factor loading of item `x1` to factor `F` to 0. Using pre-multiplication we can also constrain parameters to be the same by giving them the same label. Below we specify an RI-CLPM with the following constraints: 
+
+Naming: 
+  a = lag in ad
+  b = lag in si
+  c = cross lag ad->si
+  d = cross lag si->ad
+
+  sex.c = sex differences in constrained model 
+  lag.c = lag constrained model
+  sex.lag.c = sex and lag constrained model
+
+We will text for sex differences in two steps: 
+  1) We want to apply constraints to the lagged parameters, but allow these to vary between groups. If the chi square is significant then the lagged effects for boys and girls are different.
+  2) We want to apply sex group constraints to the lag constraints from step 1, where the lagged parameters are the same across groups. If the chi square is significant then the lagged effects for boys and girls are different.
+
+Here we want to constrain the lagged parameters to be the same. For example with lag c, I have constrained each lag to be set to c1 for females and c2 for males. They layout for group specification is c(group 1, group 2). 
+
+## Mother report: inattention ADHD symptoms 
+
+```{r specify RICLPM_inat.lag.c}
+RICLPM_inat.lag.c <- '
+  # Create between components (random intercepts treated as factors here)
+  RIad =~ 1*inem5 + 1*inem7 + 1*inem10 + 1*inem12 #x
+  RIsi =~ 1*sisoem5 + 1*sisoem7 + 1*sisoem10 + 1*sisoem12 #y
+
+  # Create within-person centered variables
+  wad5 =~ 1*inem5
+  wad7 =~ 1*inem7
+  wad10 =~ 1*inem10 
+  wad12 =~ 1*inem12
+  wsi5 =~ 1*sisoem5
+  wsi7 =~ 1*sisoem7
+  wsi10 =~ 1*sisoem10
+  wsi12 =~ 1*sisoem12
+  
+  # Constrained lagged effects between the within-person centered variables. c(group1/females, group2/males) - different values across groups, but the same values within groups and across lags. 
+  wad7 ~ wad5 + c(d1, d2)*wsi5 
+  wsi7 ~ c(c1, c2)*wad5 + wsi5
+  
+  wad10 ~ wad7 + c(d1, d2)*wsi7
+  wsi10 ~ c(c1,c2)*wad7 + wsi7
+  
+  wad12 ~ wad10 + c(d1,d2)*wsi10
+  wsi12 ~ c(c1,c2)*wad10 + wsi10
+  
+  # Estimate the covariance between the within-person centered variables at the first wave
+  wad5 ~~ wsi5 # Covariance
+  
+  # Estimate the covariances between the residuals of the within-person centered variables (the innovations)
+  wad7 ~~ wsi7
+  wad10 ~~ wsi10
+  wad12 ~~ wsi12
+  
+  # Estimate the variance and covariance of the random intercepts
+  RIad ~~ RIad
+  RIsi ~~ RIsi
+  RIad ~~ RIsi
+  
+  # Estimate the (residual) variance of the within-person centered variables.
+  wad5 ~~ wad5 # Variances
+  wsi5 ~~ wsi5 
+  wad7 ~~ wad7 # Residual variances
+  wsi7 ~~ wsi7 
+  wad10 ~~ wad10 
+  wsi10 ~~ wsi10 
+  wad12 ~~ wad12 
+  wsi12 ~~ wsi12
+'
+```
+
+```{r fit RICLPM_inat.lag.c.fit split by sex}
+RICLPM_inat.lag.c.fit <- lavaan(RICLPM_inat.lag.c, 
+                      data = dat, 
+                      missing = 'ML',
+                      group = "sex",
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
+```
+
+```{r specify RICLPM_inat.sex.lag.c, class.source = 'fold-show'}
+RICLPM_inat.sex.lag.c <- '
+  # Create between components (random intercepts treated as factors here)
+  RIad =~ 1*inem5 + 1*inem7 + 1*inem10 + 1*inem12 #x
+  RIsi =~ 1*sisoem5 + 1*sisoem7 + 1*sisoem10 + 1*sisoem12 #y
+
+  # Create within-person centered variables
+  wad5 =~ 1*inem5
+  wad7 =~ 1*inem7
+  wad10 =~ 1*inem10 
+  wad12 =~ 1*inem12
+  wsi5 =~ 1*sisoem5
+  wsi7 =~ 1*sisoem7
+  wsi10 =~ 1*sisoem10
+  wsi12 =~ 1*sisoem12
+  
+  # Estimate the lagged effects between the within-person centered variables. Constrain the autoregressive effects across groups AND the lagged effects between the within-person centered variables. 
+  wad7 ~ c(a1, a1)*wad5 + c(d, d)*wsi5
+  wsi7 ~ c(c, c)*wad5 + c(b1, b1)*wsi5
+  
+  wad10 ~ c(a2, a2)*wad7 + c(d, d)*wsi7
+  wsi10 ~ c(c, c)*wad7 + c(b2, b2)*wsi7
+  
+  wad12 ~ c(a3, a3)*wad10 + c(d, d)*wsi10
+  wsi12 ~ c(c, c)*wad10 + c(b3, b3)*wsi10 
+
+  # Estimate the covariance between the within-person centered variables at the first wave
+  wad5 ~~ wsi5 # Covariance
+  
+  # Estimate the covariances between the residuals of the within-person centered variables (the innovations)
+  wad7 ~~ wsi7
+  wad10 ~~ wsi10
+  wad12 ~~ wsi12
+  
+  # Estimate the variance and covariance of the random intercepts
+  RIad ~~ RIad
+  RIsi ~~ RIsi
+  RIad ~~ RIsi
+  
+  # Estimate the (residual) variance of the within-person centered variables.
+  wad5 ~~ wad5 # Variances
+  wsi5 ~~ wsi5 
+  wad7 ~~ wad7 # Residual variances
+  wsi7 ~~ wsi7 
+  wad10 ~~ wad10 
+  wsi10 ~~ wsi10 
+  wad12 ~~ wad12 
+  wsi12 ~~ wsi12
+'
+```
+
+```{r fit RICLPM_inat.sex.lag.c.fit grouped by sex}
+RICLPM_inat.sex.lag.c.fit <- lavaan(RICLPM_inat.sex.lag.c, 
+                      data = dat, 
+                      missing = 'ML', 
+                      group = "sex",
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
+```
+
+Now we see if there is a significantly worse fit when the lagged-parameters are constrained to be equal across groups. 
+
+```{r LRT for RICLPM_inat_lag.c.fit and RICLPM_inat.sex.lag.c.fit}
+lavTestLRT(RICLPM_inat.lag.c.fit, RICLPM_inat.sex.lag.c.fit, method = "satorra.bentler.2010")
+```
+
+For the robust model:
+The chi-square difference test of these two nested models is *non significant* (p=0.2656). 
+
+For the non-robust model: 
+The chi-square difference test of these two nested models is *significant* (p=0.003691). 
+
+**However, there were no differences in significance in the cross-lagged paths so we conclude there are no sex differences in the constrained RICLPM mother report for inattention ADHD symptoms.** 
+
+## Teacher report: total ADHD symptoms 
+
+```{r specify RICLPMt_lag.c, class.source = 'fold-show'}
+RICLPMt.lag.c <- '
+  # Create between components (random intercepts treated as factors here)
+  RIad =~ 1*tadhdet5 + 1*tadhdet7 + 1*tadhdet10 + 1*tadhdet12 #x
+  RIsi =~ 1*sisoet5 + 1*sisoet7 + 1*sisoet10 + 1*sisoet12 #y
+
+  # Create within-person centered variables
+  wad5 =~ 1*tadhdet5
+  wad7 =~ 1*tadhdet7
+  wad10 =~ 1*tadhdet10 
+  wad12 =~ 1*tadhdet12
+  wsi5 =~ 1*sisoet5
+  wsi7 =~ 1*sisoet7
+  wsi10 =~ 1*sisoet10
+  wsi12 =~ 1*sisoet12
+  
+  # Constrained lagged effects between the within-person centered variables. c(group1/females, group2/males) - different values across groups, but the same values within groups and across lags (all lags constrained). 
+  wad7 ~ c(a1, a2)*wad5 + c(d1, d2)*wsi5 
+  wsi7 ~ c(c1, c2)*wad5 + c(b1,b2)*wsi5
+  
+  wad10 ~ c(a1, a2)*wad7 + c(d1, d2)*wsi7
+  wsi10 ~ c(c1,c2)*wad7 + c(b1,b2)*wsi7
+  
+  wad12 ~ c(a1, a2)*wad10 + c(d1,d2)*wsi10
+  wsi12 ~ c(c1,c2)*wad10 + c(b1,b2)*wsi10
+
+  # Estimate the covariance between the within-person centered variables at the first wave
+  wad5 ~~ wsi5 # Covariance
+  
+  # Estimate the covariances between the residuals of the within-person centered variables (the innovations)
+  wad7 ~~ wsi7
+  wad10 ~~ wsi10
+  wad12 ~~ wsi12
+  
+  # Estimate the variance and covariance of the random intercepts
+  RIad ~~ RIad
+  RIsi ~~ RIsi
+  RIad ~~ RIsi
+  
+  # Estimate the (residual) variance of the within-person centered variables.
+  wad5 ~~ wad5 # Variances
+  wsi5 ~~ wsi5 
+  wad7 ~~ wad7 # Residual variances
+  wsi7 ~~ wsi7 
+  wad10 ~~ wad10 
+  wsi10 ~~ wsi10 
+  wad12 ~~ wad12 
+  wsi12 ~~ wsi12
+'
+```
+
+```{r fit RICLPMt.lag.c grouped by sex}
+RICLPMt.lag.c.fit <- lavaan(RICLPMt.lag.c, 
+                      data = dat, 
+                      missing = 'ML', 
+                      group = "sex",
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
+```
+
+```{r specify RICLPMt.sex.lag.c, class.source = 'fold-show'}
+RICLPMt.sex.lag.c <- '
+  # Create between components (random intercepts treated as factors here)
+  RIad =~ 1*tadhdet5 + 1*tadhdet7 + 1*tadhdet10 + 1*tadhdet12 #x
+  RIsi =~ 1*sisoet5 + 1*sisoet7 + 1*sisoet10 + 1*sisoet12 #y
+
+  # Create within-person centered variables
+  wad5 =~ 1*tadhdet5
+  wad7 =~ 1*tadhdet7
+  wad10 =~ 1*tadhdet10 
+  wad12 =~ 1*tadhdet12
+  wsi5 =~ 1*sisoet5
+  wsi7 =~ 1*sisoet7
+  wsi10 =~ 1*sisoet10
+  wsi12 =~ 1*sisoet12
+  
+  # Estimate the lagged effects between the within-person centered variables. Constrain the autoregressive effects across groups AND the lagged effects between the within-person centered variables. 
+  wad7 ~ c(a, a)*wad5 + c(d, d)*wsi5
+  wsi7 ~ c(c, c)*wad5 + c(b, b)*wsi5
+  
+  wad10 ~ c(a, a)*wad7 + c(d, d)*wsi7
+  wsi10 ~ c(c, c)*wad7 + c(b, b)*wsi7
+  
+  wad12 ~ c(a, a)*wad10 + c(d, d)*wsi10
+  wsi12 ~ c(c, c)*wad10 + c(b, b)*wsi10 
+  
+  # Estimate the covariance between the within-person centered variables at the first wave
+  wad5 ~~ wsi5 # Covariance
+  
+  # Estimate the covariances between the residuals of the within-person centered variables (the innovations)
+  wad7 ~~ wsi7
+  wad10 ~~ wsi10
+  wad12 ~~ wsi12
+  
+  # Estimate the variance and covariance of the random intercepts
+  RIad ~~ RIad
+  RIsi ~~ RIsi
+  RIad ~~ RIsi
+  
+  # Estimate the (residual) variance of the within-person centered variables.
+  wad5 ~~ wad5 # Variances
+  wsi5 ~~ wsi5 
+  wad7 ~~ wad7 # Residual variances
+  wsi7 ~~ wsi7 
+  wad10 ~~ wad10 
+  wsi10 ~~ wsi10 
+  wad12 ~~ wad12 
+  wsi12 ~~ wsi12
+'
+```
+
+```{r fit RICLPMt.sex.lag.c grouped by sex}
+RICLPMt.sex.lag.c.fit <- lavaan(RICLPMt.sex.lag.c, 
+                      data = dat, 
+                      missing = 'ML', 
+                      group = "sex",
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
+```
+
+Now we see if there is a significantly worse fit when the lagged-parameters are constrained to be equal across groups. 
+
+```{r LRT for RICLPMt.lag.c.fit and RICLPMt.sex.lag.c.fit}
+lavTestLRT(RICLPMt.lag.c.fit, RICLPMt.sex.lag.c.fit, method = "satorra.bentler.2010")
+```
+
+The chi-square difference test of these two nested models is *NON significant* (p=0.5833). **Therefore, we conclude there are no sex differences in the constrained RICLPM teacher report, total ADHD symptoms.** 
+
+## Teacher report: hyperactivity ADHD symptoms 
+
+```{r specify RICLPMt_hyp.lag.c, class.source = 'fold-show'}
+RICLPMt_hyp.lag.c  <- '
+  # Create between components (random intercepts treated as factors here)
+  RIad =~ 1*hyet5 + 1*hyet7 + 1*hyet10 + 1*hyet12 #x
+  RIsi =~ 1*sisoet5 + 1*sisoet7 + 1*sisoet10 + 1*sisoet12 #y
+
+  # Create within-person centered variables
+  wad5 =~ 1*hyet5
+  wad7 =~ 1*hyet7
+  wad10 =~ 1*hyet10 
+  wad12 =~ 1*hyet12
+  wsi5 =~ 1*sisoet5
+  wsi7 =~ 1*sisoet7
+  wsi10 =~ 1*sisoet10
+  wsi12 =~ 1*sisoet12
+  
+  # Constrained lagged effects between the within-person centered variables. c(group1/females, group2/males) - different values across groups, but the same values within groups and across lags (all lags constrained). 
+  wad7 ~ c(a1, a2)*wad5 + c(d1, d2)*wsi5 
+  wsi7 ~ c(c1, c2)*wad5 + c(b1,b2)*wsi5
+  
+  wad10 ~ c(a1, a2)*wad7 + c(d1, d2)*wsi7
+  wsi10 ~ c(c1,c2)*wad7 + c(b1,b2)*wsi7
+  
+  wad12 ~ c(a1, a2)*wad10 + c(d1,d2)*wsi10
+  wsi12 ~ c(c1,c2)*wad10 + c(b1,b2)*wsi10
+  
+  # Estimate the covariance between the within-person centered variables at the first wave
+  wad5 ~~ wsi5 # Covariance
+  
+  # Estimate the covariances between the residuals of the within-person centered variables (the innovations)
+  wad7 ~~ wsi7
+  wad10 ~~ wsi10
+  wad12 ~~ wsi12
+  
+  # Estimate the variance and covariance of the random intercepts
+  RIad ~~ RIad
+  RIsi ~~ RIsi
+  RIad ~~ RIsi
+  
+  # Estimate the (residual) variance of the within-person centered variables.
+  wad5 ~~ wad5 # Variances
+  wsi5 ~~ wsi5 
+  wad7 ~~ wad7 # Residual variances
+  wsi7 ~~ wsi7 
+  wad10 ~~ wad10 
+  wsi10 ~~ wsi10 
+  wad12 ~~ wad12 
+  wsi12 ~~ wsi12
+'
+```
+
+```{r fit RICLPMt_hyp.lag.c grouped by sex}
+RICLPMt_hyp.lag.c.fit <- lavaan(RICLPMt_hyp.lag.c, 
+                      data = dat, 
+                      missing = 'ML', 
+                      group = "sex",
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
+
+RICLPMt_hyp.lag.c.fit.summary <- summary(RICLPMt_hyp.lag.c.fit,
+                                          fit.measures = TRUE,
+                                          standardized = TRUE)
+
+#Table of model fit 
+RICLPMt_hyp.lag.c.fit.summary.fit <- table.model.fit(RICLPMt_hyp.lag.c.fit.summary)
+# Table of regression and correlation (standardised covariances) coefficients
+RICLPMt_hyp.lag.c.fit.summary.reg.female <- table.model.coef(RICLPMt_hyp.lag.c.fit.summary, sex = "Female", constraints = "Yes")
+RICLPMt_hyp.lag.c.fit.summary.reg.male <- table.model.coef(RICLPMt_hyp.lag.c.fit.summary, sex = "Male", constraints = "Yes")
+```
+
+```{r specify RICLPMt_hyp.sex.lag.c, class.source = 'fold-show'}
+RICLPMt_hyp.sex.lag.c  <- '
+  # Create between components (random intercepts treated as factors here)
+  RIad =~ 1*hyet5 + 1*hyet7 + 1*hyet10 + 1*hyet12 #x
+  RIsi =~ 1*sisoet5 + 1*sisoet7 + 1*sisoet10 + 1*sisoet12 #y
+
+  # Create within-person centered variables
+  wad5 =~ 1*hyet5
+  wad7 =~ 1*hyet7
+  wad10 =~ 1*hyet10 
+  wad12 =~ 1*hyet12
+  wsi5 =~ 1*sisoet5
+  wsi7 =~ 1*sisoet7
+  wsi10 =~ 1*sisoet10
+  wsi12 =~ 1*sisoet12
+  
+  # Estimate the lagged effects between the within-person centered variables. Constrain the autoregressive effects across groups AND the lagged effects between the within-person centered variables. 
+  wad7 ~ c(a, a)*wad5 + c(d, d)*wsi5
+  wsi7 ~ c(c, c)*wad5 + c(b, b)*wsi5
+  
+  wad10 ~ c(a, a)*wad7 + c(d, d)*wsi7
+  wsi10 ~ c(c, c)*wad7 + c(b, b)*wsi7
+  
+  wad12 ~ c(a, a)*wad10 + c(d, d)*wsi10
+  wsi12 ~ c(c, c)*wad10 + c(b, b)*wsi10 
+  
+  # Estimate the covariance between the within-person centered variables at the first wave
+  wad5 ~~ wsi5 # Covariance
+  
+  # Estimate the covariances between the residuals of the within-person centered variables (the innovations)
+  wad7 ~~ wsi7
+  wad10 ~~ wsi10
+  wad12 ~~ wsi12
+  
+  # Estimate the variance and covariance of the random intercepts
+  RIad ~~ RIad
+  RIsi ~~ RIsi
+  RIad ~~ RIsi
+  
+  # Estimate the (residual) variance of the within-person centered variables.
+  wad5 ~~ wad5 # Variances
+  wsi5 ~~ wsi5 
+  wad7 ~~ wad7 # Residual variances
+  wsi7 ~~ wsi7 
+  wad10 ~~ wad10 
+  wsi10 ~~ wsi10 
+  wad12 ~~ wad12 
+  wsi12 ~~ wsi12
+'
+```
+
+```{r fit RICLPMt_hyp.sex.lag.c grouped by sex}
+RICLPMt_hyp.sex.lag.c.fit <- lavaan(RICLPMt_hyp.sex.lag.c, 
+                      data = dat, 
+                      missing = 'ML', 
+                      group = "sex",
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
+```
+
+Now we see if there is a significantly worse fit when the lagged-parameters are constrained to be equal across groups. 
+
+```{r LRT for RICLPMt_hyp.lag.c.fit and RICLPMt_hyp.sex.lag.c.fit}
+lavTestLRT(RICLPMt_hyp.lag.c.fit, RICLPMt_hyp.sex.lag.c.fit, method = "satorra.bentler.2010")
+```
+
+For robust models:
+The chi-square difference test of these two nested models is *non significant* (p=0.3255) but this was significant when using non-robust statistics (p=0.01516). 
+
+For non-robust models:
+The chi-square difference test of these two nested models is *significant* (p=0.01516) 
+
+For non-robust model - Inattention mother report sex differences:
+- No significant cross-lags (or auto-regressive lags) for females
+- **Significant cross-lags for Hyperactivity -> social isolation for males (p=0.001)**
+
+**Therefore, we conclude there are sex differences in the constrained RICLPM teacher report for hyperactivity ADHD symptoms and social isolation - but these differences are not highly significant.** 
+
