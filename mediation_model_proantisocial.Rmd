@@ -1,0 +1,1718 @@
+---
+title: "Mediation model for social isolation, pro/antisocial behaviours, and ADHD symptoms in childhood"
+output:  
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: 2
+    toc_float:
+      collapsed: false
+    number_sections: false
+    highlight: monochrome
+    theme: flatly
+    code_folding: hide
+    includes:
+      after_body: footer.html
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      comment = NA,
+                      prompt = FALSE,
+                      cache = FALSE,
+                      message = FALSE,
+                      warning = FALSE,
+                      results = 'asis')
+
+options(bitmapType = 'quartz') # to render fonts better
+```
+
+```{r Clear global environment, include=FALSE}
+remove(list = ls())
+```
+
+```{r Load packages, include=FALSE}
+library(knitr)
+library(haven)
+library(summarytools)
+library(psych)
+library(lavaan)
+library(tidyverse)
+library(dplyr) #conflicts with tidyverse for e.g. rename and row_number
+```
+
+```{r source the data file path, include=FALSE}
+#source raw data directory: data_raw and data included
+source("../isolation_ADHD_data_path.R")
+```
+
+```{r read in dta data file}
+dat.raw <- read_dta(paste0(data.raw_path, "Katie_10Mar22.dta"))
+colnames(dat.raw)
+
+dat <- dat.raw %>%
+  dplyr::select(id = atwinid,
+         sampsex,
+         seswq35,
+         sisoem5,  # social isolation mother report
+         sisoem7,
+         sisoem10,
+         sisoem12,
+         sisoet5,    # social isolation teacher report
+         sisoet7, 
+         sisoet10,
+         sisoet12,
+         tadhdem5,   # total ADHD mother report
+         tadhdem7,
+         tadhdem10,
+         tadhdem12,
+         tadhdet5,   # total ADHD teacher report
+         tadhdet7,
+         tadhdet10,
+         tadhdet12,
+         hyem5,      # hyperactivity ADHD mother report
+         hyem7,
+         hyem10,
+         hyem12, 
+         hyet5,      # hyperactivity ADHD teacher report
+         hyet7,
+         hyet10,
+         hyet12,
+         inem5,     # inattention ADHD mother report
+         inem7,
+         inem10,
+         inem12,
+         inet5,     # inattention ADHD teacher report
+         inet7,
+         inet10,
+         inet12,
+         proem5,    # prosocial total scores mother report
+         proem7,
+         proem10,
+         proem12, 
+         proet5,    # prosocial total scores teacher report
+         proet7,
+         proet10,
+         proet12, 
+         asbem5,   # antisocial total scores mother report
+         asbem7,
+         asbem10,
+         asbem12, 
+         asbet5,   # antisocial total scores teacher report
+         asbet7,
+         asbet10,
+         asbet12, 
+         pe98m5,    # prosocial behaviours raw items (age 5)
+         pe99m5,
+         pe100m5,
+         pe101m5,
+         pe102m5,
+         pe103m5,
+         pe104m5,
+         pe105m5,
+         pe106m5,
+         pe107m5,
+         pe98m7,  # prosocial behaviours raw items (age 7)
+         pe99m7,
+         pe100m7,
+         pe101m7,
+         pe102m7,
+         pe103m7,
+         pe104m7,
+         pe105m7,
+         pe106m7,
+         pe107m7,
+         pe98m10,  # prosocial behaviours raw items (age 10)
+         pe99m10,
+         pe100m10,
+         pe101m10,
+         pe102m10,
+         pe103m10,
+         pe104m10,
+         pe105m10,
+         pe106m10,
+         pe107m10,
+         pe98m12,  # prosocial behaviours raw items (age 12)
+         pe99m12,
+         pe100m12,
+         pe101m12,
+         pe102m12,
+         pe103m12,
+         pe104m12,
+         pe105m12,
+         pe106m12,
+         pe107m12,
+         pe37m5,   # antisocial behaviours raw items (age 5) - aggression subscale 
+         pe38m5, 
+         pe41m5,  
+         pe42m5, 
+         pe43m5, 
+         pe44m5, 
+         pe45m5, 
+         pe46m5, 
+         pe50m5,
+         pe53m5,
+         pe56m5,
+         pe58m5,
+         pe61m5,
+         pe62m5,
+         pe64m5,
+         pe65m5,
+         pe66m5,
+         pe69m5,
+         pe47m5,  # antisocial behaviours raw items (age 5) - delinquency subscale  
+         pe51m5,
+         pe52m5,
+         pe54m5,
+         pe55m5,
+         pe57m5,
+         pe59m5,
+         pe60m5,
+         pe63m5,
+         pe67m5,
+         pe68m5,
+         pe70m5,
+         pe71m5,
+         pe39m5,  # Additional Items from Rutter Questionnaire
+         pe40m5,
+         pe49m5,
+         pe72m5,  # Conduct and Oppositional Defiant Items
+         pe73m5,
+         pe74m5,
+         pe75m5,
+         pe76m5,
+         pe77m5,
+         pe78m5,
+         pe79m5,
+         pe80m5,
+         pe37m7,   # antisocial behaviours raw items (age 7)
+         pe38m7, 
+         pe41m7,  
+         pe42m7, 
+         pe43m7, 
+         pe44m7, 
+         pe45m7, 
+         pe46m7, 
+         pe50m7,
+         pe53m7,
+         pe56m7,
+         pe58m7,
+         pe61m7,
+         pe62m7,
+         pe64m7,
+         pe65m7,
+         pe66m7,
+         pe69m7,
+         pe47m7,
+         pe51m7,
+         pe52m7,
+         pe54m7,
+         pe55m7,
+         pe57m7,
+         pe59m7,
+         pe60m7,
+         pe63m7,
+         pe67m7,
+         pe68m7,
+         pe70m7,
+         pe71m7,
+         pe39m7,
+         pe40m7,
+         pe49m7,
+         pe72m7,
+         pe73m7,
+         pe74m7,
+         pe75m7,
+         pe76m7,
+         pe77m7,
+         pe78m7,
+         pe79m7,
+         pe80m7,
+         pe37m10,   # antisocial behaviours raw items (age 10)
+         pe38m10, 
+         pe41m10,  
+         pe42m10, 
+         pe43m10, 
+         pe44m10, 
+         pe45m10, 
+         pe46m10, 
+         pe50m10,
+         pe53m10,
+         pe56m10,
+         pe58m10,
+         pe61m10,
+         pe62m10,
+         pe64m10,
+         pe65m10,
+         pe66m10,
+         pe69m10,
+         pe47m10,
+         pe51m10,
+         pe52m10,
+         pe54m10,
+         pe55m10,
+         pe57m10,
+         pe59m10,
+         pe60m10,
+         pe63m10,
+         pe67m10,
+         pe68m10,
+         pe70m10,
+         pe71m10,
+         pe39m10,
+         pe40m10,
+         pe49m10,
+         pe72m10,
+         pe73m10,
+         pe74m10,
+         pe75m10,
+         pe76m10,
+         pe77m10,
+         pe78m10,
+         pe79m10,
+         pe80m10,
+         pe37m12,   # antisocial behaviours raw items (age 12)
+         pe38m12, 
+         pe41m12,  
+         pe42m12, 
+         pe43m12, 
+         pe44m12, 
+         pe45m12, 
+         pe46m12, 
+         pe50m12,
+         pe53m12,
+         pe56m12,
+         pe58m12,
+         pe61m12,
+         pe62m12,
+         pe64m12,
+         pe65m12,
+         pe66m12,
+         pe69m12,
+         pe47m12,
+         pe51m12,
+         pe52m12,
+         pe54m12,
+         pe55m12,
+         pe57m12,
+         pe59m12,
+         pe60m12,
+         pe63m12,
+         pe67m12,
+         pe68m12,
+         pe70m12,
+         pe71m12,
+         pe39m12,
+         pe40m12,
+         pe49m12,
+         pe72m12,
+         pe73m12,
+         pe74m12,
+         pe75m12,
+         pe76m12,
+         pe77m12,
+         pe78m12,
+         pe79m12,
+         pe80m12,
+         trf8e5,  # Antisocial behaviour - Agression subscale age 5 teacher report
+         trf9e5,  
+         trf10e5, 
+         trf13e5, 
+         trf14e5, 
+         trf15e5, 
+         trf16e5, 
+         trf17e5, 
+         trf18e5, 
+         trf21e5, 
+         trf27e5, 
+         trf38e5, 
+         trf47e5, 
+         trf50e5, 
+         trf51e5, 
+         trf54e5, 
+         trf56e5, 
+         trf57e5, 
+         trf61e5, 
+         trf62e5, 
+         trf66e5, 
+         trf67e5, 
+         trf68e5, 
+         trf69e5, 
+         trf74e5, 
+         trf20e5,  # Antisocial behaviour - Delinquent subscale age 5 teacher report
+         trf29e5, 
+         trf31e5, 
+         trf48e5, 
+         trf60e5, 
+         trf65e5, 
+         trf70e5, 
+         trf71e5, 
+         trf79e5, 
+         trf80e5, # Antisocial behaviour - Conduct and Oppositional Defiant subscale age 5 teacher report 
+         trf81e5,
+         trf82e5,
+         trf83e5,
+         trf84e5,
+         trf85e5,
+         trf86e5,
+         trf87e5,
+         trf88e5,
+         trf8e7,  # Antisocial behaviour - Agression subscale age 7 teacher report
+         trf9e7,  
+         trf10e7, 
+         trf13e7, 
+         trf14e7, 
+         trf15e7, 
+         trf16e7, 
+         trf17e7, 
+         trf18e7, 
+         trf21e7, 
+         trf27e7, 
+         trf38e7, 
+         trf47e7, 
+         trf50e7, 
+         trf51e7, 
+         trf54e7, 
+         trf56e7, 
+         trf57e7, 
+         trf61e7, 
+         trf62e7, 
+         trf66e7, 
+         trf67e7, 
+         trf68e7, 
+         trf69e7, 
+         trf74e7, 
+         trf20e7,  # Antisocial behaviour - Delinquent subscale age 7 teacher report
+         trf29e7, 
+         trf31e7, 
+         trf48e7, 
+         trf60e7, 
+         trf65e7, 
+         trf70e7, 
+         trf71e7, 
+         trf79e7, 
+         trf80e7, # Antisocial behaviour - Conduct and Oppositional Defiant subscale age 7 teacher report 
+         trf81e7,
+         trf82e7,
+         trf83e7,
+         trf84e7,
+         trf85e7,
+         trf86e7,
+         trf87e7,
+         trf88e7,
+         trf8e10,  # Antisocial behaviour - Agression subscale age 10 teacher report
+         trf9e10,  
+         trf10e10, 
+         trf13e10, 
+         trf14e10, 
+         trf15e10, 
+         trf16e10, 
+         trf17e10, 
+         trf18e10, 
+         trf21e10, 
+         trf27e10, 
+         trf38e10, 
+         trf47e10, 
+         trf50e10, 
+         trf51e10, 
+         trf54e10, 
+         trf56e10, 
+         trf57e10, 
+         trf61e10, 
+         trf62e10, 
+         trf66e10, 
+         trf67e10, 
+         trf68e10, 
+         trf69e10, 
+         trf74e10, 
+         trf20e10,  # Antisocial behaviour - Delinquent subscale age 10 teacher report
+         trf29e10, 
+         trf31e10, 
+         trf48e10, 
+         trf60e10, 
+         trf65e10, 
+         trf70e10, 
+         trf71e10, 
+         trf79e10, 
+         trf80e10, # Antisocial behaviour - Conduct and Oppositional Defiant subscale age 10 teacher report 
+         trf81e10,
+         trf82e10,
+         trf83e10,
+         trf84e10,
+         trf85e10,
+         trf86e10,
+         trf87e10,
+         trf88e10,
+         trf8e12,  # Antisocial behaviour - Agression subscale age 12 teacher report
+         trf9e12,  
+         trf10e12, 
+         trf13e12, 
+         trf14e12, 
+         trf15e12, 
+         trf16e12, 
+         trf17e12, 
+         trf18e12, 
+         trf21e12, 
+         trf27e12, 
+         trf38e12, 
+         trf47e12, 
+         trf50e12, 
+         trf51e12, 
+         trf54e12, 
+         trf56e12, 
+         trf57e12, 
+         trf61e12, 
+         trf62e12, 
+         trf66e12, 
+         trf67e12, 
+         trf68e12, 
+         trf69e12, 
+         trf74e12, 
+         trf20e12,  # Antisocial behaviour - Delinquent subscale age 12 teacher report
+         trf29e12, 
+         trf31e12, 
+         trf48e12, 
+         trf60e12, 
+         trf65e12, 
+         trf70e12, 
+         trf71e12, 
+         trf79e12, 
+         trf80e12, # Antisocial behaviour - Conduct and Oppositional Defiant subscale age 12 teacher report 
+         trf81e12,
+         trf82e12,
+         trf83e12,
+         trf84e12,
+         trf85e12,
+         trf86e12,
+         trf87e12,
+         trf88e12
+  )
+
+colnames(dat)
+```
+
+***
+
+```{r functions}
+# Table of model fit 
+table.model.fit <- function(model){
+  model.fit <- as.data.frame(t(as.data.frame(model$FIT))) %>%
+    dplyr::select(chisq, df, chisq.scaled, cfi, tli, rmsea, rmsea.ci.lower, rmsea.ci.upper, srmr) # not robust because ELSMV estimator
+  return(model.fit)
+}
+
+# Table of regression and correlation (standardised covariance) coefficients
+table.model.coef <- function(model, step){
+  if (step == "S1"){
+    model.coef <- as.tibble(model$PE[c(121:136),]) %>% dplyr::select(-exo, -std.lv, -std.nox)
+    return(model.coef)
+  } else if(step == "S2"){
+    model.coef <- as.tibble(model$PE[c(121:136),]) %>% dplyr::select(-exo, -label, -std.lv, -std.nox)
+    return(model.coef)
+  } else if(step == "S3"){
+    model.coef <- as.tibble(model$PE[c(121:136),]) %>% dplyr::select(-exo, -label, -std.lv, -std.nox)
+    return(model.coef)
+  } else {model.coef <- NULL}
+}
+```
+
+***
+
+# Variable creation
+
+We first create the joint age 7 and age 10 prosocial and antisocial behaviour.
+
+## Mother report
+
+```{r create the summed 7 and 10 prosocial mother}
+# how many missing at age 7 and 10 
+summary(dat$proem7)
+summary(dat$proem10)
+
+# number of participants missing age 7 and 10 data 
+dat <- dat %>%
+  mutate(proem710na = 
+           if_else(
+             is.na(proem7) & is.na(proem10), "Yes", "No")
+  )
+table(dat$proem710na)
+
+# creating the 710 variable
+dat <- dat %>%
+  mutate(proem710 = 
+           case_when(
+             is.na(proem7) & is.na(proem10) ~ NA_real_,
+             is.na(proem7) & !is.na(proem10) ~ as.numeric(proem10),
+             is.na(proem10) & !is.na(proem7) ~ as.numeric(proem7),
+             !is.na(proem7) & !is.na(proem10) ~ as.numeric(rowMeans(across(proem7:proem10))))
+  )
+summary(dat$proem710) # the NAs here should match the NAs from proem710na
+```
+
+```{r create the summed 7 and 10 prosocial mother}
+# how many missing at age 7 and 10 
+summary(dat$asbem7)
+summary(dat$asbem10)
+
+# number of participants missing age 7 and 10 data 
+dat <- dat %>%
+  mutate(asbem710na = 
+           if_else(
+             is.na(asbem7) & is.na(asbem10), "Yes", "No")
+  )
+table(dat$asbem710na)
+
+# creating the 710 variable
+dat <- dat %>%
+  mutate(asbem710 = 
+           case_when(
+             is.na(asbem7) & is.na(asbem10) ~ NA_real_,
+             is.na(asbem7) & !is.na(asbem10) ~ as.numeric(asbem10),
+             is.na(asbem10) & !is.na(asbem7) ~ as.numeric(asbem7),
+             !is.na(asbem7) & !is.na(asbem10) ~ as.numeric(rowMeans(across(asbem7:asbem10))))
+  )
+summary(dat$asbem710) # the NAs here should match the NAs from proem710na
+```
+
+## Teacher report
+
+```{r create the summed 7 and 10 prosocial teacher}
+# how many missing at age 7 and 10 
+summary(dat$proet7)
+summary(dat$proet10)
+
+# number of participants missing age 7 and 10 data 
+dat <- dat %>%
+  mutate(proet710na = 
+           if_else(
+             is.na(proet7) & is.na(proet10), "Yes", "No")
+  )
+table(dat$proet710na)
+
+# creating the 710 variable
+dat <- dat %>%
+  mutate(proet710 = 
+           case_when(
+             is.na(proet7) & is.na(proet10) ~ NA_real_,
+             is.na(proet7) & !is.na(proet10) ~ as.numeric(proet10),
+             is.na(proet10) & !is.na(proet7) ~ as.numeric(proet7),
+             !is.na(proet7) & !is.na(proet10) ~ as.numeric(rowMeans(across(proet7:proet10))))
+  )
+summary(dat$proet710) # the NAs here should match the NAs from proem710na
+```
+
+```{r create the summed 7 and 10 prosocial}
+# how many missing at age 7 and 10 
+summary(dat$asbet7)
+summary(dat$asbet10)
+
+# number of participants missing age 7 and 10 data 
+dat <- dat %>%
+  mutate(asbet710na = 
+           if_else(
+             is.na(asbet7) & is.na(asbet10), "Yes", "No")
+  )
+table(dat$asbet710na)
+
+# creating the 710 variable
+dat <- dat %>%
+  mutate(asbet710 = 
+           case_when(
+             is.na(asbet7) & is.na(asbet10) ~ NA_real_,
+             is.na(asbet7) & !is.na(asbet10) ~ as.numeric(asbet10),
+             is.na(asbet10) & !is.na(asbet7) ~ as.numeric(asbet7),
+             !is.na(asbet7) & !is.na(asbet10) ~ as.numeric(rowMeans(across(asbet7:asbet10))))
+  )
+summary(dat$asbet710) # the NAs here should match the NAs from proem710na
+```
+
+
+
+```{r create the average 7 and 10 isolation mother}
+# how many missing at age 7 and 10 
+summary(dat$sisoem7)
+summary(dat$sisoem10)
+
+# number of participants missing age 7 and 10 data 
+dat <- dat %>%
+  mutate(sisoem710na = 
+           if_else(
+             is.na(sisoem7) & is.na(sisoem10), "Yes", "No")
+  )
+table(dat$sisoem710na)
+
+# creating the 710 variable
+dat <- dat %>%
+  mutate(sisoem710 = 
+           case_when(
+             is.na(sisoem7) & is.na(sisoem10) ~ NA_real_,
+             is.na(sisoem7) & !is.na(sisoem10) ~ as.numeric(sisoem10),
+             is.na(sisoem10) & !is.na(sisoem7) ~ as.numeric(sisoem7),
+             !is.na(sisoem7) & !is.na(sisoem10) ~ as.numeric(rowMeans(across(sisoem7:sisoem10))))
+  )
+summary(dat$sisoem710) # the NAs here should match the NAs above
+```
+
+```{r create the average 7 and 10 isolation teacher}
+# how many missing at age 7 and 10 
+summary(dat$sisoet7)
+summary(dat$sisoet10)
+
+# number of participants missing age 7 and 10 data 
+dat <- dat %>%
+  mutate(sisoet710na = 
+           if_else(
+             is.na(sisoet7) & is.na(sisoet10), "Yes", "No")
+  )
+table(dat$sisoet710na)
+
+# creating the 710 variable
+dat <- dat %>%
+  mutate(sisoet710 = 
+           case_when(
+             is.na(sisoet7) & is.na(sisoet10) ~ NA_real_,
+             is.na(sisoet7) & !is.na(sisoet10) ~ as.numeric(sisoet10),
+             is.na(sisoet10) & !is.na(sisoet7) ~ as.numeric(sisoet7),
+             !is.na(sisoet7) & !is.na(sisoet10) ~ as.numeric(rowMeans(across(sisoet7:sisoet10))))
+  )
+summary(dat$sisoet710) # the NAs here should match the NAs above
+```
+
+```{r create the average 7 and 10 ADHD mother}
+# how many missing at age 7 and 10 
+summary(dat$tadhdem7)
+summary(dat$tadhdem10)
+
+# number of participants missing age 7 and 10 data 
+dat <- dat %>%
+  mutate(tadhdem710na = 
+           if_else(
+             is.na(tadhdem7) & is.na(tadhdem10), "Yes", "No")
+  )
+table(dat$tadhdem710na)
+
+# creating the 710 variable
+dat <- dat %>%
+  mutate(tadhdem710 = 
+           case_when(
+             is.na(tadhdem7) & is.na(tadhdem10) ~ NA_real_,
+             is.na(tadhdem7) & !is.na(tadhdem10) ~ as.numeric(tadhdem10),
+             is.na(tadhdem10) & !is.na(tadhdem7) ~ as.numeric(tadhdem7),
+             !is.na(tadhdem7) & !is.na(tadhdem10) ~ as.numeric(rowMeans(across(tadhdem7:tadhdem10))))
+  )
+summary(dat$tadhdem710) # the NAs here should match the NAs above
+```
+
+```{r create the average 7 and 10 ADHD teacher}
+# how many missing at age 7 and 10 
+summary(dat$tadhdet7)
+summary(dat$tadhdet10)
+
+# number of participants missing age 7 and 10 data 
+dat <- dat %>%
+  mutate(tadhdet710na = 
+           if_else(
+             is.na(tadhdet7) & is.na(tadhdet10), "Yes", "No")
+  )
+table(dat$tadhdet710na)
+
+# creating the 710 variable
+dat <- dat %>%
+  mutate(tadhdet710 = 
+           case_when(
+             is.na(tadhdet7) & is.na(tadhdet10) ~ NA_real_,
+             is.na(tadhdet7) & !is.na(tadhdet10) ~ as.numeric(tadhdet10),
+             is.na(tadhdet10) & !is.na(tadhdet7) ~ as.numeric(tadhdet7),
+             !is.na(tadhdet7) & !is.na(tadhdet10) ~ as.numeric(rowMeans(across(tadhdet7:tadhdet10))))
+  )
+summary(dat$tadhdet710) # the NAs here should match the NAs above
+```
+
+```{r create the average 7 and 10 hyperactivity mother}
+# how many missing at age 7 and 10 
+summary(dat$hyem7)
+summary(dat$hyem10)
+
+# number of participants missing age 7 and 10 data 
+dat <- dat %>%
+  mutate(hyem710na = 
+           if_else(
+             is.na(hyem7) & is.na(hyem10), "Yes", "No")
+  )
+table(dat$hyem710na)
+
+# creating the 710 variable
+dat <- dat %>%
+  mutate(hyem710 = 
+           case_when(
+             is.na(hyem7) & is.na(hyem10) ~ NA_real_,
+             is.na(hyem7) & !is.na(hyem10) ~ as.numeric(hyem10),
+             is.na(hyem10) & !is.na(hyem7) ~ as.numeric(hyem7),
+             !is.na(hyem7) & !is.na(hyem10) ~ as.numeric(rowMeans(across(hyem7:hyem10))))
+  )
+summary(dat$hyem710) # the NAs here should match the NAs above
+```
+
+```{r create the average 7 and 10 hyperactivity teacher}
+# how many missing at age 7 and 10 
+summary(dat$hyet7)
+summary(dat$hyet10)
+
+# number of participants missing age 7 and 10 data 
+dat <- dat %>%
+  mutate(hyet710na = 
+           if_else(
+             is.na(hyet7) & is.na(hyet10), "Yes", "No")
+  )
+table(dat$hyet710na)
+
+# creating the 710 variable
+dat <- dat %>%
+  mutate(hyet710 = 
+           case_when(
+             is.na(hyet7) & is.na(hyet10) ~ NA_real_,
+             is.na(hyet7) & !is.na(hyet10) ~ as.numeric(hyet10),
+             is.na(hyet10) & !is.na(hyet7) ~ as.numeric(hyet7),
+             !is.na(hyet7) & !is.na(hyet10) ~ as.numeric(rowMeans(across(hyet7:hyet10))))
+  )
+summary(dat$hyet710) # the NAs here should match the NAs above
+```
+
+```{r create the average 7 and 10 inattention mother}
+# how many missing at age 7 and 10 
+summary(dat$inem7)
+summary(dat$inem10)
+
+# number of participants missing age 7 and 10 data 
+dat <- dat %>%
+  mutate(inem710na = 
+           if_else(
+             is.na(inem7) & is.na(inem10), "Yes", "No")
+  )
+table(dat$inem710na)
+
+# creating the 710 variable
+dat <- dat %>%
+  mutate(inem710 = 
+           case_when(
+             is.na(inem7) & is.na(inem10) ~ NA_real_,
+             is.na(inem7) & !is.na(inem10) ~ as.numeric(inem10),
+             is.na(inem10) & !is.na(inem7) ~ as.numeric(inem7),
+             !is.na(inem7) & !is.na(inem10) ~ as.numeric(rowMeans(across(inem7:inem10))))
+  )
+summary(dat$inem710) # the NAs here should match the NAs above
+```
+
+```{r create the average 7 and 10 inattention teacher}
+# how many missing at age 7 and 10 
+summary(dat$inet7)
+summary(dat$inet10)
+
+# number of participants missing age 7 and 10 data 
+dat <- dat %>%
+  mutate(inet710na = 
+           if_else(
+             is.na(inet7) & is.na(inet10), "Yes", "No")
+  )
+table(dat$inet710na)
+
+# creating the 710 variable
+dat <- dat %>%
+  mutate(inet710 = 
+           case_when(
+             is.na(inet7) & is.na(inet10) ~ NA_real_,
+             is.na(inet7) & !is.na(inet10) ~ as.numeric(inet10),
+             is.na(inet10) & !is.na(inet7) ~ as.numeric(inet7),
+             !is.na(inet7) & !is.na(inet10) ~ as.numeric(rowMeans(across(inet7:inet10))))
+  )
+summary(dat$inet710) # the NAs here should match the NAs above
+```
+
+# Simple mediation
+
+The simple mediation that we will be testing is does pro/antisocial behaviour at age 7/10 mediate the association between social isolation at age 5 and ADHD at age 12. 
+
+![Exmaple prosocial behaviour (PSB) mediation model](/Users/katiethompson/Documents/PhD/LISS-DTP_Louise_and_Tim/Social isolation heritability_Paper 2/data_analysis/scripts/scripts_github/mediation_PSB.jpg)
+
+* How do we separate out with person and between person change in mediation models?
+* Hwo do we account for the twin data here when it's suggested to use bootstrapepd standard errors rather than robust ones. 
+
+## Mother report
+
+### Prosocial behaviour 
+
+```{r med.simp.pro.m}
+med.simp.pro.m <- ' 
+                  # direct effect
+                   sisoem12 ~ c*tadhdem5
+                  
+                  # mediator
+                   proem710 ~ a*tadhdem5
+                   sisoem12 ~ b*proem710
+                  
+                  # indirect effect (a*b)
+                   indirect := a*b
+                  
+                  # total effect
+                   total := c + (a*b)
+         '
+```
+
+```{r  fit med.simp.pro.m}
+med.simp.pro.fit <- sem(model = med.simp.pro.m, 
+                        data = dat,
+                        se = "bootstrap",
+                        estimator = "ML")
+
+med.simp.pro.fit.summary <- summary(med.simp.pro.fit, standardized = TRUE)
+```
+
+### Antisocial behaviour 
+
+```{r med.simp.asb.m}
+med.simp.asb.m <- ' 
+                  # direct effect
+                   sisoem12 ~ c*tadhdem5
+                  
+                  # mediator
+                   asbem710 ~ a*tadhdem5
+                   sisoem12 ~ b*asbem710
+                  
+                  # indirect effect (a*b)
+                   indirect := a*b
+                  
+                  # total effect
+                   total := c + (a*b)
+         '
+```
+
+```{r  fit med.simp.asb.m}
+med.simp.asb.fit <- sem(model = med.simp.asb.m, 
+                        data = dat,
+                        se = "bootstrap",
+                        estimator = "ML")
+
+med.simp.asb.fit.summary <- summary(med.simp.asb.fit, standardized = TRUE)
+```
+
+## Teacher report
+
+### Prosocial behaviour 
+
+```{r med.simp.pro.t}
+med.simp.pro.t <- ' 
+                  # direct effect
+                   sisoet12 ~ c*tadhdet5
+                  
+                  # mediator
+                   proet710 ~ a*tadhdet5
+                   sisoet12 ~ b*proet710
+                  
+                  # indirect effect (a*b)
+                   indirect := a*b
+                  
+                  # total effect
+                   total := c + (a*b)
+         '
+```
+
+```{r  fit med.simp.pro.t}
+med.simp.pro.fit <- sem(model = med.simp.pro.t, 
+                        data = dat,
+                        se = "bootstrap",
+                        estimator = "ML")
+
+med.simp.pro.fit.summary <- summary(med.simp.pro.fit, standardized = TRUE)
+```
+
+### Antisocial behaviour 
+
+```{r med.simp.asb.t}
+med.simp.asb.t <- ' 
+                  # direct effect
+                   sisoet12 ~ c*tadhdet5
+                  
+                  # mediator
+                   asbet710 ~ a*tadhdet5
+                   sisoet12 ~ b*asbet710
+                  
+                  # indirect effect (a*b)
+                   indirect := a*b
+                  
+                  # total effect
+                   total := c + (a*b)
+         '
+```
+
+```{r fit med.simp.asb.t}
+med.simp.asb.fit <- sem(model = med.simp.asb.t, 
+                        data = dat,
+                        se = "bootstrap",
+                        estimator = "ML")
+
+med.simp.asb.fit.summary <- summary(med.simp.asb.fit, standardized = TRUE)
+```
+
+***
+
+# Longitudinal mediation models
+
+**For each reporter and set of ADHD symptoms, we present two models:**
+ * First, the mediation model which is an extension of the CLPM - rather than two variables, we now have three and can calculate the mediation path. 
+ * Second, we add in random intercepts to create a three variable RI-CLPM where the mediation path can be calculated whilst accounting for between person differences. 
+
+We already know the direction of the association - ADHD predicts later social isolation. Therefore the labeled mediator paths are (for example):  
+                              
+                              proem710 ~ a*tadhdem5 
+                              sisoem12 ~ b*proem710
+
+All path coefficients are written out in full to save confusion of the different paths. 
+
+Model notation is as follows: 
+* med = mediation model
+* long = longitudinal
+* sat = saturated
+* pro = prosocial
+* m = mother report
+* t = teacher report
+* hyp = hyperactivity 
+* inat = inattention
+* ri = random intercepts
+
+We will first run all models with no equality constraints. Then we will apply equality constraints to the autoregressive lags. All models will be repeated for mother/teacher report, and inattention/hyperactive symptoms. 
+
+
+## Unconstrained models
+
+These models have no equality constraints applied. The only constraints are that the "direct c paths" have not been estimated here. Therefore, the effects from age 5 have to go through age 7/10 and are not directly associated with age 12. to estimate these effects, you can add this code:
+
+          ###### Direct effects (age 5 to 12) ######
+                  
+                   sisoem12 ~ c*tadhdem5
+                   proem12 ~ tadhdem5
+                   tadhdem12 ~ tadhdem5
+                   
+                   sisoem12 ~ proem5
+                   proem12 ~ proem5
+                   tadhdem12 ~ proem5
+                   
+                   sisoem12 ~ sisoem5
+                   proem12 ~ sisoem5
+                   tadhdem12 ~ sisoem5
+                   
+         ###### total effect ######
+                   total := c + (a*b)
+                  
+### Mother report
+
+#### Prosocial behaviour 
+
+##### Total ADHD symptoms 
+
+1. The CLPM mediaiton model 
+
+```{r med.long.sat.pro.m}
+med.long.sat.pro.m <- ' 
+                  ###### Autoregressive lags ######
+                  ## Isolation
+                  sisoem710 ~ sisoem5
+                  sisoem12 ~ sisoem710
+                  ## Pro social bahviour
+                  proem710 ~ proem5
+                  proem12 ~ proem710
+                  ## ADHD
+                  tadhdem710 ~ tadhdem5
+                  tadhdem12 ~ tadhdem710
+                  
+                  ###### Cross lag paths ######
+                  ## Isolation
+                  tadhdem710 ~ sisoem5
+                  tadhdem12 ~ sisoem710
+                  ## ADHD
+                  sisoem710 ~ tadhdem5
+                  sisoem12 ~ tadhdem710
+                  ## Prosocial
+                  sisoem710 ~ proem5
+                  tadhdem710 ~ proem5
+                  proem12 ~ sisoem710
+                  proem12 ~ tadhdem710
+                  
+                  ###### Mediation paths ######
+                  ## ADHD to Isolation
+                  proem710 ~ a*tadhdem5 
+                  sisoem12 ~ b*proem710
+                  ## Isolation to ADHD
+                  proem710 ~ sisoem5
+                  tadhdem12 ~ proem710
+                  
+                  ###### Covariances ######
+                  sisoem5 ~~ proem5
+                  proem5 ~~ tadhdem5
+                  sisoem5 ~~ tadhdem5
+                  sisoem710 ~~ proem710
+                  proem710 ~~ tadhdem710
+                  sisoem710 ~~ tadhdem710
+                  sisoem12 ~~ proem12
+                  proem12 ~~ tadhdem12
+                  sisoem12 ~~ tadhdem12
+                    
+                  ###### Variances ######
+                  ## Variances
+                  tadhdem5 ~~ tadhdem5 
+                  sisoem5 ~~ sisoem5 
+                  proem5 ~~ proem5
+                  ## Residual variances
+                  tadhdem710 ~~ tadhdem710 
+                  sisoem710 ~~ sisoem710 
+                  proem710 ~~ proem710
+                  tadhdem12 ~~ tadhdem12 
+                  sisoem12 ~~ sisoem12
+                  proem12 ~~ proem12
+
+                  ###### Indirect effect (a*b) ######
+                  indirect := a*b
+         '
+```
+
+```{r  fit med.long.sat.pro.m}
+med.long.sat.pro.m.fit <- sem(model = med.long.sat.pro.m, 
+                        data = dat,
+                        se = "bootstrap",
+                        estimator = "ML")
+
+med.long.sat.pro.m.fit.summary <- summary(med.long.sat.pro.m.fit, standardized = TRUE, fit.measures = TRUE)
+```
+
+2. The RI-CLPM mediation model 
+
+```{r ri.med.long.sat.pro.m}
+ri.med.long.sat.pro.m <- ' 
+                  ###### Create random intercepts ###### 
+                  RIad =~ 1*tadhdem5 + 1*tadhdem710 + 1*tadhdem12 
+                  RIsi =~ 1*sisoem5 + 1*sisoem710 + 1*sisoem12 
+                  RIpro =~ 1*proem5 + 1*proem710 + 1*proem12
+                
+                  ###### Create within-person variables ######
+                  ## Isolation
+                  wsi5 =~ 1*sisoem5
+                  wsi710 =~ 1*sisoem710
+                  wsi12 =~ 1*sisoem12
+                  ## ADHD
+                  wad5 =~ 1*tadhdem5
+                  wad710 =~ 1*tadhdem710
+                  wad12 =~ 1*tadhdem12
+                  ## Prosocial 
+                  wpro5 =~ 1*proem5
+                  wpro710 =~ 1*proem710
+                  wpro12 =~ 1*proem12
+                  
+                  ###### Autoregressive lags ######
+                  ## Isolation
+                  wsi710 ~ wsi5
+                  wsi12 ~ wsi710
+                  ## Pro social bahviour
+                  wpro710 ~ wpro5
+                  wpro12 ~ wpro710
+                  ## ADHD
+                  wad710 ~ wad5
+                  wad12 ~ wad710
+                  
+                  ###### Cross lag paths ######
+                  ## Isolation
+                  wad710 ~ wsi5
+                  wad12 ~ wsi710
+                  ## ADHD
+                  wsi710 ~ wad5
+                  wsi12 ~ wad710
+                  ## Prosocial
+                  wsi710 ~ wpro5
+                  wad710 ~ wpro5
+                  wpro12 ~ wsi710
+                  wpro12 ~ wad710
+                  
+                  ###### Mediation paths ######
+                  ## ADHD to Isolation
+                  wpro710 ~ a*wad5 
+                  wsi12 ~ b*wpro710
+                  ## Isolation to ADHD
+                  wpro710 ~ wsi5
+                  wad12 ~ wpro710
+                  
+                  ###### Covariances ######
+                  wsi5 ~~ wpro5
+                  wpro5 ~~ wad5
+                  wsi5 ~~ wad5
+                  wsi710 ~~ wpro710
+                  wpro710 ~~ wad710
+                  wsi710 ~~ wad710
+                  wsi12 ~~ wpro12
+                  wpro12 ~~ wad12
+                  wsi12 ~~ wad12
+                    
+                  ###### Variances ######
+                  ## Variances
+                  wad5 ~~ wad5 
+                  wsi5 ~~ wsi5 
+                  wpro5 ~~ wpro5
+                  ## Residual variances
+                  wad710 ~~ wad710 
+                  wsi710 ~~ wsi710 
+                  wpro710 ~~ wpro710
+                  wad12 ~~ wad12 
+                  wsi12 ~~ wsi12
+                  wpro12 ~~ wpro12
+                  
+                  ###### Variance and covariance of random intercepts ######
+                  RIad ~~ RIad
+                  RIsi ~~ RIsi
+                  RIpro ~~ RIpro
+                  RIad ~~ RIsi
+                  RIad ~~ RIpro
+                  RIsi ~~ RIpro
+
+                  ###### Indirect effect (a*b) ######
+                  indirect := a*b
+         '
+```
+
+```{r  fit ri.med.long.sat.pro.m}
+ri.med.long.sat.pro.m.fit <- lavaan(model = ri.med.long.sat.pro.m, 
+                        data = dat,
+                        missing = 'ML',       
+                        meanstructure = TRUE, 
+                        se = "robust",        
+                        int.ov.free = TRUE,   
+                        estimator = "MLR")
+
+ri.med.long.sat.pro.m.fit.summary <- summary(ri.med.long.sat.pro.m.fit, standardized = TRUE, fit.measures = TRUE)
+```
+
+
+
+
+##### Hyperactivity symptoms 
+
+```{r med.long.sat.pro.m.hyp}
+med.long.sat.pro.m.hyp <- ' 
+                  ###### Autoregressive lags ######
+                  ## Isolation
+                  sisoem710 ~ sisoem5
+                  sisoem12 ~ sisoem710
+                  ## Pro social bahviour
+                  proem710 ~ proem5
+                  proem12 ~ proem710
+                  ## ADHD
+                  hyem710 ~ hyem5
+                  hyem12 ~ hyem710
+                  
+                  ###### Cross lag paths ######
+                  ## Isolation
+                  hyem710 ~ sisoem5
+                  hyem12 ~ sisoem710
+                  ## ADHD
+                  sisoem710 ~ hyem5
+                  sisoem12 ~ hyem710
+                  ## Prosocial
+                  sisoem710 ~ proem5
+                  hyem710 ~ proem5
+                  proem12 ~ sisoem710
+                  proem12 ~ hyem710
+                  
+                  ###### Mediation paths ######
+                  ## ADHD to Isolation
+                  proem710 ~ a*hyem5 
+                  sisoem12 ~ b*proem710
+                  ## Isolation to ADHD
+                  proem710 ~ sisoem5
+                  hyem12 ~ proem710
+                  
+                  ###### Covariances ######
+                  sisoem5 ~~ proem5
+                  proem5 ~~ hyem5
+                  sisoem5 ~~ hyem5
+                  sisoem710 ~~ proem710
+                  proem710 ~~ hyem710
+                  sisoem710 ~~ hyem710
+                  sisoem12 ~~ proem12
+                  proem12 ~~ hyem12
+                  sisoem12 ~~ hyem12
+                  
+                  ###### Variances ######
+                  ## Variances
+                  hyem5 ~~ hyem5 
+                  sisoem5 ~~ sisoem5 
+                  proem5 ~~ proem5
+                  ## Residual variances
+                  hyem710 ~~ hyem710 
+                  sisoem710 ~~ sisoem710 
+                  proem710 ~~ proem710
+                  hyem12 ~~ hyem12 
+                  sisoem12 ~~ sisoem12
+                  proem12 ~~ proem12
+                  
+                  ###### Indirect effect (a*b) ######
+                  indirect := a*b
+         '
+```
+
+```{r  fit med.long.sat.pro.m.hyp}
+med.long.sat.pro.m.hyp.fit <- sem(model = med.long.sat.pro.m.hyp, 
+                        data = dat,
+                        se = "bootstrap",
+                        estimator = "ML")
+
+med.long.sat.pro.m.hyp.fit.summary <- summary(med.long.sat.pro.m.hyp.fit, standardized = TRUE)
+```
+
+##### Inattention symptoms 
+
+```{r med.long.sat.pro.m.inat}
+med.long.sat.pro.m.inat <- ' 
+                  ###### Autoregressive lags ######
+                  ## Isolation
+                  sisoem710 ~ sisoem5
+                  sisoem12 ~ sisoem710
+                  ## Pro social bahviour
+                  proem710 ~ proem5
+                  proem12 ~ proem710
+                  ## ADHD
+                  inem710 ~ inem5
+                  inem12 ~ inem710
+                  
+                  ###### Cross lag paths ######
+                  ## Isolation
+                  inem710 ~ sisoem5
+                  inem12 ~ sisoem710
+                  ## ADHD
+                  sisoem710 ~ inem5
+                  sisoem12 ~ inem710
+                  ## Prosocial
+                  sisoem710 ~ proem5
+                  inem710 ~ proem5
+                  proem12 ~ sisoem710
+                  proem12 ~ inem710
+                  
+                  ###### Mediation paths ######
+                  ## ADHD to Isolation
+                  proem710 ~ a*inem5 
+                  sisoem12 ~ b*proem710
+                  ## Isolation to ADHD
+                  proem710 ~ sisoem5
+                  inem12 ~ proem710
+                  
+                  ###### Covariances ######
+                  sisoem5 ~~ proem5
+                  proem5 ~~ inem5
+                  sisoem5 ~~ inem5
+                  sisoem710 ~~ proem710
+                  proem710 ~~ inem710
+                  sisoem710 ~~ inem710
+                  sisoem12 ~~ proem12
+                  proem12 ~~ inem12
+                  sisoem12 ~~ inem12
+                    
+                  ###### Variances ######
+                  ## Variances
+                  inem5 ~~ inem5 
+                  sisoem5 ~~ sisoem5 
+                  proem5 ~~ proem5
+                  ## Residual variances
+                  inem710 ~~ inem710 
+                  sisoem710 ~~ sisoem710 
+                  proem710 ~~ proem710
+                  inem12 ~~ inem12 
+                  sisoem12 ~~ sisoem12
+                  proem12 ~~ proem12
+                  
+                  ###### Indirect effect (a*b) ######
+                  indirect := a*b
+         '
+```
+
+```{r  fit med.long.sat.pro.m.inat}
+med.long.sat.pro.m.inat.fit <- sem(model = med.long.sat.pro.m.inat, 
+                        data = dat,
+                        se = "bootstrap",
+                        estimator = "ML")
+
+med.long.sat.pro.m.inat.fit.summary <- summary(med.long.sat.pro.m.inat.fit, standardized = TRUE)
+```
+
+#### Antisocial behaviour 
+
+```{r med.long.sat.asb.m}
+med.long.sat.asb.m <- ' 
+                  ###### Autoregressive lags ######
+                  ## Isolation
+                  sisoem710 ~ sisoem5
+                  sisoem12 ~ sisoem710
+                  ## Antisocial bahviour
+                  asbem710 ~ asbem5
+                  asbem12 ~ asbem710
+                  ## ADHD
+                  tadhdem710 ~ tadhdem5
+                  tadhdem12 ~ tadhdem710
+                  
+                  ###### Cross lag paths ######
+                  ## Isolation
+                  tadhdem710 ~ sisoem5
+                  tadhdem12 ~ sisoem710
+                  ## ADHD
+                  sisoem710 ~ tadhdem5
+                  sisoem12 ~ tadhdem710
+                  ## Antisocial
+                  sisoem710 ~ asbem5
+                  tadhdem710 ~ asbem5
+                  asbem12 ~ sisoem710
+                  asbem12 ~ tadhdem710
+                  
+                  ###### Mediation paths ######
+                  ## ADHD to Isolation
+                  asbem710 ~ a*tadhdem5 
+                  sisoem12 ~ b*asbem710
+                  ## Isolation to ADHD
+                  asbem710 ~ sisoem5
+                  tadhdem12 ~ asbem710
+                  
+                  ###### Covariances ######
+                  sisoem5 ~~ asbem5
+                  asbem5 ~~ tadhdem5
+                  sisoem5 ~~ tadhdem5
+                  sisoem710 ~~ asbem710
+                  asbem710 ~~ tadhdem710
+                  sisoem710 ~~ tadhdem710
+                  sisoem12 ~~ asbem12
+                  asbem12 ~~ tadhdem12
+                  sisoem12 ~~ tadhdem12
+                    
+                  ###### Variances ######
+                  ## Variances
+                  tadhdem5 ~~ tadhdem5 
+                  sisoem5 ~~ sisoem5 
+                  asbem5 ~~ asbem5
+                  ## Residual variances
+                  tadhdem710 ~~ tadhdem710 
+                  sisoem710 ~~ sisoem710 
+                  asbem710 ~~ asbem710
+                  tadhdem12 ~~ tadhdem12 
+                  sisoem12 ~~ sisoem12
+                  asbem12 ~~ asbem12
+                  
+                  ###### Indirect effect (a*b) ######
+                  indirect := a*b
+         '
+```
+
+```{r  fit med.long.sat.asb.m}
+med.long.sat.asb.m.fit <- sem(model = med.long.sat.asb.m, 
+                        data = dat,
+                        se = "bootstrap",
+                        estimator = "ML")
+
+med.long.sat.asb.m.fit.summary <- summary(med.long.sat.asb.m.fit, standardized = TRUE, fit.measures = TRUE)
+```
+
+```{r med.long.sat.asb.m.hyp}
+med.long.sat.asb.m.hyp <- ' 
+                  ###### Autoregressive lags ######
+                  ## Isolation
+                  sisoem710 ~ sisoem5
+                  sisoem12 ~ sisoem710
+                  ## Antisocial bahviour
+                  asbem710 ~ asbem5
+                  asbem12 ~ asbem710
+                  ## ADHD
+                  hyem710 ~ hyem5
+                  hyem12 ~ hyem710
+                  
+                  ###### Cross lag paths ######
+                  ## Isolation
+                  hyem710 ~ sisoem5
+                  hyem12 ~ sisoem710
+                  ## ADHD
+                  sisoem710 ~ hyem5
+                  sisoem12 ~ hyem710
+                  ## Antisocial
+                  sisoem710 ~ asbem5
+                  hyem710 ~ asbem5
+                  asbem12 ~ sisoem710
+                  asbem12 ~ hyem710
+                  
+                  ###### Mediation paths ######
+                  ## ADHD to Isolation
+                  asbem710 ~ a*hyem5 
+                  sisoem12 ~ b*asbem710
+                  ## Isolation to ADHD
+                  asbem710 ~ sisoem5
+                  hyem12 ~ asbem710
+                  
+                  ###### Covariances ######
+                  sisoem5 ~~ asbem5
+                  asbem5 ~~ hyem5
+                  sisoem5 ~~ hyem5
+                  sisoem710 ~~ asbem710
+                  asbem710 ~~ hyem710
+                  sisoem710 ~~ hyem710
+                  sisoem12 ~~ asbem12
+                  asbem12 ~~ hyem12
+                  sisoem12 ~~ hyem12
+                    
+                  ###### Variances ######
+                  ## Variances
+                  hyem5 ~~ hyem5 
+                  sisoem5 ~~ sisoem5 
+                  asbem5 ~~ asbem5
+                  ## Residual variances
+                  hyem710 ~~ hyem710 
+                  sisoem710 ~~ sisoem710 
+                  asbem710 ~~ asbem710
+                  hyem12 ~~ hyem12 
+                  sisoem12 ~~ sisoem12
+                  asbem12 ~~ asbem12
+                  
+                  ###### Indirect effect (a*b) ######
+                  indirect := a*b
+         '
+```
+
+```{r  fit med.long.sat.asb.m.hyp}
+med.long.sat.asb.m.hyp.fit <- sem(model = med.long.sat.asb.m.hyp, 
+                        data = dat,
+                        se = "bootstrap",
+                        estimator = "ML")
+
+med.long.sat.asb.m.hyp.fit.summary <- summary(med.long.sat.asb.m.hyp.fit, standardized = TRUE, fit.measures = TRUE)
+```
+
+##### Inattention
+
+```{r med.long.sat.asb.m.inat}
+med.long.sat.asb.m.inat <- ' 
+                  ###### Autoregressive lags ######
+                  ## Isolation
+                  sisoem710 ~ sisoem5
+                  sisoem12 ~ sisoem710
+                  ## Antisocial bahviour
+                  asbem710 ~ asbem5
+                  asbem12 ~ asbem710
+                  ## ADHD
+                  inem710 ~ inem5
+                  inem12 ~ inem710
+                  
+                  ###### Cross lag paths ######
+                  ## Isolation
+                  inem710 ~ sisoem5
+                  inem12 ~ sisoem710
+                  ## ADHD
+                  sisoem710 ~ inem5
+                  sisoem12 ~ inem710
+                  ## Antisocial
+                  sisoem710 ~ asbem5
+                  inem710 ~ asbem5
+                  asbem12 ~ sisoem710
+                  asbem12 ~ inem710
+                  
+                  ###### Mediation paths ######
+                  ## ADHD to Isolation
+                  asbem710 ~ a*inem5 
+                  sisoem12 ~ b*asbem710
+                  ## Isolation to ADHD
+                  asbem710 ~ sisoem5
+                  inem12 ~ asbem710
+                  
+                  ###### Covariances ######
+                  sisoem5 ~~ asbem5
+                  asbem5 ~~ inem5
+                  sisoem5 ~~ inem5
+                  sisoem710 ~~ asbem710
+                  asbem710 ~~ inem710
+                  sisoem710 ~~ inem710
+                  sisoem12 ~~ asbem12
+                  asbem12 ~~ inem12
+                    
+                  ###### Variances ######
+                  ## Variances
+                  inem5 ~~ inem5 
+                  sisoem5 ~~ sisoem5 
+                  asbem5 ~~ asbem5
+                  ## Residual variances
+                  inem710 ~~ inem710 
+                  sisoem710 ~~ sisoem710 
+                  asbem710 ~~ asbem710
+                  inem12 ~~ inem12 
+                  sisoem12 ~~ sisoem12
+                  asbem12 ~~ asbem12
+                  
+                  ###### Indirect effect (a*b) ######
+                  indirect := a*b
+         '
+```
+
+```{r  fit med.long.sat.asb.m.inat}
+med.long.sat.asb.m.inat.fit <- sem(model = med.long.sat.asb.m.inat, 
+                        data = dat,
+                        se = "bootstrap",
+                        estimator = "ML")
+
+med.long.sat.asb.m.inat.fit.summary <- summary(med.long.sat.asb.m.inat.fit, standardized = TRUE, fit.measures = TRUE)
+```
+
+*****
+NEED TO ADD HYPERACTIVITY AND INATTENTION BELOW
+*****
+
+### Teacher report
+
+#### Prosocial behaviour 
+
+```{r med.long.sat.pro.t}
+med.long.sat.pro.t <- ' 
+                  ###### Autoregressive lags ######
+                  ## Isolation
+                  sisoet710 ~ sisoet5
+                  sisoet12 ~ sisoet710
+                  ## Pro social bahviour
+                  proet710 ~ proet5
+                  proet12 ~ proet710
+                  ## ADHD
+                  tadhdet710 ~ tadhdet5
+                  tadhdet12 ~ tadhdet710
+                  
+                  ###### Cross lag paths ######
+                  ## Isolation
+                  tadhdet710 ~ sisoet5
+                  tadhdet12 ~ sisoet710
+                  ## ADHD
+                  sisoet710 ~ tadhdet5
+                  sisoet12 ~ tadhdet710
+                  ## Prosocial
+                  sisoet710 ~ proet5
+                  tadhdet710 ~ proet5
+                  proet12 ~ sisoet710
+                  proet12 ~ tadhdet710
+                  
+                  ###### Mediation paths ######
+                  ## ADHD to Isolation
+                  proet710 ~ a*tadhdet5 
+                  sisoet12 ~ b*proet710
+                  ## Isolation to ADHD
+                  proet710 ~ sisoet5
+                  tadhdet12 ~ proet710
+                  
+                  ###### Covariances ######
+                  sisoet5 ~~ proet5
+                  proet5 ~~ tadhdet5
+                  sisoet5 ~~ tadhdet5
+                  sisoet710 ~~ proet710
+                  proet710 ~~ tadhdet710
+                  sisoet710 ~~ tadhdet710
+                  sisoet12 ~~ proet12
+                  proet12 ~~ tadhdet12
+                  sisoet12 ~~ tadhdet12
+                    
+                  ###### Variances ######
+                  ## Variances
+                  tadhdet5 ~~ tadhdet5 
+                  sisoet5 ~~ sisoet5 
+                  proet5 ~~ proet5
+                  ## Residual variances
+                  tadhdet710 ~~ tadhdet710 
+                  sisoet710 ~~ sisoet710 
+                  proet710 ~~ proet710
+                  tadhdet12 ~~ tadhdet12 
+                  sisoet12 ~~ sisoet12
+                  proet12 ~~ proet12
+
+                  ###### Indirect effect (a*b) ######
+                  indirect := a*b
+         '
+```
+
+```{r  fit med.long.sat.pro.t}
+med.long.sat.pro.t.fit <- sem(model = med.long.sat.pro.t, 
+                        data = dat,
+                        se = "bootstrap",
+                        estimator = "ML")
+
+med.long.sat.pro.t.fit.summary <- summary(med.long.sat.pro.t.fit, standardized = TRUE, fit.measures = TRUE)
+```
+
+#### Antisocial behaviour 
+
+```{r med.long.sat.asb.t}
+med.long.sat.asb.t <- ' 
+                  ###### Autoregressive lags ######
+                  ## Isolation
+                  sisoet710 ~ sisoet5
+                  sisoet12 ~ sisoet710
+                  ## asb social bahviour
+                  asbet710 ~ asbet5
+                  asbet12 ~ asbet710
+                  ## ADHD
+                  tadhdet710 ~ tadhdet5
+                  tadhdet12 ~ tadhdet710
+                  
+                  ###### Cross lag paths ######
+                  ## Isolation
+                  tadhdet710 ~ sisoet5
+                  tadhdet12 ~ sisoet710
+                  ## ADHD
+                  sisoet710 ~ tadhdet5
+                  sisoet12 ~ tadhdet710
+                  ## asbsocial
+                  sisoet710 ~ asbet5
+                  tadhdet710 ~ asbet5
+                  asbet12 ~ sisoet710
+                  asbet12 ~ tadhdet710
+                  
+                  ###### Mediation paths ######
+                  ## ADHD to Isolation
+                  asbet710 ~ a*tadhdet5 
+                  sisoet12 ~ b*asbet710
+                  ## Isolation to ADHD
+                  asbet710 ~ sisoet5
+                  tadhdet12 ~ asbet710
+                  
+                  ###### Covariances ######
+                  sisoet5 ~~ asbet5
+                  asbet5 ~~ tadhdet5
+                  sisoet5 ~~ tadhdet5
+                  sisoet710 ~~ asbet710
+                  asbet710 ~~ tadhdet710
+                  sisoet710 ~~ tadhdet710
+                  sisoet12 ~~ asbet12
+                  asbet12 ~~ tadhdet12
+                  sisoet12 ~~ tadhdet12
+                    
+                  ###### Variances ######
+                  ## Variances
+                  tadhdet5 ~~ tadhdet5 
+                  sisoet5 ~~ sisoet5 
+                  asbet5 ~~ asbet5
+                  ## Residual variances
+                  tadhdet710 ~~ tadhdet710 
+                  sisoet710 ~~ sisoet710 
+                  asbet710 ~~ asbet710
+                  tadhdet12 ~~ tadhdet12 
+                  sisoet12 ~~ sisoet12
+                  asbet12 ~~ asbet12
+                  
+                  ###### Indirect effect (a*b) ######
+                  indirect := a*b
+         '
+```
+
+```{r  fit med.long.sat.asb.t}
+med.long.sat.asb.t.fit <- sem(model = med.long.sat.asb.t, 
+                        data = dat,
+                        se = "bootstrap",
+                        estimator = "ML")
+
+med.long.sat.asb.t.fit.summary <- summary(med.long.sat.asb.t.fit, standardized = TRUE, fit.measures = TRUE)
+```
+
+*****
+NEED TO ADD THE EQUALITY CONSTRAINED MODELS BELOW
+*****
+
+
