@@ -34,6 +34,7 @@ remove(list = ls())
 ```{r Load packages, include=FALSE}
 library(knitr)
 library(haven)
+library(ltm)
 library(lavaan)
 library(tidyverse)
 library(dplyr) #conflicts with tidyverse for e.g. rename and row_number
@@ -249,6 +250,31 @@ colnames(dat)
 
 ***
 
+```{r functions}
+# Table of model fit 
+table.model.fit <- function(model){
+  model.fit <- as.data.frame(t(as.data.frame(model$FIT))) %>%
+    dplyr::select(chisq, df, chisq.scaled, cfi, tli, rmsea, rmsea.ci.lower, rmsea.ci.upper, srmr) # not robust because ELSMV estimator
+  return(model.fit)
+}
+
+# Table of regression and correlation (standardised covariance) coefficients
+table.model.coef <- function(model, step){
+  if (step == "S1"){
+    model.coef <- as.tibble(model$PE[c(121:136),]) %>% dplyr::select(-exo, -std.lv, -std.nox)
+    return(model.coef)
+  } else if(step == "S2"){
+    model.coef <- as.tibble(model$PE[c(121:136),]) %>% dplyr::select(-exo, -label, -std.lv, -std.nox)
+    return(model.coef)
+  } else if(step == "S3"){
+    model.coef <- as.tibble(model$PE[c(121:136),]) %>% dplyr::select(-exo, -label, -std.lv, -std.nox)
+    return(model.coef)
+  } else {model.coef <- NULL}
+}
+```
+
+***
+
 # Cronbach alpha for social isolation items 
 
 ```{r identifying items}
@@ -282,7 +308,7 @@ The loaded data is for se = robust and listwise deletion models.
 Need to create a new saved dataset where all models are robust standard errors and pairwise deletion. 
 For now the robust standard errors isn't computing for the pairwise deletion (I think this is an issue with the package). *So all models have se='robust' hashed out for now.*
 ```{r load saved environment with models run}
-#load("../measurement_environment.RData")
+load("../../data_full/data/measurement_models_ordered_WLSMVestimator_8March22.RData")
 ```
 
 # All RI-CLPM models displayed here **This needs to be updated**
@@ -298,6 +324,8 @@ For now the robust standard errors isn't computing for the pairwise deletion (I 
 From [Mulder and Hamaker (2021)](https://www.tandfonline.com/doi/full/10.1080/10705511.2020.1784738): We include multiple indicators for each of the constructs (mother and teacher), while formulating the dynamics over time between the latent variables. There are two ways in which this can be done. First, a random intercept can be included for each indicator and these random intercepts are allowed to be correlated with each other. In addition, a common factor of the multiple indicators is included per occasion to capture the common within-unit variability over time. Second, the random intercepts can be included at the latent level as shown in the bottom panel of (e.g., Seddig, 2020). There is a common factor for each construct at each occasion, which is then being further decomposed into a time-invariant part captured by the random intercept, and a time-varying part that is used to model the within-unit dynamics. *These two approaches are nested with the second being a special case of the first.*
 
 To allow for a meaningful comparison of factors over time, the factor loadings should be time-invariant, such that there is **(at least)** weak factorial invariance over time (Meredith, 1993; Millsap, 2011). If we are unable to establish this invariance, it implies that the constructs that we try to measure are interpreted differently over time, and it is difficult to make meaningful comparisons between the constructs measured at different occasions. The below steps need to be considered to establish longitudinal measurement invariance, and detail how the decomposition into within-unit and between-unit variance can be obtained in the context of multiple indicators.
+
+When the ordered = TRUE argument is used, lavaan will automatically switch to the WLSMV estimator: it will use diagonally weighted least squares (DWLS) to estimate the model parameters, but it will use the full weight matrix to compute robust standard errors, and a mean- and variance-adjusted test statistic. The robust CFI, TLI and RMSEA can only be done for MLR estimator, so non-robust fit statistics have been called for all models below as we are using the WLSMV estimator.  
 
 - Step 1: the configural model (RICLPM_multi_S1)
 - Step 2: weak factorial invariance  (RICLPM_multi_S2)
@@ -319,6 +347,8 @@ The configural model is the least stringent test of invariance, it is designed t
 We have six indicators of $Social isolation$, measured at four waves, we specify six random intercepts to capture the trait-like part of each indicator, that is, `RIX1 =~ 1*x11 1*x21 ...`, and `RIX2 =~ 1*x121 1*x22@1 ...`. In addition, we specify four within-unit components that capture the state-like part at each wave, using `WFX1 =~ x11 x12 x13; WFX2 =~ x21 x22 x23; ...`.
 
 At the latent within-unit level, we specify the dynamic model using `WFX2 ~ WFY1 + WFX1; WFX3 ~ WFY2 + WFX2; ...`. In addition, we allow the within-person factors at the first wave, and their residuals at subsequent waves to be correlated within each wave, `WFX1 ~~ WFY1; WFX2 ~~ WFY2; ...`. The random intercepts are allowed to be freely correlated with each other through using the cfa() command below. 
+
+
 
 **At the moment all models are using pairwise deletion**
 
@@ -527,7 +557,7 @@ Now we will move onto strong invariance tests.
 
 **Multiple response items RICLPM mother report inattention ADHD symptoms and social isolation: Step 3** 
 
-As full or partial weak invariance is supported, the next step is to test for strong (scalar) invariance, or equivalence of item intercepts, for weak invariant items. Strong invariance means that mean differences in the latent construct capture all mean differences in the shared variance of the items. Strong invariance is tested by constraining the item intercepts to be equivalent in the two groups - with the restraint applied in the weak invariance model retained. *Any items that had unequal loadings in the weak invariance model (and were allowed to vary) should be allowed to vary in the strong invariance model because it is meaningless to test for equal item intercepts if the factor loadings of the items differs across groups* (Putnick and Bornstein, 2016). 
+As full or partial weak invariance is supported, the next step is to test for strong (scalar) invariance, or equivalence of item intercepts, for weak invariant items. Strong invariance means that mean differences in the latent construct capture all mean differences in the shared variance of the items. Strong invariance is tested by constraining the item intercepts to be equivalent in the two groups - with the restraint applied in the weak invariance model retained. Any items that had unequal loadings in the weak invariance model (and were allowed to vary) should be allowed to vary in the strong invariance model because it is meaningless to test for equal item intercepts if the factor loadings of the items differs across groups (Putnick and Bornstein, 2016). 
 
 Fitting a model with constraints to ensure strong factorial invariance, with a random intercept for each indicator separately.
 
@@ -646,13 +676,12 @@ We attempted to view the fit differences using semTools but it gives the error "
 
 ```{r tables for inattention ADHD S3}
 # Table of model fit 
-RICLPM_multi_inat_S3.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPM_multi_inat_S3.fit.summary$FIT)))[,c(6,7,19,20,27,28,29,35)]
-
+RICLPM_multi_inat_S3.fit.summary.fit <- table.model.fit(model = RICLPM_multi_inat_S3.fit.summary)
 # Table of regression coefficients and covariances 
-RICLPM_multi_inat_S3.fit.summary.reg <- as.tibble(RICLPM_multi_inat_S3.fit.summary$PE[c(187:202),-c(4,5)])
+RICLPM_multi_inat_S3.fit.summary.reg <- table.model.coef(model = RICLPM_multi_inat_S3.fit.summary, step = "S3")
 ```
 
-Our model does not loose *any* fi, which means we can assume that strong factorial invariance holds over time. In contrast, If the overall model fit is not significantly worse in the strong invariance model compared to the weak invariance model, it indicates that constraining the item intercepts across time points does not significantly affect the model fit, and strong invariance is supported. 
+Our model does not loose any fit, which means we can assume that strong factorial invariance holds over time. In contrast, If the overall model fit is not significantly worse in the strong invariance model compared to the weak invariance model, it indicates that constraining the item intercepts across time points does not significantly affect the model fit, and strong invariance is supported. 
 
 **Going forward, we will assume that we have strong invariance for our inattention and social isolation mother report RI-CLPM.**
 
@@ -763,10 +792,10 @@ RICLPM_multi_inat_S4 <- '
 
 ```{r fit RICLPM_multi_S4}
 RICLPM_multi_inat_S4.fit <- cfa(RICLPM_multi_inat_S4, 
-                           data = dat, 
-                           estimator = "WLSMV",
-                           ordered = TRUE,
-                           missing = 'pairwise')
+                                 data = dat, 
+                                 estimator = "WLSMV",
+                                 ordered = TRUE,
+                                 missing = 'pairwise')
 
 summary(RICLPM_multi_inat_S4.fit, fit.measures = TRUE, standardized = TRUE)
 ``` 
@@ -796,18 +825,14 @@ To key points from [Hamaker et al., 2015](https://www.tandfonline.com/doi/pdf/10
 2. The procedure described above for establishing measurement invariance relies heavily on chi-square difference testing which, as mentioned before, can have serious disadvantages such as an increased Type I and Type II error rate when the base model is misspecified (Yuan & Bentler, 2004). Alternatively, researchers can use equivalence testing **(Yuan & Chan, 2016)**, which allows researchers to explicitly specify an acceptable level of model misfit. 
 
 ***
-
 So if the S3 model is the way to go here - then I need to figure out how to interpret this 
-
 ***
 
 # Multiple indicator RI-CLPM: Hyperactivity and social isolation
 
 ## RICLPM_multi_hyp_S1: Hyperactivity/Implsivity step 1
 
-**Multiple response items RICLPM mother report hyperactivity ADHD symptoms and social isolation: Step 1, the configural model**  
-
-The configural model is the least stringent test of invariance, it is designed to test if the constructs have the same pattern of free and fixed loadings. Configural *non*invariance means that the pattern of loadings of items on the latent factors differs over the time points. This would then suggest that a slightly different concept is being measured at each time point (Putnick and Bornstein, 2016). To test if the configural variance holds, we will look at the fit of the configural model (S1).
+**Multiple response items RICLPM mother report hyperactivity ADHD symptoms and social isolation: Step 1, the configural model (S1)**  
 
 ```{r specify RICLPM_multi_hyp_S1}
 RICLPM_multi_hyp_S1 <- '
@@ -898,10 +923,9 @@ We can conclude that the model shows very good fit.
 
 ## RICLPM_multi_hyp_S2: Hyperactivity step 2 
 
-**Multiple response items RICLPM mother report hyperactivity ADHD symptoms and social isolation: Step 2**.
-If configural variance is supported, we next test for weak invariance (sometimes called metric invariance). This tests for the equivalence of the item loadings on the factors. Weak (metric) invariance means that each item contributes to the latent construct to a similar degree across groups. this is tested by constraining factor loadings (i.e., the loadings of the items on the constructs) to be equivalent in the two time points (Putnick and Bornstein, 2016). The model with constrained factor loadings (S2) is then compared to the configural invariance model (S1) to determine fit. If the overall model fit is significantly worse in the weak invariance model compared to the configural invariance model, it indicates that at least one loading is not equivalent across the groups, and weak invariance is not supported.
+**Multiple response items RICLPM mother report hyperactivity ADHD symptoms and social isolation: weak invariance (S2)**.
 
-In our second  step model, we constrain the factor loadings to be invariant over time using the labels `a*`, `b*`, `c*`, `d*` etc, in the "within" part of the model. 
+In our S2 model, we constrain the factor loadings to be invariant over time using the labels `a*`, `b*`, `c*`, `d*` etc, in the "within" part of the model. 
 
 ```{r specify RICLPM_multi_hyp_S2}
 RICLPM_multi_hyp_S2 <- '
@@ -994,17 +1018,11 @@ Now we need to conduct a Likelihood ratio test to see if the constrained model i
 summary(semTools::compareFit(RICLPM_multi_hyp_S1.fit, RICLPM_multi_hyp_S2.fit, nested = TRUE)) #† indicates the best fitting model 
 ```
 
-Significantly worse fit to include the restrictions, p<0.0001.
-
-*The difference in model fit is still smaller than 0.01 - so we can assume that weak invariance holds - even though there is a significant chi square test.*
-
-We will now go onto strong invariance testing. 
+Significantly worse fit to include the restrictions, p<0.0001.*But The difference in model fit is still smaller than 0.01 - so we can assume that weak invariance holds - even though there is a significant chi square test.*
 
 ## RICLPM_multi_hyp_S3
 
 **Multiple response items RICLPM mother report hyperactivity ADHD symptoms and social isolation: Step 3** 
-
-If full or partial weak invariance is supported, the next step is to test for strong (scalar) invariance, or equivalence of item intercepts, for weak invariant items. Strong invariance means that mean differences in the latent construct capture all mean differences in the shared variance of the items. Strong invariance is tested by constraining the item intercepts to be equivalent in the two groups - with the restarint applied in the weak invariance model retained. *Any items that had unequal loadings in the weak invariance model (and were allowed to vary) should be allowed to vary in the strong invariance model because it is meaningless to test for equal item intercepts if the factor loadings of the items differs across groups* (Putnick and Bornstein, 2016). 
 
 Fitting a model with constraints to ensure strong factorial invariance, with a random intercept for each indicator separately.
 
@@ -1114,7 +1132,6 @@ RMSEA                                          0.019 (≤ 0.06)   Change in RMSE
 90 Percent confidence interval - upper         0.021       
 SRMR                                           0.040 (≤ 0.08)   Change in SRMR: 0.006 (increase)  - same fit 
 
-Now we need to conduct a Likelihood ratio test to see if the constrained model is a significantly worse fit than the free loading model. By constraining the factor loadings over time we can assume that the items load onto the same construct in the same way at each time point. We use the compareFit command which gives the LRT with the comparison in model fit for the two models. 
 
 ```{r compare fit RICLPM_multi_hyp_S2 and RICLPM_hyp_S3}
 # summary(semTools::compareFit(RICLPM_multi_hyp_S2.fit, RICLPM_multi_hyp_S3.fit, nested = TRUE)) #† indicates the best fitting model - hashed out to keep script running
@@ -1126,20 +1143,12 @@ Again this function does not run - perhaps there is something wrong with the way
 
 ```{r tables for inattention ADHD S3}
 # Table of model fit 
-RICLPM_multi_hyp_S3.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPM_multi_hyp_S3.fit.summary$FIT)))[,c(6,7,19,20,27,28,29,35)]
-
+RICLPM_multi_hyp_S3.fit.summary.fit <- table.model.fit(RICLPM_multi_hyp_S3.fit.summary)
 # Table of regression coefficients and covariances 
-RICLPM_multi_hyp_S3.fit.summary.reg <- as.tibble(RICLPM_multi_hyp_S3.fit.summary$PE[c(187:202),-c(4,5)])
+RICLPM_multi_hyp_S3.fit.summary.reg <- table.model.coef(model = RICLPM_multi_hyp_S3.fit.summary, step = "S3")
 ```
 
 ## RICLPM_multi_hyp_S4: Hyperactivity step 4 - *Full model*
-
-From Mulder and Hamaker (2021):
-A significant chi-square difference test would mean strong factorial invariance does not hold, implying that the actual scores cannot be compared over time, but individual differences in scores can still be meaningfully compared since weak factorial invariance holds. As the focus in cross-lagged panel modeling is primarily on comparing individual differences (by decomposing the observed scores into between-unit and withinunit components) rather than mean scores over time, weak factorial invariance may be enough. However, from a measurement point of view, having strong factorial invariance would be considered more ideal.
-
-Instead of including a random intercept at the observed level for each indicator separately (as done so far and in the upper part of the figure at the beginning of this document), we can also choose to specify the entire RI-CLPM at the latent level; this is illustrated in the lower part of the beginning figure. This can be done in either a model with weak or strong factorial invariance over time. To this end, we specify the common factors that capture both trait-like and state-like common variance, and thereby make the assumption that the trait- and state structures coincide. We then decompose these latent variables into a stable, between-unit part and the within-unit components.
-
-We set the factor loadings of these second-order factors to be identical to the corresponding factor loadings of the withinunit factors. Additionally, we constrain the residual variances for the first-order factors to zero. This model is nested under the model we just presented (top panel of the figure), and is statistically equivalent to the model presented in the lower panel of the figure. This implies that we can use a chi-square difference test to compare. 
 
 Multiple indicator RI-CLPM, 5 waves with 3 indicators for each variable at each wave (30 observed variables). Fitting a model with constraints to ensure strong factorial invariance, with the RI-CLPM at the latent level.
 
@@ -1256,8 +1265,6 @@ RMSEA                                          0.049 (≤ 0.06)   Change in RMSE
 90 Percent confidence interval - upper         0.040       
 SRMR                                           0.086 (≤ 0.08)   Change in SRMR: 0.046 (increase)  - worse fit 
 
-Now we need to conduct a Likelihood ratio test to see if the constrained model is a significantly worse fit than the free loading model. By constraining the factor loadings over time we can assume that the items load onto the same construct in the same way at each time point. We use the compareFit command which gives the LRT with the comparison in model fit for the two models. 
-
 ```{r compare fit RICLPM_multi_hyp_S3 and RICLPM_hyp_inat_S4}
 summary(semTools::compareFit(RICLPM_multi_hyp_S3.fit, RICLPM_multi_hyp_S4.fit, nested = TRUE)) #† indicates the best fitting model
 ```
@@ -1265,18 +1272,14 @@ summary(semTools::compareFit(RICLPM_multi_hyp_S3.fit, RICLPM_multi_hyp_S4.fit, n
 **As all fit indices changed by more than 0.01 - we cannot accept this measurement model.**
 
 ***
-
 So if the S3 model is the way to go here - then I need to figure out how to interpret this 
-
 ***
 
 # Multiple indicator RI-CLPM: ADHD and social isolation
 
 ## RICLPM_multi_adhd_S1: ADHD step 1
 
-**Multiple response items RICLPM mother report total ADHD symptoms and social isolation: Step 1, the configural model**  
-
-The configural model is the least stringent test of invariance, it is designed to test if the constructs have the same pattern of free and fixed loadings. Configural *non*invariance means that the pattern of loadings of items on the latent factors differs over the time points. This would then suggest that a slightly different concept is being measured at each time point (Putnick and Bornstein, 2016). To test if the configural variance holds, we will look at the fit of the configural model (S1).
+**Multiple response items RICLPM mother report total ADHD symptoms and social isolation: Step 1, the configural model (S1)**  
 
 ```{r specify RICLPM_multi_adhd_S1}
 RICLPM_multi_adhd_S1 <- '
@@ -1378,7 +1381,6 @@ We can conclude that the model shows very good fit.
 ## RICLPM_multi_adhd_S2: ADHD step 2 
 
 **Multiple response items RICLPM mother report ADHD symptoms and social isolation: Step 2**.
-If configural variance is supported, we next test for weak invariance (sometimes called metric invariance). This tests for the equivalence of the item loadings on the factors. Weak (metric) invariance means that each item contributes to the latent construct to a similar degree across groups. this is tested by constraining factor loadings (i.e., the loadings of the items on the constructs) to be equivalent in the two time points (Putnick and Bornstein, 2016). The model with constrained factor loadings (S2) is then compared to the configural invariance model (S1) to determine fit. If the overall model fit is significantly worse in the weak invariance model compared to the configural invariance model, it indicates that at least one loading is not equivalent across the groups, and weak invariance is not supported.
 
 In our second  step model, we constrain the factor loadings to be invariant over time using the labels `a*`, `b*`, `c*`, `d*` etc, in the "within" part of the model. 
 
@@ -1478,8 +1480,6 @@ RMSEA                                          0.017 (≤ 0.06) Change in RMSEA:
 90 Percent confidence interval - upper         0.018       
 SRMR                                           0.038 (≤ 0.08) Change in SRMR:   0.005 (increase) - worse fit  
 
-Now we need to conduct a Likelihood ratio test and compare the model fit for S1 and S2 to see if the constrained model is a significantly worse fit than the free loading model. By constraining the factor loadings over time we can assume that the items load onto the same construct in the same way at each time point. 
-
 ```{r compare fit RICLPM_multi_adhd_S1 and RICLPM_hyp_adhd_S2}
 summary(semTools::compareFit(RICLPM_multi_adhd_S1.fit, RICLPM_multi_adhd_S2.fit, nested = TRUE)) #† indicates the best fitting model 
 ```
@@ -1488,13 +1488,9 @@ Significant;y worse fit according to the chi square (p<0.0001).
 
 **However, since the change in fit did not exceed 0.01 for all indices - we can except that strong invariance holds.**
 
-Notes from Hamaker on a forum: We assume that all the parameters are invariant over time (e.g., the lagged relationships between waves, or the residual variances), which may be problematic when the intervals between the waves vary, and/or if the time intervals between the waves are relatively large and developmental changes are may have occurred during the study. Both of these things could be playing a part in the chi square estimate - so it's good to keep this in mind. 
-
 ## RICLPM_multi_adhd_S3: ADHD step 3
 
 **Multiple response items RICLPM mother report ADHD symptoms and social isolation: Step 3** 
-
-If full or partial weak invariance is supported, the next step is to test for strong (scalar) invariance, or equivalence of item intercepts, for weak invariant items. Strong invariance means that mean differences in the latent construct capture all mean differences in the shared variance of the items. Strong invariance is tested by constraining the item intercepts to be equivalent in the two groups - with the restarint applied in the weak invariance model retained. *Any items that had unequal loadings in the weak invariance model (and were allowed to vary) should be allowed to vary in the strong invariance model because it is meaningless to test for equal item intercepts if the factor loadings of the items differs across groups* (Putnick and Bornstein, 2016). 
 
 Fitting a model with constraints to ensure strong factorial invariance, with a random intercept for each indicator separately.
 
@@ -1628,10 +1624,8 @@ RMSEA                                          0.017 (≤ 0.06) Change in RMSEA:
 90 Percent confidence interval - upper         0.018       
 SRMR                                           0.038 (≤ 0.08) Change in SRMR:   0.00 (increase) - same fit  
 
-Now we need to conduct a Likelihood ratio test and compare the model fit for S1 and S2 to see if the constrained model is a significantly worse fit than the free loading model. By constraining the factor loadings over time we can assume that the items load onto the same construct in the same way at each time point. 
-
 ```{r compare fit RICLPM_multi_adhd_S2 and RICLPM_hyp_adhd_S3}
-summary(semTools::compareFit(RICLPM_multi_adhd_S2.fit, RICLPM_multi_adhd_S3.fit, nested = TRUE)) #† indicates the best fitting model 
+#summary(semTools::compareFit(RICLPM_multi_adhd_S2.fit, RICLPM_multi_adhd_S3.fit, nested = TRUE)) #† indicates the best fitting model 
 ```
 
 *** 
@@ -1640,23 +1634,12 @@ below table rows need updating
 
 ```{r tables for total ADHD S3}
 # Table of model fit 
-RICLPM_multi_adhd_S3.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPM_multi_adhd_S3.fit.summary$FIT)))[,c(3,4,9,10,13,14,16,17,18,19,21)]
-
+# RICLPM_multi_adhd_S3.fit.summary.fit <- table.model.fit(RICLPM_multi_adhd_S3.fit.summary)
 # Table of regression coefficient 
-RICLPM2d.fit.summary.reg <- as.tibble(RICLPM2d.fit.summary$PE[c(17:28),-c(4,5)])
-
-# Table of co-variances - concurrent associations between SI and ADHD
-RICLPM2d.fit.summary.covar <- as.tibble(RICLPM2d.fit.summary$PE[c(29:32),-c(4,5)])
+# RICLPM2d.fit.summary.reg <- as.tibble(RICLPM2d.fit.summary$PE[c(17:28),-c(4,5)]) table.model.coef(mdoel = RICLPM_multi_adhd_S3.fit.summary, step = "S3")
 ```
 
 ## RICLPM_multi_adhd_S4: Total ADHD symptoms step 4 - *Full model*
-
-From Mulder and Hamaker (2021):
-A significant chi-square difference test would mean strong factorial invariance does not hold, implying that the actual scores cannot be compared over time, but individual differences in scores can still be meaningfully compared since weak factorial invariance holds. As the focus in cross-lagged panel modeling is primarily on comparing individual differences (by decomposing the observed scores into between-unit and withinunit components) rather than mean scores over time, weak factorial invariance may be enough. However, from a measurement point of view, having strong factorial invariance would be considered more ideal.
-
-Instead of including a random intercept at the observed level for each indicator separately (as done so far and in the upper part of the figure at the beginning of this document), we can also choose to specify the entire RI-CLPM at the latent level; this is illustrated in the lower part of the beginning figure. This can be done in either a model with weak or strong factorial invariance over time. To this end, we specify the common factors that capture both trait-like and state-like common variance, and thereby make the assumption that the trait- and state structures coincide. We then decompose these latent variables into a stable, between-unit part and the within-unit components.
-
-We set the factor loadings of these second-order factors to be identical to the corresponding factor loadings of the withinunit factors. Additionally, we constrain the residual variances for the first-order factors to zero. This model is nested under the model we just presented (top panel of the figure), and is statistically equivalent to the model presented in the lower panel of the figure. This implies that we can use a chi-square difference test to compare. 
 
 Multiple indicator RI-CLPM, 5 waves with 3 indicators for each variable at each wave (30 observed variables). Fitting a model with constraints to ensure strong factorial invariance, with the RI-CLPM at the latent level.
 
@@ -1772,9 +1755,7 @@ RICLPM_multi_adhd_S4.fit <- cfa(RICLPM_multi_adhd_S4,
                            missing = 'pairwise'
                            )
 
-summary(RICLPM_multi_adhd_S4.fit, 
-        fit.measures = TRUE,
-        standardized = TRUE)
+summary(RICLPM_multi_adhd_S4.fit, fit.measures = TRUE, standardized = TRUE)
 ```
 
 S4 Model fit:
@@ -1786,10 +1767,8 @@ RMSEA                                          0. (≤ 0.06)   Change in RMSEA: 
 90 Percent confidence interval - upper         0.       
 SRMR                                           0. (≤ 0.08)   Change in SRMR: 0.0 (increase)  - worse fit 
 
-Now we need to conduct a Likelihood ratio test to see if the constrained model is a significantly worse fit than the free loading model. By constraining the factor loadings over time we can assume that the items load onto the same construct in the same way at each time point. We use the compareFit command which gives the LRT with the comparison in model fit for the two models. 
-
 ```{r compare fit RICLPM_multi_adhd_S3 and RICLPM_multi_adhd_S4}
-summary(semTools::compareFit(RICLPM_multi_adhd_S3.fit, RICLPM_multi_adhd_S4.fit, nested = TRUE)) #† indicates the best fitting model
+# summary(semTools::compareFit(RICLPM_multi_adhd_S3.fit, RICLPM_multi_adhd_S4.fit, nested = TRUE)) #† indicates the best fitting model
 ```
 
 **As all fit indices changed by more than 0.01 - we cannot accept this measurement model.**
@@ -1800,13 +1779,7 @@ summary(semTools::compareFit(RICLPM_multi_adhd_S3.fit, RICLPM_multi_adhd_S4.fit,
 
 ## RICLPM_multi_inat_S1: Inattention step 1
 
-**Multiple response items RICLPM teacher report inattention ADHD symptoms and social isolation: Step 1, the configural model**  
-
-The configural model is the least stringent test of invariance, it is designed to test if the constructs have the same pattern of free and fixed loadings. Configural *non*invariance means that the pattern of loadings of items on the latent factors differs over the time points. This would then suggest that a slightly different concept is being measured at each time point (Putnick and Bornstein, 2016). To test if the configural variance holds, we will look at the fit of the configural model (S1).
-
-We have six indicators of $Social isolation$, measured at four waves, we specify six random intercepts to capture the trait-like part of each indicator, that is, `RIX1 =~ 1*x11 1*x21 ...`, and `RIX2 =~ 1*x121 1*x22@1 ...`. In addition, we specify four within-unit components that capture the state-like part at each wave, using `WFX1 =~ x11 x12 x13; WFX2 =~ x21 x22 x23; ...`.
-
-At the latent within-unit level, we specify the dynamic model using `WFX2 ~ WFY1 + WFX1; WFX3 ~ WFY2 + WFX2; ...`. In addition, we allow the within-person factors at the first wave, and their residuals at subsequent waves to be correlated within each wave, `WFX1 ~~ WFY1; WFX2 ~~ WFY2; ...`. The random intercepts are allowed to be freely correlated with each other through using the cfa() command below. 
+**Multiple response items RICLPM teacher report inattention ADHD symptoms and social isolation: Step 1, the configural model (S1)**  
 
 ```{r specify RICLPMt_multi_inat_S1}
 RICLPMt_multi_inat_S1 <- '
@@ -1898,7 +1871,6 @@ We can conclude that the model shows very good fit.
 ## RICLPMt_multi_inat_S2: Inattention step 2 
 
 **Multiple response items RICLPMt teacher report inattention ADHD symptoms and social isolation: Step 2**.
-If configural variance is supported, we next test for weak invariance (sometimes called metric invariance). This tests for the equivalence of the item loadings on the factors. Weak (metric) invariance means that each item contributes to the latent construct to a similar degree across groups. this is tested by constraining factor loadings (i.e., the loadings of the items on the constructs) to be equivalent in the two time points (Putnick and Bornstein, 2016). The model with constrained factor loadings (S2) is then compared to the configural invariance model (S1) to determine fit. If the overall model fit is significantly worse in the weak invariance model compared to the configural invariance model, it indicates that at least one loading is not equivalent across the groups, and weak invariance is not supported.
 
 In our second step model, we constrain the factor loadings to be invariant over time using the labels `a*`, `b*`, `c*`, `d*` etc, in the "within" part of the model. 
 
@@ -1987,15 +1959,11 @@ RMSEA                                          0.013 (≤ 0.06)   Change in RMSE
 90 Percent confidence interval - upper         0.014       
 SRMR                                           0.052 (≤ 0.08)   Change in SRMR: 0.001 (increase)  - worse fit 
 
-We can look at the best fitting model and the difference in fit indices by using the compareFit function from semTools. 
-
 ```{r compare fit RICLPMt_multi_inat_S1 and RICLPMt_multi_inat_S2}
-summary(semTools::compareFit(RICLPMt_multi_inat_S1.fit, RICLPMt_multi_inat_S2.fit, nested = TRUE)) #† indicates the best fitting model - using the robust statistics
+# summary(semTools::compareFit(RICLPMt_multi_inat_S1.fit, RICLPMt_multi_inat_S2.fit, nested = TRUE)) #† indicates the best fitting model - using the robust statistics
 ```
 
-Now we need to conduct a Likelihood ratio test to see if the constrained model is a significantly worse fit than the free loading model. By constraining the factor loadings over time we can assume that the items load onto the same construct in the same way at each time point. 
-
-Really important to note that the Chi Square p value is very likely to be significant when using large samples. We should consider the change in model fit as well as the Chi square.
+Important to note that the Chi Square p value is very likely to be significant when using large samples. We should consider the change in model fit as well as the Chi square.
 
 ```{r LRT for RICLPMt_multi_inat_S1 and RICLPMt_multi_inat_S2}
 lavTestLRT(RICLPMt_multi_inat_S1.fit, RICLPMt_multi_inat_S2.fit)
@@ -2010,8 +1978,6 @@ Now we will move onto strong invariance tests.
 ## RICLPMt_multi_inat_S3: Inattention step 3
 
 **Multiple response items RICLPMt teacher report inattention ADHD symptoms and social isolation: Step 3** 
-
-As full or partial weak invariance is supported, the next step is to test for strong (scalar) invariance, or equivalence of item intercepts, for weak invariant items. Strong invariance means that mean differences in the latent construct capture all mean differences in the shared variance of the items. Strong invariance is tested by constraining the item intercepts to be equivalent in the two groups - with the restraint applied in the weak invariance model retained. *Any items that had unequal loadings in the weak invariance model (and were allowed to vary) should be allowed to vary in the strong invariance model because it is meaningless to test for equal item intercepts if the factor loadings of the items differs across groups* (Putnick and Bornstein, 2016). 
 
 Fitting a model with constraints to ensure strong factorial invariance, with a random intercept for each indicator separately.
 
@@ -2121,30 +2087,21 @@ RMSEA                                          0.013 (≤ 0.06)   Change in RMSE
 90 Percent confidence interval - upper         0.014       
 SRMR                                           0.052 (≤ 0.08)   Change in SRMR:  0.000 
 
-We attempted to view the fit differences using semTools but it gives the error "a dimention is zero" - which I think means that there is no differences to test here. And this is somethign to do with the way the models are specified. But there is no difference in model fit between S2 and S3, so we can assume that **strong invariance holds here.**
-
 ```{r LRT for RICLPMt_multi_inat_S2 and RICLPMt_multi_inat_S3}
 #lavTestLRT(RICLPMt_multi_inat_S2.fit, RICLPMt_multi_inat_S3.fit)
 ```
 
 ```{r compare fit RICLPMt_multi_inat_S2 and RICLPMt_multi_inat_S3}
-summary(semTools::compareFit(RICLPMt_multi_inat_S2.fit, RICLPMt_multi_inat_S3.fit, nested = TRUE)) #† indicates the best fitting model - have hashed out here
+# summary(semTools::compareFit(RICLPMt_multi_inat_S2.fit, RICLPMt_multi_inat_S3.fit, nested = TRUE)) #† indicates the best fitting model - have hashed out here
 ```
 
 Our model does not loose *any* fit, which means we can assume that strong factorial invariance holds over time. In contrast, If the overall model fit is not significantly worse in the strong invariance model compared to the weak invariance model, it indicates that constraining the item intercepts across time points does not significantly affect the model fit, and strong invariance is supported. 
 
-**Going forward, we will assume that we have strong invariance for our inattention and social isolation mother report RI-CLPM.**
+**Going forward, we will assume that we have strong invariance**
 
 ***
 
 ## RICLPMt_multi_inat_S4: Inattention step 4 - *Full model*
-
-From Mulder and Hamaker (2021):
-A significant chi-square difference test would mean strong factorial invariance does not hold, implying that the actual scores cannot be compared over time, but individual differences in scores can still be meaningfully compared since weak factorial invariance holds. As the focus in cross-lagged panel modeling is primarily on comparing individual differences (by decomposing the observed scores into between-unit and withinunit components) rather than mean scores over time, weak factorial invariance may be enough. However, from a measurement point of view, having strong factorial invariance would be considered more ideal.
-
-Instead of including a random intercept at the observed level for each indicator separately (as done so far and in the upper part of the figure at the beginning of this document), we can also choose to specify the entire RI-CLPM at the latent level; this is illustrated in the lower part of the beginning figure. This can be done in either a model with weak or strong factorial invariance over time. To this end, we specify the common factors that capture both trait-like and state-like common variance, and thereby make the assumption that the trait- and state structures coincide. We then decompose these latent variables into a stable, between-unit part and the within-unit components.
-
-We set the factor loadings of these second-order factors to be identical to the corresponding factor loadings of the within unit factors. Additionally, we constrain the residual variances for the first-order factors to zero. This model is nested under the model we just presented, and is statistically equivalent to the model presented in the lower panel of the figure at the top of the script. This implies that we can use a chi-square difference test to compare. 
 
 Multiple indicator RI-CLPM, 4 waves with 9 indicators for inattention and 6 indicators for social isolation. Fitting a model with constraints to ensure strong factorial invariance, with the RI-CLPM at the latent level.
 
@@ -2266,7 +2223,7 @@ lavTestLRT(RICLPMt_multi_inat_S3.fit, RICLPMt_multi_inat_S4.fit)
 According to the chi square - significantly worse fit, p<0.000001
 
 ```{r compare fit RICLPMt_multi_inat_S3 and RICLPMt_multi_inat_S4}
-summary(semTools::compareFit(RICLPMt_multi_inat_S3.fit, RICLPMt_multi_inat_S4.fit, nested = TRUE)) #† indicates the best fitting model 
+# summary(semTools::compareFit(RICLPMt_multi_inat_S3.fit, RICLPMt_multi_inat_S4.fit, nested = TRUE)) #† indicates the best fitting model 
 ```
 
 This is slightly tricky - I would be inclined to say that change of 0.011 in fit statistics and 0.018 in SRMR is not a substantial loss in fit. **Therefore, we can conclude that S4 is good fit for teacher report inattention scores and social isolation**
@@ -2485,7 +2442,7 @@ lavTestLRT(RICLPMt_multi_hyp_S1.fit, RICLPMt_multi_hyp_S2.fit)
 ```
 
 ```{r compare fit RICLPMt_multi_hyp_S1 and RICLPMt_hyp_S2}
-summary(semTools::compareFit(RICLPMt_multi_hyp_S1.fit, RICLPMt_multi_hyp_S2.fit, nested = TRUE)) #† indicates the best fitting model 
+# summary(semTools::compareFit(RICLPMt_multi_hyp_S1.fit, RICLPMt_multi_hyp_S2.fit, nested = TRUE)) #† indicates the best fitting model 
 ```
 
 Significantly worse fit to include the restrictions, p<0.0001.
@@ -2745,7 +2702,7 @@ SRMR                                           0. (≤ 0.08)   Change in SRMR: 0
 Now we need to conduct a Likelihood ratio test to see if the constrained model is a significantly worse fit than the free loading model. By constraining the factor loadings over time we can assume that the items load onto the same construct in the same way at each time point. We use the compareFit command which gives the LRT with the comparison in model fit for the two models. 
 
 ```{r compare fit RICLPMt_multi_hyp_S3 and RICLPMt_hyp_inat_S4}
-summary(semTools::compareFit(RICLPMt_multi_hyp_S3.fit, RICLPMt_multi_hyp_S4.fit, nested = TRUE)) #† indicates the best fitting model
+# summary(semTools::compareFit(RICLPMt_multi_hyp_S3.fit, RICLPMt_multi_hyp_S4.fit, nested = TRUE)) #† indicates the best fitting model
 ```
 
 **As all fit indices changed by more than 0.01 - we cannot accept this measurement model.**
@@ -2758,9 +2715,9 @@ So if the S3 model is the way to go here - then I need to figure out how to inte
 NOW NEED TO EXPORT THE TABLES OF THE MODEL THAT WE'VE CHOSEN 
 ```{r tables for inattention ADHD S3}
 # Table of model fit 
-RICLPMt_multi_hyp_S3.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPMt_multi_hyp_S3.fit.summary$FIT)))[,c(6,7,19,20,27,28,29,35)]
+# RICLPMt_multi_hyp_S3.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPMt_multi_hyp_S3.fit.summary$FIT)))[,c(6,7,19,20,27,28,29,35)]
 
 # Table of regression coefficients and covariances 
-RICLPMt_multi_hyp_S3.fit.summary.reg <- as.tibble(RICLPMt_multi_hyp_S3.fit.summary$PE[c(187:202),-c(4,5)])
+# RICLPMt_multi_hyp_S3.fit.summary.reg <- as.tibble(RICLPMt_multi_hyp_S3.fit.summary$PE[c(187:202),-c(4,5)])
 ```
 
