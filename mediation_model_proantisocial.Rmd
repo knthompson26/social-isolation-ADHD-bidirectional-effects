@@ -2830,7 +2830,7 @@ med.long.asb.m <- '
                   ## ADHD
                   sisoem710 ~ tadhdem5
                   sisoem12 ~ tadhdem710
-                  ## asbsocial
+                  ## antisocial
                   sisoem710 ~ asbem5
                   tadhdem710 ~ asbem5
                   asbem12 ~ sisoem710
@@ -2906,7 +2906,7 @@ med.long2a.asb.m <- '
                   ## ADHD
                   sisoem710 ~ tadhdem5
                   sisoem12 ~ tadhdem710
-                  ## asbsocial
+                  ## antisocial
                   sisoem710 ~ asbem5
                   tadhdem710 ~ asbem5
                   asbem12 ~ sisoem710
@@ -2990,7 +2990,7 @@ med.long2b.asb.m <- '
                   sisoem710 ~ f*tadhdem5
                   sisoem12 ~ f*tadhdem710
                   asbem12 ~ a*tadhdem710
-                  ## asbsocial
+                  ## antisocial
                   sisoem710 ~ b*asbem5
                   tadhdem710 ~ d*asbem5
                   
@@ -3048,7 +3048,7 @@ lavTestLRT(med.long.asb.m.fit, med.long2b.asb.m.fit, method = "satorra.bentler.2
 
 The cross-lag constraints gave a non-significant loss in model fit (p=0.1086). Therefore this model 2b will be carried forward.
 
-```{r results table for mother report asbsocial and total adhd}
+```{r results table for mother report antisocial and total adhd}
 # Model fit 
 med.long2b.asb.m.fit.summary.fit <- table.model.fit(med.long2b.asb.m.fit.summary)
 # Coefficients
@@ -3060,10 +3060,10 @@ Results show that
 * Isolation does *not* predict later ADHD (e)
 * Isolation does *not* predict later lower antisocial behaviours (c)
 * ADHD predicts later isolation (f)
-* asbsocial behaviours predict later lower ADHD (d)
-* ADHD predicts later lower asbsocial behaviours (a)
-* asbsocial behaviours predict later lower isolation (b)
-* Significant indirect mediation path (a*b, p=0.003). ADHD -> lower asbsocial behaviours -> isolation
+* antisocial behaviours predict later lower ADHD (d)
+* ADHD predicts later lower antisocial behaviours (a)
+* antisocial behaviours predict later lower isolation (b)
+* Significant indirect mediation path (a*b, p=0.003). ADHD -> lower antisocial behaviours -> isolation
 
 ###### 3. The RI-CLPM mediation model 
 
@@ -3083,7 +3083,7 @@ ri.med.long.asb.m <- '
                   wad5 =~ 1*tadhdem5
                   wad710 =~ 1*tadhdem710
                   wad12 =~ 1*tadhdem12
-                  ## asbsocial 
+                  ## antisocial 
                   wasb5 =~ 1*asbem5
                   wasb710 =~ 1*asbem710
                   wasb12 =~ 1*asbem12
@@ -3106,7 +3106,7 @@ ri.med.long.asb.m <- '
                   ## ADHD
                   wsi710 ~ wad5
                   wsi12 ~ wad710
-                  ## asbsocial
+                  ## antisocial
                   wsi710 ~ wasb5
                   wad710 ~ wasb5
                   wasb12 ~ wsi710
@@ -3190,7 +3190,7 @@ ri.med.long4a.asb.m <- '
                   wad5 =~ 1*tadhdem5
                   wad710 =~ 1*tadhdem710
                   wad12 =~ 1*tadhdem12
-                  ## asbsocial 
+                  ## antisocial 
                   wasb5 =~ 1*asbem5
                   wasb710 =~ 1*asbem710
                   wasb12 =~ 1*asbem12
@@ -3215,7 +3215,7 @@ ri.med.long4a.asb.m <- '
                   wsi710 ~ wad5
                   wsi12 ~ wad710
                   wasb12 ~ wad710
-                  ## asbsocial
+                  ## antisocial
                   wsi710 ~ wasb5
                   wad710 ~ wasb5
                   
@@ -3299,7 +3299,7 @@ ri.med.long4b.asb.m <- '
                   wad5 =~ 1*tadhdem5
                   wad710 =~ 1*tadhdem710
                   wad12 =~ 1*tadhdem12
-                  ## asbsocial 
+                  ## antisocial 
                   wasb5 =~ 1*asbem5
                   wasb710 =~ 1*asbem710
                   wasb12 =~ 1*asbem12
@@ -3324,7 +3324,7 @@ ri.med.long4b.asb.m <- '
                   wsi710 ~ f*wad5
                   wsi12 ~ f*wad710
                   wasb12 ~ a*wad710
-                  ## asbsocial
+                  ## antisocial
                   wsi710 ~ b*wasb5
                   wad710 ~ d*wasb5
                   
@@ -3390,7 +3390,7 @@ ri.med.long4b.asb.m.fit.summary <- summary(ri.med.long4b.asb.m.fit, standardized
 
 We cannot compare to the freed model as this did not converge. As all other mother report have fvaoured the 4b model, we will continue with the 4b model. 
 
-```{r results table for random intercept mother report asbsocial and total adhd}
+```{r results table for random intercept mother report antisocial and total adhd}
 # Model fit 
 ri.med.long4b.asb.m.fit.summary.fit <- table.model.fit(ri.med.long4b.asb.m.fit.summary)
 # Coefficients
@@ -3432,7 +3432,7 @@ med_hyp.long.asb.m <- '
                   ## ADHD
                   sisoem710 ~ hyem5
                   sisoem12 ~ hyem710
-                  ## asbsocial
+                  ## antisocial
                   sisoem710 ~ asbem5
                   hyem710 ~ asbem5
                   asbem12 ~ sisoem710
@@ -3508,7 +3508,7 @@ med_hyp.long2a.asb.m <- '
                   ## ADHD
                   sisoem710 ~ hyem5
                   sisoem12 ~ hyem710
-                  ## asbsocial
+                  ## antisocial
                   sisoem710 ~ asbem5
                   hyem710 ~ asbem5
                   asbem12 ~ sisoem710
@@ -3592,7 +3592,7 @@ med_hyp.long2b.asb.m <- '
                   sisoem710 ~ f*hyem5
                   sisoem12 ~ f*hyem710
                   asbem12 ~ a*hyem710
-                  ## asbsocial
+                  ## antisocial
                   sisoem710 ~ b*asbem5
                   hyem710 ~ d*asbem5
                   
@@ -3650,7 +3650,7 @@ lavTestLRT(med_hyp.long.asb.m.fit, med_hyp.long2b.asb.m.fit, method = "satorra.b
 
 The cross-lag constraints gave a non-significant loss in model fit (p=0.1609). Therefore this model 2b will be carried forward.
 
-```{r results table for mother report asbsocial and total adhd}
+```{r results table for mother report antisocial and total adhd}
 # Model fit 
 med_hyp.long2b.asb.m.fit.summary.fit <- table.model.fit(med_hyp.long2b.asb.m.fit.summary)
 # Coefficients
@@ -3660,12 +3660,12 @@ med_hyp.long2b.asb.m.fit.summary.reg <- table.model.coef(model = med_hyp.long2b.
 Results show that 
 * All significant autoregressive lags
 * Isolation *does not* predict later ADHD (e)
-* Isolation *does not* predict later lower asbsocial behaviours (c)
+* Isolation *does not* predict later lower antisocial behaviours (c)
 * ADHD *does not* predict later isolation (f)
-* asbsocial behaviours predict later lower ADHD (d)
-* ADHD predicts later lower asbsocial behaviours (a)
-* asbsocial behaviours predict later lower isolation (b)
-* Significant indirect mediation path (a*b, p=0.007). ADHD -> lower asbsocial behaviours -> isolation
+* antisocial behaviours predict later lower ADHD (d)
+* ADHD predicts later lower antisocial behaviours (a)
+* antisocial behaviours predict later lower isolation (b)
+* Significant indirect mediation path (a*b, p=0.007). ADHD -> lower antisocial behaviours -> isolation
 
 ###### 3. The RI-CLPM mediation model 
 
@@ -3685,7 +3685,7 @@ ri.med_hyp.long.asb.m <- '
                   wad5 =~ 1*hyem5
                   wad710 =~ 1*hyem710
                   wad12 =~ 1*hyem12
-                  ## asbsocial 
+                  ## antisocial 
                   wasb5 =~ 1*asbem5
                   wasb710 =~ 1*asbem710
                   wasb12 =~ 1*asbem12
@@ -3708,7 +3708,7 @@ ri.med_hyp.long.asb.m <- '
                   ## ADHD
                   wsi710 ~ wad5
                   wsi12 ~ wad710
-                  ## asbsocial
+                  ## antisocial
                   wsi710 ~ wasb5
                   wad710 ~ wasb5
                   wasb12 ~ wsi710
@@ -3789,7 +3789,7 @@ ri.med_hyp.long4a.asb.m <- '
                   wad5 =~ 1*hyem5
                   wad710 =~ 1*hyem710
                   wad12 =~ 1*hyem12
-                  ## asbsocial 
+                  ## antisocial 
                   wasb5 =~ 1*asbem5
                   wasb710 =~ 1*asbem710
                   wasb12 =~ 1*asbem12
@@ -3814,7 +3814,7 @@ ri.med_hyp.long4a.asb.m <- '
                   wsi710 ~ wad5
                   wsi12 ~ wad710
                   wasb12 ~ wad710
-                  ## asbsocial
+                  ## antisocial
                   wsi710 ~ wasb5
                   wad710 ~ wasb5
                   
@@ -3898,7 +3898,7 @@ ri.med_hyp.long4b.asb.m <- '
                   wad5 =~ 1*hyem5
                   wad710 =~ 1*hyem710
                   wad12 =~ 1*hyem12
-                  ## asbsocial 
+                  ## antisocial 
                   wasb5 =~ 1*asbem5
                   wasb710 =~ 1*asbem710
                   wasb12 =~ 1*asbem12
@@ -3923,7 +3923,7 @@ ri.med_hyp.long4b.asb.m <- '
                   wsi710 ~ f*wad5
                   wsi12 ~ f*wad710
                   wasb12 ~ a*wad710
-                  ## asbsocial
+                  ## antisocial
                   wsi710 ~ b*wasb5
                   wad710 ~ d*wasb5
                   
@@ -3989,7 +3989,7 @@ lavTestLRT(ri.med_hyp.long.asb.m.fit, ri.med_hyp.long4b.asb.m.fit, method = "sat
 
 The cross-lag constraints gave a non-significant loss in model fit (p=0.9763). Therefore this model 4b will be carried forward.
 
-```{r results table for random intercept mother report asbsocial and total adhd}
+```{r results table for random intercept mother report antisocial and total adhd}
 # Model fit 
 ri.med_hyp.long4b.asb.m.fit.summary.fit <- table.model.fit(ri.med_hyp.long4b.asb.m.fit.summary)
 # Coefficients
@@ -3999,12 +3999,12 @@ ri.med_hyp.long4b.asb.m.fit.summary.reg <- table.model.coef(model = ri.med_hyp.l
 Results show that 
 * All significant autoregressive lags 
 * Isolation does *not* predict later ADHD (e)
-* Isolation does *not* predict later lower asbsocial behaviours (c)
+* Isolation does *not* predict later lower antisocial behaviours (c)
 * ADHD does *not* predict later isolation (p=0.019) (f)
-* asbsocial behaviours do predict later lower ADHD (d)
-* ADHD *does not* predict later lower asbsocial behaviours (a)
-* asbsocial behaviours *does* predict later lower isolation (b)
-* **Nonsignificant** indirect mediation path (a*b, p=0.212). ADHD -> lower asbsocial behaviours -> isolation
+* antisocial behaviours do predict later lower ADHD (d)
+* ADHD *does not* predict later lower antisocial behaviours (a)
+* antisocial behaviours *does* predict later lower isolation (b)
+* **Nonsignificant** indirect mediation path (a*b, p=0.212). ADHD -> lower antisocial behaviours -> isolation
 
 
 ##### Inattention symptoms 
@@ -4031,7 +4031,7 @@ med_inat.long.asb.m <- '
                   ## ADHD
                   sisoem710 ~ inem5
                   sisoem12 ~ inem710
-                  ## asbsocial
+                  ## antisocial
                   sisoem710 ~ asbem5
                   inem710 ~ asbem5
                   asbem12 ~ sisoem710
@@ -4107,7 +4107,7 @@ med_inat.long2a.asb.m <- '
                   ## ADHD
                   sisoem710 ~ inem5
                   sisoem12 ~ inem710
-                  ## asbsocial
+                  ## antisocial
                   sisoem710 ~ asbem5
                   inem710 ~ asbem5
                   asbem12 ~ sisoem710
@@ -4191,7 +4191,7 @@ med_inat.long2b.asb.m <- '
                   sisoem710 ~ f*inem5
                   sisoem12 ~ f*inem710
                   asbem12 ~ a*inem710
-                  ## asbsocial
+                  ## antisocial
                   sisoem710 ~ b*asbem5
                   inem710 ~ d*asbem5
                   
@@ -4249,7 +4249,7 @@ lavTestLRT(med_inat.long.asb.m.fit, med_inat.long2b.asb.m.fit, method = "satorra
 
 The cross-lag constraints gave a significant loss in model fit (p=0.02991). Therefore the freed model should be used going forward.
 
-```{r results table for mother report asbsocial and total adhd}
+```{r results table for mother report antisocial and total adhd}
 # Model fit 
 med_inat.long.asb.m.fit.summary.fit <- table.model.fit(med_inat.long.asb.m.fit.summary)
 # Coefficients
@@ -4259,12 +4259,12 @@ med_inat.long.asb.m.fit.summary.reg <- table.model.coef(model = med_inat.long.as
 Results show that (NOT BEEN UPDATED)
 * All significant autoregressive lags
 * Isolation *does not* predicts later ADHD (e)
-* Isolation predicts later lower asbsocial behaviours (c)
+* Isolation predicts later lower antisocial behaviours (c)
 * ADHD predicts later isolation (f)
-* asbsocial behaviours predict later lower ADHD (d)
-* ADHD predicts later lower asbsocial behaviours (a)
-* asbsocial behaviours predict later lower isolation (b)
-* Significant indirect mediation path (a*b, p=0.0007). ADHD -> lower asbsocial behaviours -> isolation
+* antisocial behaviours predict later lower ADHD (d)
+* ADHD predicts later lower antisocial behaviours (a)
+* antisocial behaviours predict later lower isolation (b)
+* Significant indirect mediation path (a*b, p=0.0007). ADHD -> lower antisocial behaviours -> isolation
 
 ###### 3. The RI-CLPM mediation model 
 
@@ -4284,7 +4284,7 @@ ri.med_inat.long.asb.m <- '
                   wad5 =~ 1*inem5
                   wad710 =~ 1*inem710
                   wad12 =~ 1*inem12
-                  ## asbsocial 
+                  ## antisocial 
                   wasb5 =~ 1*asbem5
                   wasb710 =~ 1*asbem710
                   wasb12 =~ 1*asbem12
@@ -4307,7 +4307,7 @@ ri.med_inat.long.asb.m <- '
                   ## ADHD
                   wsi710 ~ wad5
                   wsi12 ~ wad710
-                  ## asbsocial
+                  ## antisocial
                   wsi710 ~ wasb5
                   wad710 ~ wasb5
                   wasb12 ~ wsi710
@@ -4388,7 +4388,7 @@ ri.med_inat.long4a.asb.m <- '
                   wad5 =~ 1*inem5
                   wad710 =~ 1*inem710
                   wad12 =~ 1*inem12
-                  ## asbsocial 
+                  ## antisocial 
                   wasb5 =~ 1*asbem5
                   wasb710 =~ 1*asbem710
                   wasb12 =~ 1*asbem12
@@ -4413,7 +4413,7 @@ ri.med_inat.long4a.asb.m <- '
                   wsi710 ~ wad5
                   wsi12 ~ wad710
                   wasb12 ~ wad710
-                  ## asbsocial
+                  ## antisocial
                   wsi710 ~ wasb5
                   wad710 ~ wasb5
                   
@@ -4497,7 +4497,7 @@ ri.med_inat.long4b.asb.m <- '
                   wad5 =~ 1*inem5
                   wad710 =~ 1*inem710
                   wad12 =~ 1*inem12
-                  ## asbsocial 
+                  ## antisocial 
                   wasb5 =~ 1*asbem5
                   wasb710 =~ 1*asbem710
                   wasb12 =~ 1*asbem12
@@ -4522,7 +4522,7 @@ ri.med_inat.long4b.asb.m <- '
                   wsi710 ~ f*wad5
                   wsi12 ~ f*wad710
                   wasb12 ~ a*wad710
-                  ## asbsocial
+                  ## antisocial
                   wsi710 ~ b*wasb5
                   wad710 ~ d*wasb5
                   
@@ -4588,7 +4588,7 @@ lavTestLRT(ri.med_inat.long.asb.m.fit, ri.med_inat.long4b.asb.m.fit, method = "s
 
 The cross-lag constraints gave a non-significant loss in model fit (p=1). Therefore this model 4b will be carried forward.
 
-```{r results table for random intercept mother report asbsocial and total adhd}
+```{r results table for random intercept mother report antisocial and total adhd}
 # Model fit 
 ri.med_inat.long4b.asb.m.fit.summary.fit <- table.model.fit(ri.med_inat.long4b.asb.m.fit.summary)
 # Coefficients
@@ -4598,12 +4598,12 @@ ri.med_inat.long4b.asb.m.fit.summary.reg <- table.model.coef(model = ri.med_inat
 Results show that 
 * All significant autoregressive lags 
 * Isolation does *not* predict later ADHD (e)
-* Isolation does *not* predict later lower asbsocial behaviours (c)
+* Isolation does *not* predict later lower antisocial behaviours (c)
 * ADHD does *not* predict later isolation (f)
-* asbsocial behaviours **does** predict later lower ADHD (d)
-* ADHD **does** predict later lower asbsocial behaviours (a)
-* asbsocial behaviours *do not* predict later lower isolation (b)
-* **Nonsignificant** indirect mediation path (a*b, p=0.153). ADHD -> lower asbsocial behaviours -> isolation
+* antisocial behaviours **does** predict later lower ADHD (d)
+* ADHD **does** predict later lower antisocial behaviours (a)
+* antisocial behaviours *do not* predict later lower isolation (b)
+* **Nonsignificant** indirect mediation path (a*b, p=0.153). ADHD -> lower antisocial behaviours -> isolation
 
 ***
 
@@ -4851,7 +4851,7 @@ med.long2b.pro.t.fit.summary <- summary(med.long2b.pro.t.fit, standardized = TRU
 lavTestLRT(med.long.pro.t.fit, med.long2b.pro.t.fit, method = "satorra.bentler.2010")
 ```
 
-The cross-lag constraints gave a non-significant loss in model fit (p=0.1009). Therefore this model 2b will be carried forward.
+The cross-lag constraints gave a non-significant loss in model fit (p=0.3128). Therefore this model 2b will be carried forward.
 
 ```{r results table for mother report prosocial and total adhd}
 # Model fit 
@@ -5081,9 +5081,11 @@ ri.med.long4a.pro.t.fit.summary <- summary(ri.med.long4a.pro.t.fit, standardized
 lavTestLRT(ri.med.long.pro.t.fit, ri.med.long4a.pro.t.fit, method = "satorra.bentler.2010")
 ```
 
-**There is no p value for the chi square difference test here?????**
+This model is not significantly worse fit (p=0.2153)
 
 ###### 4b. Constrained cross-lag RI-CLPM mediation model 
+
+This will now have both corss-lags and autoregressive parameters constrained. 
 
 ```{r ri.med.long4b.pro.t}
 ri.med.long4b.pro.t <- ' 
@@ -5108,14 +5110,14 @@ ri.med.long4b.pro.t <- '
                   
                   ###### Autoregressive lags ######
                   ## Isolation
-                  wsi710 ~ wsi5
-                  wsi12 ~ wsi710
+                  wsi710 ~ g*wsi5
+                  wsi12 ~ g*wsi710
                   ## Pro social bahviour
-                  wpro710 ~ wpro5
-                  wpro12 ~ wpro710
+                  wpro710 ~ h*wpro5
+                  wpro12 ~ h*wpro710
                   ## ADHD
-                  wad710 ~ wad5
-                  wad12 ~ wad710
+                  wad710 ~ i*wad5
+                  wad12 ~ i*wad710
                   
                   ###### Cross lag paths ######
                   ## Isolation
@@ -5187,10 +5189,10 @@ ri.med.long4b.pro.t.fit.summary <- summary(ri.med.long4b.pro.t.fit, standardized
 ```
 
 ```{r LRT for ri.med.long.pro.t.fit and ri.med.long4a.pro.t.fit}
-lavTestLRT(ri.med.long.pro.t.fit, ri.med.long4b.pro.t.fit, method = "satorra.bentler.2010")
+lavTestLRT(ri.med.long4a.pro.t.fit, ri.med.long4b.pro.t.fit, method = "satorra.bentler.2010")
 ```
 
-The cross-lag constraints gave a non-significant loss in model fit (p=1). Therefore this model 4b will be carried forward.
+The cross-lag constraints gave a non-significant loss in model fit (p=0.582). Therefore this model 4b will be carried forward (**both autoregressive and cross-lags constrained**)
 
 ```{r results table for random intercept mother report prosocial and total adhd}
 # Model fit 
@@ -5200,14 +5202,14 @@ ri.med.long4b.pro.t.fit.summary.reg <- table.model.coef(model = ri.med.long4b.pr
 ```
 
 Results show that 
-* All significant autoregressive lags 
+* Significant autoregressive lags for isolation and ADHD, but not for prosocial behaviours
 * Isolation does *not* predict later ADHD (e)
 * Isolation does *not* predict later lower prosocial behaviours (c)
-* ADHD **does not** predict later isolation (f)
+* ADHD **does** predict later isolation (f)
 * Prosocial behaviours *do not* predict later lower ADHD (d)
-* ADHD predicts later lower prosocial behaviours (a)
+* ADHD predicts *does not* predict later lower prosocial behaviours (a)
 * Prosocial behaviours *do not* predict later lower isolation (b)
-* **Nonsignificant** indirect mediation path (a*b, p=0.1). ADHD -> lower prosocial behaviours -> isolation
+* **Nonsignificant** indirect mediation path (a*b, p=0.45). ADHD -> lower prosocial behaviours -> isolation
 
 
 ##### Hyperactivity symptoms 
@@ -5450,7 +5452,7 @@ med_hyp.long2b.pro.t.fit.summary <- summary(med_hyp.long2b.pro.t.fit, standardiz
 lavTestLRT(med_hyp.long.pro.t.fit, med_hyp.long2b.pro.t.fit, method = "satorra.bentler.2010")
 ```
 
-The cross-lag constraints gave a non-significant loss in model fit (p=0.3019). Therefore this model 2b will be carried forward.
+The cross-lag constraints gave a non-significant loss in model fit (p=0.4832). Therefore this model 2b will be carried forward.
 
 ```{r results table for mother report prosocial and total adhd}
 # Model fit 
@@ -5461,7 +5463,7 @@ med_hyp.long2b.pro.t.fit.summary.reg <- table.model.coef(model = med_hyp.long2b.
 
 Results show that 
 * All significant autoregressive lags
-* Isolation predicts later ADHD (e)
+* Isolation *does not* predict later ADHD (e)
 * Isolation predicts later lower prosocial behaviours (c)
 * ADHD predicts later isolation (f)
 * Prosocial behaviours predict later lower ADHD (d)
@@ -5673,15 +5675,18 @@ ri.med_hyp.long4a.pro.t.fit <- lavaan(model = ri.med_hyp.long4a.pro.t,
                         int.ov.free = TRUE,   
                         estimator = "MLR")
 
-# ri.med_hyp.long4a.pro.t.fit.summary <- summary(ri.med_hyp.long4a.pro.t.fit, standardized = TRUE, fit.measures = TRUE)
+ri.med_hyp.long4a.pro.t.fit.summary <- summary(ri.med_hyp.long4a.pro.t.fit, standardized = TRUE, fit.measures = TRUE)
 ```
 
-**This model did not converge - is there something wrong with the 4a models??**
 ```{r LRT for ri.med_hyp.long.pro.t.fit and ri.med_hyp.long4a.pro.t.fit}
-# lavTestLRT(ri.med_hyp.long.pro.t.fit, ri.med_hyp.long4a.pro.t.fit, method = "satorra.bentler.2010")
+lavTestLRT(ri.med_hyp.long.pro.t.fit, ri.med_hyp.long4a.pro.t.fit, method = "satorra.bentler.2010")
 ```
+
+This was non-significant (p=0.08587) worse fit - therefore we will compare the 4b model to the 4a model. 
 
 ###### 4b. Constrained cross-lag RI-CLPM mediation model 
+
+This will include constrained cross-lags and autoregressive lags. 
 
 ```{r ri.med_hyp.long4b.pro.t}
 ri.med_hyp.long4b.pro.t <- ' 
@@ -5706,14 +5711,14 @@ ri.med_hyp.long4b.pro.t <- '
                   
                   ###### Autoregressive lags ######
                   ## Isolation
-                  wsi710 ~ wsi5
-                  wsi12 ~ wsi710
+                  wsi710 ~ g*wsi5
+                  wsi12 ~ g*wsi710
                   ## Pro social bahviour
-                  wpro710 ~ wpro5
-                  wpro12 ~ wpro710
+                  wpro710 ~ h*wpro5
+                  wpro12 ~ h*wpro710
                   ## ADHD
-                  wad710 ~ wad5
-                  wad12 ~ wad710
+                  wad710 ~ i*wad5
+                  wad12 ~ i*wad710
                   
                   ###### Cross lag paths ######
                   ## Isolation
@@ -5785,10 +5790,10 @@ ri.med_hyp.long4b.pro.t.fit.summary <- summary(ri.med_hyp.long4b.pro.t.fit, stan
 ```
 
 ```{r LRT for ri.med_hyp.long.pro.t.fit and ri.med_hyp.long4a.pro.t.fit}
-lavTestLRT(ri.med_hyp.long.pro.t.fit, ri.med_hyp.long4b.pro.t.fit, method = "satorra.bentler.2010")
+lavTestLRT(ri.med_hyp.long4a.pro.t.fit, ri.med_hyp.long4b.pro.t.fit, method = "satorra.bentler.2010")
 ```
 
-The cross-lag constraints gave a non-significant loss in model fit (p=0.4466). Therefore this model 4b will be carried forward.
+This model was no significantly worse fit (p=0.5283). Therefore this model 4b will be carried forward.
 
 ```{r results table for random intercept mother report prosocial and total adhd}
 # Model fit 
@@ -5798,15 +5803,14 @@ ri.med_hyp.long4b.pro.t.fit.summary.reg <- table.model.coef(model = ri.med_hyp.l
 ```
 
 Results show that 
-* All significant autoregressive lags 
+* Significant autoregressive lags for isolation and hyperactivity, but not for prosocial behaviours. 
 * Isolation does *not* predict later ADHD (e)
 * Isolation does *not* predict later lower prosocial behaviours (c)
-* ADHD **does** predict later isolation (p=0.019) (f)
+* ADHD **does** predict later isolation (p=0.008) (f)
 * Prosocial behaviours *do not* predict later lower ADHD (d)
 * ADHD **does** predict later lower prosocial behaviours (a)
 * Prosocial behaviours *do not* predict later lower isolation (b)
 * **Nonsignificant** indirect mediation path (a*b, p=0.141). ADHD -> lower prosocial behaviours -> isolation
-
 
 
 ##### Inattention symptoms 
@@ -5967,22 +5971,24 @@ med_inat.long2a.pro.t.fit.summary <- summary(med_inat.long2a.pro.t.fit, standard
 lavTestLRT(med_inat.long.pro.t.fit, med_inat.long2a.pro.t.fit, method = "satorra.bentler.2010")
 ```
 
-Constrained autoregressive paths lead to significantly worse model fit. 
+Constrained autoregressive paths did not lead to significantly worse model fit. 
 
 ###### 2b. Constrained crosslag paths CLPM mediation model 
+
+This model has both cross and autoregressive lags constrained. 
 
 ```{r med_inat.long2b.pro.t}
 med_inat.long2b.pro.t <- ' 
                   ###### Autoregressive lags ######
                   ## Isolation
-                  sisoet710 ~ sisoet5
-                  sisoet12 ~ sisoet710
+                  sisoet710 ~ g*sisoet5
+                  sisoet12 ~ g*sisoet710
                   ## Pro social bahviour
-                  proet710 ~ proet5
-                  proet12 ~ proet710
+                  proet710 ~ h*proet5
+                  proet12 ~ h*proet710
                   ## ADHD
-                  inet710 ~ inet5
-                  inet12 ~ inet710
+                  inet710 ~ i*inet5
+                  inet12 ~ i*inet710
                   
                   ###### Cross lag paths ######
                   ## Isolation
@@ -6046,10 +6052,10 @@ med_inat.long2b.pro.t.fit.summary <- summary(med_inat.long2b.pro.t.fit, standard
 ```
 
 ```{r LRT for med_inat.long.pro.t.fit and med_inat.long2b.pro.t.fit}
-lavTestLRT(med_inat.long.pro.t.fit, med_inat.long2b.pro.t.fit, method = "satorra.bentler.2010")
+lavTestLRT(med_inat.long2a.pro.t.fit, med_inat.long2b.pro.t.fit, method = "satorra.bentler.2010")
 ```
 
-The cross-lag constraints gave a non-significant loss in model fit (p=0.1303). Therefore this model 2b will be carried forward.
+The cross-lag constraints was significant loss in model fit (p=0.04625). However, this is verging on non-significance and the fit did not decrease substantially. Therefore this model 2b will be carried forward.
 
 ```{r results table for mother report prosocial and total adhd}
 # Model fit 
@@ -6275,13 +6281,16 @@ ri.med_inat.long4a.pro.t.fit <- lavaan(model = ri.med_inat.long4a.pro.t,
 ri.med_inat.long4a.pro.t.fit.summary <- summary(ri.med_inat.long4a.pro.t.fit, standardized = TRUE, fit.measures = TRUE)
 ```
 
-**Saying non-significant loss of fit but the fit statistics have reduced a lot.**
-
 ```{r LRT for ri.med_inat.long.pro.t.fit and ri.med_inat.long4a.pro.t.fit}
 lavTestLRT(ri.med_inat.long.pro.t.fit, ri.med_inat.long4a.pro.t.fit, method = "satorra.bentler.2010")
 ```
 
+This model was significantly worse fit (p=0.02571). However, the fit did not reduce dramatically, therefore we continue to compare the 4b to 4a. 
+
+
 ###### 4b. Constrained cross-lag RI-CLPM mediation model 
+
+This model includes constrained autoregressive and cross lags. 
 
 ```{r ri.med_inat.long4b.pro.t}
 ri.med_inat.long4b.pro.t <- ' 
@@ -6306,14 +6315,14 @@ ri.med_inat.long4b.pro.t <- '
                   
                   ###### Autoregressive lags ######
                   ## Isolation
-                  wsi710 ~ wsi5
-                  wsi12 ~ wsi710
+                  wsi710 ~ g*wsi5
+                  wsi12 ~ g*wsi710
                   ## Pro social bahviour
-                  wpro710 ~ wpro5
-                  wpro12 ~ wpro710
+                  wpro710 ~ h*wpro5
+                  wpro12 ~ h*wpro710
                   ## ADHD
-                  wad710 ~ wad5
-                  wad12 ~ wad710
+                  wad710 ~ i*wad5
+                  wad12 ~ i*wad710
                   
                   ###### Cross lag paths ######
                   ## Isolation
@@ -6388,7 +6397,7 @@ ri.med_inat.long4b.pro.t.fit.summary <- summary(ri.med_inat.long4b.pro.t.fit, st
 lavTestLRT(ri.med_inat.long.pro.t.fit, ri.med_inat.long4b.pro.t.fit, method = "satorra.bentler.2010")
 ```
 
-The cross-lag constraints gave a non-significant loss in model fit (p=0.4466). Therefore this model 4b will be carried forward.
+The cross-lag constraints gave a non-significant loss in model fit (p=0.0692). Therefore this model 4b will be carried forward.
 
 ```{r results table for random intercept mother report prosocial and total adhd}
 # Model fit 
@@ -6398,14 +6407,14 @@ ri.med_inat.long4b.pro.t.fit.summary.reg <- table.model.coef(model = ri.med_inat
 ```
 
 Results show that 
-* All significant autoregressive lags 
+* Significant autoregressive lags for social isolation and inattention, but not for prosocial behaviours.  
 * Isolation does *not* predict later ADHD (e)
 * Isolation does *not* predict later lower prosocial behaviours (c)
-* ADHD **does (ish)** predict later isolation (p=0.047) (f)
+* ADHD *does not* predict later isolation (f)
 * Prosocial behaviours *do not* predict later lower ADHD (d)
-* ADHD **does** predict later lower prosocial behaviours (a)
+* ADHD *does not* predict later lower prosocial behaviours (a)
 * Prosocial behaviours *do not* predict later lower isolation (b)
-* **Nonsignificant** indirect mediation path (a*b, p=0.165). ADHD -> lower prosocial behaviours -> isolation
+* **Nonsignificant** indirect mediation path (a*b, p=0.564). ADHD -> lower prosocial behaviours -> isolation
 
 ***
 
@@ -6436,7 +6445,7 @@ med.long.asb.t <- '
                   ## ADHD
                   sisoet710 ~ tadhdet5
                   sisoet12 ~ tadhdet710
-                  ## asbsocial
+                  ## antisocial
                   sisoet710 ~ asbet5
                   tadhdet710 ~ asbet5
                   asbet12 ~ sisoet710
@@ -6512,7 +6521,7 @@ med.long2a.asb.t <- '
                   ## ADHD
                   sisoet710 ~ tadhdet5
                   sisoet12 ~ tadhdet710
-                  ## asbsocial
+                  ## antisocial
                   sisoet710 ~ asbet5
                   tadhdet710 ~ asbet5
                   asbet12 ~ sisoet710
@@ -6596,7 +6605,7 @@ med.long2b.asb.t <- '
                   sisoet710 ~ f*tadhdet5
                   sisoet12 ~ f*tadhdet710
                   asbet12 ~ a*tadhdet710
-                  ## asbsocial
+                  ## antisocial
                   sisoet710 ~ b*asbet5
                   tadhdet710 ~ d*asbet5
                   
@@ -6652,9 +6661,9 @@ med.long2b.asb.t.fit.summary <- summary(med.long2b.asb.t.fit, standardized = TRU
 lavTestLRT(med.long.asb.t.fit, med.long2b.asb.t.fit, method = "satorra.bentler.2010")
 ```
 
-The cross-lag constraints gave a non-significant loss in model fit (p=0.1086). Therefore this model 2b will be carried forward.
+The cross-lag constraints gave a non-significant loss in model fit (p=0.1118). Therefore this model 2b will be carried forward.
 
-```{r results table for mother report asbsocial and total adhd}
+```{r results table for mother report antisocial and total adhd}
 # Model fit 
 med.long2b.asb.t.fit.summary.fit <- table.model.fit(med.long2b.asb.t.fit.summary)
 # Coefficients
@@ -6664,12 +6673,12 @@ med.long2b.asb.t.fit.summary.reg <- table.model.coef(model = med.long2b.asb.t.fi
 Results show that 
 * All significant autoregressive lags 
 * Isolation does *not* predict later ADHD (e)
-* Isolation does *not* predict later lower antisocial behaviours (c)
+* Isolation predicts later lower antisocial behaviours (c)
 * ADHD predicts later isolation (f)
-* asbsocial behaviours predict later lower ADHD (d)
-* ADHD predicts later lower asbsocial behaviours (a)
-* asbsocial behaviours predict later lower isolation (b)
-* Significant indirect mediation path (a*b, p=0.003). ADHD -> lower asbsocial behaviours -> isolation
+* antisocial behaviours predict later lower ADHD (d)
+* ADHD predicts later lower antisocial behaviours (ish, p=0.051) (a)
+* antisocial behaviours predict later lower isolation (b)
+* Significant(ish) indirect mediation path (a*b, p=0.049). ADHD -> lower antisocial behaviours -> isolation
 
 ###### 3. The RI-CLPM mediation model 
 
@@ -6689,7 +6698,7 @@ ri.med.long.asb.t <- '
                   wad5 =~ 1*tadhdet5
                   wad710 =~ 1*tadhdet710
                   wad12 =~ 1*tadhdet12
-                  ## asbsocial 
+                  ## antisocial 
                   wasb5 =~ 1*asbet5
                   wasb710 =~ 1*asbet710
                   wasb12 =~ 1*asbet12
@@ -6712,7 +6721,7 @@ ri.med.long.asb.t <- '
                   ## ADHD
                   wsi710 ~ wad5
                   wsi12 ~ wad710
-                  ## asbsocial
+                  ## antisocial
                   wsi710 ~ wasb5
                   wad710 ~ wasb5
                   wasb12 ~ wsi710
@@ -6796,7 +6805,7 @@ ri.med.long4a.asb.t <- '
                   wad5 =~ 1*tadhdet5
                   wad710 =~ 1*tadhdet710
                   wad12 =~ 1*tadhdet12
-                  ## asbsocial 
+                  ## antisocial 
                   wasb5 =~ 1*asbet5
                   wasb710 =~ 1*asbet710
                   wasb12 =~ 1*asbet12
@@ -6821,7 +6830,7 @@ ri.med.long4a.asb.t <- '
                   wsi710 ~ wad5
                   wsi12 ~ wad710
                   wasb12 ~ wad710
-                  ## asbsocial
+                  ## antisocial
                   wsi710 ~ wasb5
                   wad710 ~ wasb5
                   
@@ -6882,10 +6891,10 @@ ri.med.long4a.asb.t.fit.summary <- summary(ri.med.long4a.asb.t.fit, standardized
 ```
 
 ```{r LRT for ri.med.long.asb.t.fit and ri.med.long4a.asb.t.fit}
-#lavTestLRT(ri.med.long.asb.t.fit, ri.med.long4a.asb.t.fit, method = "satorra.bentler.2010")
+lavTestLRT(ri.med.long.asb.t.fit, ri.med.long4a.asb.t.fit, method = "satorra.bentler.2010")
 ```
 
-**Can't compare as the freed parameter model did not converge properly**
+Does not give p value here, I think this is because it is actually better fit. 
 
 ###### 4b. Constrained cross-lag RI-CLPM mediation model 
 
@@ -6905,21 +6914,21 @@ ri.med.long4b.asb.t <- '
                   wad5 =~ 1*tadhdet5
                   wad710 =~ 1*tadhdet710
                   wad12 =~ 1*tadhdet12
-                  ## asbsocial 
+                  ## antisocial 
                   wasb5 =~ 1*asbet5
                   wasb710 =~ 1*asbet710
                   wasb12 =~ 1*asbet12
                   
                   ###### Autoregressive lags ######
                   ## Isolation
-                  wsi710 ~ wsi5
-                  wsi12 ~ wsi710
+                  wsi710 ~ g*wsi5
+                  wsi12 ~ g*wsi710
                   ## asb social bahviour
-                  wasb710 ~ wasb5
-                  wasb12 ~ wasb710
+                  wasb710 ~ h*wasb5
+                  wasb12 ~ h*wasb710
                   ## ADHD
-                  wad710 ~ wad5
-                  wad12 ~ wad710
+                  wad710 ~ i*wad5
+                  wad12 ~ i*wad710
                   
                   ###### Cross lag paths ######
                   ## Isolation
@@ -6930,7 +6939,7 @@ ri.med.long4b.asb.t <- '
                   wsi710 ~ f*wad5
                   wsi12 ~ f*wad710
                   wasb12 ~ a*wad710
-                  ## asbsocial
+                  ## antisocial
                   wsi710 ~ b*wasb5
                   wad710 ~ d*wasb5
                   
@@ -6991,12 +7000,12 @@ ri.med.long4b.asb.t.fit.summary <- summary(ri.med.long4b.asb.t.fit, standardized
 ```
 
 ```{r LRT for ri.med.long.asb.t.fit and ri.med.long4a.asb.t.fit}
-#lavTestLRT(ri.med.long.asb.t.fit, ri.med.long4b.asb.t.fit, method = "satorra.bentler.2010")
+lavTestLRT(ri.med.long4a.asb.t.fit, ri.med.long4b.asb.t.fit, method = "satorra.bentler.2010")
 ```
 
-We cannot compare to the freed model as this did not converge. As all other mother report have fvaoured the 4b model, we will continue with the 4b model. 
+This was not significantly worse fit, we will continue with the 4b model. 
 
-```{r results table for random intercept mother report asbsocial and total adhd}
+```{r results table for random intercept mother report antisocial and total adhd}
 # Model fit 
 ri.med.long4b.asb.t.fit.summary.fit <- table.model.fit(ri.med.long4b.asb.t.fit.summary)
 # Coefficients
@@ -7004,14 +7013,14 @@ ri.med.long4b.asb.t.fit.summary.reg <- table.model.coef(model = ri.med.long4b.as
 ```
 
 Results show that 
-* All significant autoregressive lags 
+* Significant autoregressive paths for anisocial behaviour and ADHD but not for social isolation. 
 * Isolation does *not* predict later ADHD (e)
 * Isolation does *not* predict later lower antisocial behaviours (c)
 * ADHD does *not* predict later isolation (f)
 * Antisocial behaviours *do not* predict later lower ADHD (d)
-* ADHD predicts later lower antisocial behaviours (a)
+* ADHD *does not* predicts antisocial behaviours (a)
 * Antisocial behaviours predict later lower isolation (b)
-* **Nonsignificant** indirect mediation path (a*b, p=0.074). ADHD -> lower antisocial behaviours -> isolation
+* **Nonsignificant** indirect mediation path (a*b, p=0.98). ADHD -> lower antisocial behaviours -> isolation
 
 
 ##### Hyperactivity symptoms 
@@ -7038,7 +7047,7 @@ med_hyp.long.asb.t <- '
                   ## ADHD
                   sisoet710 ~ hyet5
                   sisoet12 ~ hyet710
-                  ## asbsocial
+                  ## antisocial
                   sisoet710 ~ asbet5
                   hyet710 ~ asbet5
                   asbet12 ~ sisoet710
@@ -7114,7 +7123,7 @@ med_hyp.long2a.asb.t <- '
                   ## ADHD
                   sisoet710 ~ hyet5
                   sisoet12 ~ hyet710
-                  ## asbsocial
+                  ## antisocial
                   sisoet710 ~ asbet5
                   hyet710 ~ asbet5
                   asbet12 ~ sisoet710
@@ -7198,7 +7207,7 @@ med_hyp.long2b.asb.t <- '
                   sisoet710 ~ f*hyet5
                   sisoet12 ~ f*hyet710
                   asbet12 ~ a*hyet710
-                  ## asbsocial
+                  ## antisocial
                   sisoet710 ~ b*asbet5
                   hyet710 ~ d*asbet5
                   
@@ -7254,9 +7263,9 @@ med_hyp.long2b.asb.t.fit.summary <- summary(med_hyp.long2b.asb.t.fit, standardiz
 lavTestLRT(med_hyp.long.asb.t.fit, med_hyp.long2b.asb.t.fit, method = "satorra.bentler.2010")
 ```
 
-The cross-lag constraints gave a non-significant loss in model fit (p=0.1609). Therefore this model 2b will be carried forward.
+The cross-lag constraints gave a non-significant loss in model fit (p=0.1948). Therefore this model 2b will be carried forward.
 
-```{r results table for mother report asbsocial and total adhd}
+```{r results table for mother report antisocial and total adhd}
 # Model fit 
 med_hyp.long2b.asb.t.fit.summary.fit <- table.model.fit(med_hyp.long2b.asb.t.fit.summary)
 # Coefficients
@@ -7265,13 +7274,13 @@ med_hyp.long2b.asb.t.fit.summary.reg <- table.model.coef(model = med_hyp.long2b.
 
 Results show that 
 * All significant autoregressive lags
-* Isolation *does not* predict later ADHD (e)
-* Isolation *does not* predict later lower asbsocial behaviours (c)
+* Isolation predicts later ADHD (e)
+* Isolation predicts later lower antisocial behaviours (c)
 * ADHD *does not* predict later isolation (f)
-* asbsocial behaviours predict later lower ADHD (d)
-* ADHD predicts later lower asbsocial behaviours (a)
-* asbsocial behaviours predict later lower isolation (b)
-* Significant indirect mediation path (a*b, p=0.007). ADHD -> lower asbsocial behaviours -> isolation
+* antisocial behaviours predict later lower ADHD (d)
+* ADHD *does not* predicts later lower antisocial behaviours (a)
+* antisocial behaviours predict later lower isolation (b)
+* **Non-Significant** indirect mediation path (a*b, p=0.007). ADHD -> lower antisocial behaviours -> isolation
 
 ###### 3. The RI-CLPM mediation model 
 
@@ -7291,7 +7300,7 @@ ri.med_hyp.long.asb.t <- '
                   wad5 =~ 1*hyet5
                   wad710 =~ 1*hyet710
                   wad12 =~ 1*hyet12
-                  ## asbsocial 
+                  ## antisocial 
                   wasb5 =~ 1*asbet5
                   wasb710 =~ 1*asbet710
                   wasb12 =~ 1*asbet12
@@ -7314,7 +7323,7 @@ ri.med_hyp.long.asb.t <- '
                   ## ADHD
                   wsi710 ~ wad5
                   wsi12 ~ wad710
-                  ## asbsocial
+                  ## antisocial
                   wsi710 ~ wasb5
                   wad710 ~ wasb5
                   wasb12 ~ wsi710
@@ -7395,7 +7404,7 @@ ri.med_hyp.long4a.asb.t <- '
                   wad5 =~ 1*hyet5
                   wad710 =~ 1*hyet710
                   wad12 =~ 1*hyet12
-                  ## asbsocial 
+                  ## antisocial 
                   wasb5 =~ 1*asbet5
                   wasb710 =~ 1*asbet710
                   wasb12 =~ 1*asbet12
@@ -7420,7 +7429,7 @@ ri.med_hyp.long4a.asb.t <- '
                   wsi710 ~ wad5
                   wsi12 ~ wad710
                   wasb12 ~ wad710
-                  ## asbsocial
+                  ## antisocial
                   wsi710 ~ wasb5
                   wad710 ~ wasb5
                   
@@ -7504,21 +7513,21 @@ ri.med_hyp.long4b.asb.t <- '
                   wad5 =~ 1*hyet5
                   wad710 =~ 1*hyet710
                   wad12 =~ 1*hyet12
-                  ## asbsocial 
+                  ## antisocial 
                   wasb5 =~ 1*asbet5
                   wasb710 =~ 1*asbet710
                   wasb12 =~ 1*asbet12
                   
                   ###### Autoregressive lags ######
                   ## Isolation
-                  wsi710 ~ wsi5
-                  wsi12 ~ wsi710
+                  wsi710 ~ g*wsi5
+                  wsi12 ~ g*wsi710
                   ## asb social bahviour
-                  wasb710 ~ wasb5
-                  wasb12 ~ wasb710
+                  wasb710 ~ h*wasb5
+                  wasb12 ~ h*wasb710
                   ## ADHD
-                  wad710 ~ wad5
-                  wad12 ~ wad710
+                  wad710 ~ i*wad5
+                  wad12 ~ i*wad710
                   
                   ###### Cross lag paths ######
                   ## Isolation
@@ -7529,7 +7538,7 @@ ri.med_hyp.long4b.asb.t <- '
                   wsi710 ~ f*wad5
                   wsi12 ~ f*wad710
                   wasb12 ~ a*wad710
-                  ## asbsocial
+                  ## antisocial
                   wsi710 ~ b*wasb5
                   wad710 ~ d*wasb5
                   
@@ -7590,12 +7599,12 @@ ri.med_hyp.long4b.asb.t.fit.summary <- summary(ri.med_hyp.long4b.asb.t.fit, stan
 ```
 
 ```{r LRT for ri.med_hyp.long.asb.t.fit and ri.med_hyp.long4a.asb.t.fit}
-lavTestLRT(ri.med_hyp.long.asb.t.fit, ri.med_hyp.long4b.asb.t.fit, method = "satorra.bentler.2010")
+lavTestLRT(ri.med_hyp.long4a.asb.t.fit, ri.med_hyp.long4b.asb.t.fit, method = "satorra.bentler.2010")
 ```
 
-The cross-lag constraints gave a non-significant loss in model fit (p=0.9763). Therefore this model 4b will be carried forward.
+The cross-lag constraints gave a non-significant loss in model fit (p=0.3189). Therefore this model 4b will be carried forward.
 
-```{r results table for random intercept mother report asbsocial and total adhd}
+```{r results table for random intercept mother report antisocial and total adhd}
 # Model fit 
 ri.med_hyp.long4b.asb.t.fit.summary.fit <- table.model.fit(ri.med_hyp.long4b.asb.t.fit.summary)
 # Coefficients
@@ -7603,14 +7612,14 @@ ri.med_hyp.long4b.asb.t.fit.summary.reg <- table.model.coef(model = ri.med_hyp.l
 ```
 
 Results show that 
-* All significant autoregressive lags 
-* Isolation does *not* predict later ADHD (e)
-* Isolation does *not* predict later lower asbsocial behaviours (c)
+* Only significant auto lags for antisocial behaviour
+* Isolation predicts later ADHD (e) (minus Beta???)
+* Isolation does *not* predict later lower antisocial behaviours (c)
 * ADHD does *not* predict later isolation (p=0.019) (f)
-* asbsocial behaviours do predict later lower ADHD (d)
-* ADHD *does not* predict later lower asbsocial behaviours (a)
-* asbsocial behaviours *does* predict later lower isolation (b)
-* **Nonsignificant** indirect mediation path (a*b, p=0.212). ADHD -> lower asbsocial behaviours -> isolation
+* Antisocial behaviours predict (ish, p=0.05) later lower ADHD (d)
+* ADHD *does not* predict later lower antisocial behaviours (a)
+* Antisocial behaviours *does* predict later lower isolation (b)
+* **Nonsignificant** indirect mediation path (a*b, p=0.269). ADHD -> lower antisocial behaviours -> isolation
 
 
 ##### Inattention symptoms 
@@ -7637,7 +7646,7 @@ med_inat.long.asb.t <- '
                   ## ADHD
                   sisoet710 ~ inet5
                   sisoet12 ~ inet710
-                  ## asbsocial
+                  ## antisocial
                   sisoet710 ~ asbet5
                   inet710 ~ asbet5
                   asbet12 ~ sisoet710
@@ -7713,7 +7722,7 @@ med_inat.long2a.asb.t <- '
                   ## ADHD
                   sisoet710 ~ inet5
                   sisoet12 ~ inet710
-                  ## asbsocial
+                  ## antisocial
                   sisoet710 ~ asbet5
                   inet710 ~ asbet5
                   asbet12 ~ sisoet710
@@ -7797,7 +7806,7 @@ med_inat.long2b.asb.t <- '
                   sisoet710 ~ f*inet5
                   sisoet12 ~ f*inet710
                   asbet12 ~ a*inet710
-                  ## asbsocial
+                  ## antisocial
                   sisoet710 ~ b*asbet5
                   inet710 ~ d*asbet5
                   
@@ -7855,22 +7864,22 @@ lavTestLRT(med_inat.long.asb.t.fit, med_inat.long2b.asb.t.fit, method = "satorra
 
 The cross-lag constraints gave a significant loss in model fit (p=0.02991). Therefore the freed model should be used going forward.
 
-```{r results table for mother report asbsocial and total adhd}
+```{r results table for mother report antisocial and total adhd}
 # Model fit 
 med_inat.long.asb.t.fit.summary.fit <- table.model.fit(med_inat.long.asb.t.fit.summary)
 # Coefficients
 med_inat.long.asb.t.fit.summary.reg <- table.model.coef(model = med_inat.long.asb.t.fit.summary, step = "S1")
 ```
 
-Results show that (NOT BEEN UPDATED)
+Results show that (**NOT BEEN UPDATED**)
 * All significant autoregressive lags
 * Isolation *does not* predicts later ADHD (e)
-* Isolation predicts later lower asbsocial behaviours (c)
+* Isolation predicts later lower antisocial behaviours (c)
 * ADHD predicts later isolation (f)
-* asbsocial behaviours predict later lower ADHD (d)
-* ADHD predicts later lower asbsocial behaviours (a)
-* asbsocial behaviours predict later lower isolation (b)
-* Significant indirect mediation path (a*b, p=0.0007). ADHD -> lower asbsocial behaviours -> isolation
+* antisocial behaviours predict later lower ADHD (d)
+* ADHD predicts later lower antisocial behaviours (a)
+* antisocial behaviours predict later lower isolation (b)
+* Significant indirect mediation path (a*b, p=0.0007). ADHD -> lower antisocial behaviours -> isolation
 
 ###### 3. The RI-CLPM mediation model 
 
@@ -7890,7 +7899,7 @@ ri.med_inat.long.asb.t <- '
                   wad5 =~ 1*inet5
                   wad710 =~ 1*inet710
                   wad12 =~ 1*inet12
-                  ## asbsocial 
+                  ## antisocial 
                   wasb5 =~ 1*asbet5
                   wasb710 =~ 1*asbet710
                   wasb12 =~ 1*asbet12
@@ -7913,7 +7922,7 @@ ri.med_inat.long.asb.t <- '
                   ## ADHD
                   wsi710 ~ wad5
                   wsi12 ~ wad710
-                  ## asbsocial
+                  ## antisocial
                   wsi710 ~ wasb5
                   wad710 ~ wasb5
                   wasb12 ~ wsi710
@@ -7994,7 +8003,7 @@ ri.med_inat.long4a.asb.t <- '
                   wad5 =~ 1*inet5
                   wad710 =~ 1*inet710
                   wad12 =~ 1*inet12
-                  ## asbsocial 
+                  ## antisocial 
                   wasb5 =~ 1*asbet5
                   wasb710 =~ 1*asbet710
                   wasb12 =~ 1*asbet12
@@ -8019,7 +8028,7 @@ ri.med_inat.long4a.asb.t <- '
                   wsi710 ~ wad5
                   wsi12 ~ wad710
                   wasb12 ~ wad710
-                  ## asbsocial
+                  ## antisocial
                   wsi710 ~ wasb5
                   wad710 ~ wasb5
                   
@@ -8079,11 +8088,11 @@ ri.med_inat.long4a.asb.t.fit <- lavaan(model = ri.med_inat.long4a.asb.t,
 ri.med_inat.long4a.asb.t.fit.summary <- summary(ri.med_inat.long4a.asb.t.fit, standardized = TRUE, fit.measures = TRUE)
 ```
 
-**Saying non-significant loss of fit but the fit statistics have reduced a lot.**
-
 ```{r LRT for ri.med_inat.long.asb.t.fit and ri.med_inat.long4a.asb.t.fit}
 lavTestLRT(ri.med_inat.long.asb.t.fit, ri.med_inat.long4a.asb.t.fit, method = "satorra.bentler.2010")
 ```
+
+**Really large decrease in model fit - this should not be used going forward**
 
 ###### 4b. Constrained cross-lag RI-CLPM mediation model 
 
@@ -8103,7 +8112,7 @@ ri.med_inat.long4b.asb.t <- '
                   wad5 =~ 1*inet5
                   wad710 =~ 1*inet710
                   wad12 =~ 1*inet12
-                  ## asbsocial 
+                  ## antisocial 
                   wasb5 =~ 1*asbet5
                   wasb710 =~ 1*asbet710
                   wasb12 =~ 1*asbet12
@@ -8128,7 +8137,7 @@ ri.med_inat.long4b.asb.t <- '
                   wsi710 ~ f*wad5
                   wsi12 ~ f*wad710
                   wasb12 ~ a*wad710
-                  ## asbsocial
+                  ## antisocial
                   wsi710 ~ b*wasb5
                   wad710 ~ d*wasb5
                   
@@ -8192,9 +8201,9 @@ ri.med_inat.long4b.asb.t.fit.summary <- summary(ri.med_inat.long4b.asb.t.fit, st
 lavTestLRT(ri.med_inat.long.asb.t.fit, ri.med_inat.long4b.asb.t.fit, method = "satorra.bentler.2010")
 ```
 
-The cross-lag constraints gave a non-significant loss in model fit (p=1). Therefore this model 4b will be carried forward.
+The cross-lag constraints gave a non-significant loss in model fit (p=0.1202). Therefore this model 4b will be carried forward.
 
-```{r results table for random intercept mother report asbsocial and total adhd}
+```{r results table for random intercept mother report antisocial and total adhd}
 # Model fit 
 ri.med_inat.long4b.asb.t.fit.summary.fit <- table.model.fit(ri.med_inat.long4b.asb.t.fit.summary)
 # Coefficients
@@ -8202,19 +8211,15 @@ ri.med_inat.long4b.asb.t.fit.summary.reg <- table.model.coef(model = ri.med_inat
 ```
 
 Results show that 
-* All significant autoregressive lags 
+* Almost all significant autoregressive lags - increasing significance with age
 * Isolation does *not* predict later ADHD (e)
-* Isolation does *not* predict later lower asbsocial behaviours (c)
+* Isolation does (ish, p=0.052) predict later lower antisocial behaviours (c)
 * ADHD does *not* predict later isolation (f)
-* asbsocial behaviours **does** predict later lower ADHD (d)
-* ADHD **does** predict later lower asbsocial behaviours (a)
-* asbsocial behaviours *do not* predict later lower isolation (b)
-* **Nonsignificant** indirect mediation path (a*b, p=0.153). ADHD -> lower asbsocial behaviours -> isolation
+* Antisocial behaviours *does not* predict later lower ADHD (d)
+* ADHD *does not* predict later lower antisocial behaviours (a)
+* Antisocial behaviours **do** predict later lower isolation (b)
+* **Nonsignificant** indirect mediation path (a*b, p=0.356). ADHD -> lower antisocial behaviours -> isolation
 
 ***
-
-
-
-
 
 
