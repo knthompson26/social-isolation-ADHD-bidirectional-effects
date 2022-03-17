@@ -844,6 +844,8 @@ The simple mediation that we will be testing is does pro/antisocial behaviour at
 
 ### Prosocial behaviour 
 
+#### Total ADHD symptoms 
+
 ```{r med.simp.pro.m}
 med.simp.pro.m <- ' 
                   # direct effect
@@ -862,15 +864,73 @@ med.simp.pro.m <- '
 ```
 
 ```{r  fit med.simp.pro.m}
-med.simp.pro.fit <- sem(model = med.simp.pro.m, 
+med.simp.pro.m.fit <- sem(model = med.simp.pro.m, 
                         data = dat,
                         se = "bootstrap",
                         estimator = "ML")
 
-med.simp.pro.fit.summary <- summary(med.simp.pro.fit, standardized = TRUE)
+med.simp.pro.m.fitsummary <- summary(med.simp.pro.m.fit, standardized = TRUE)
+```
+
+#### Hyperactivity symptoms 
+
+```{r med_hyp.simp.pro.m}
+med_hyp.simp.pro.m <- ' 
+                  # direct effect
+                   sisoem12 ~ c*hyem5
+                  
+                  # med_hypiator
+                   proem710 ~ a*hyem5
+                   sisoem12 ~ b*proem710
+                  
+                  # indirect effect (a*b)
+                   indirect := a*b
+                  
+                  # total effect
+                   total := c + (a*b)
+         '
+```
+
+```{r  fit med_hyp.simp.pro.m}
+med_hyp.simp.pro.m.fit <- sem(model = med_hyp.simp.pro.m, 
+                        data = dat,
+                        se = "bootstrap",
+                        estimator = "ML")
+
+med_hyp.simp.pro.m.fitsummary <- summary(med_hyp.simp.pro.m.fit, standardized = TRUE)
+```
+
+#### Inattention symptoms 
+
+```{r med_inat.simp.pro.m}
+med_inat.simp.pro.m <- ' 
+                  # direct effect
+                   sisoem12 ~ c*inem5
+                  
+                  # med_inatiator
+                   proem710 ~ a*inem5
+                   sisoem12 ~ b*proem710
+                  
+                  # indirect effect (a*b)
+                   indirect := a*b
+                  
+                  # total effect
+                   total := c + (a*b)
+         '
+```
+
+```{r  fit med_inat.simp.pro.m}
+med_inat.simp.pro.m.fit <- sem(model = med_inat.simp.pro.m, 
+                        data = dat,
+                        se = "bootstrap",
+                        estimator = "ML")
+
+med_inat.simp.pro.m.fitsummary <- summary(med_inat.simp.pro.m.fit, standardized = TRUE)
 ```
 
 ### Antisocial behaviour 
+
+#### Total ADHD symptoms 
 
 ```{r med.simp.asb.m}
 med.simp.asb.m <- ' 
@@ -890,17 +950,75 @@ med.simp.asb.m <- '
 ```
 
 ```{r  fit med.simp.asb.m}
-med.simp.asb.fit <- sem(model = med.simp.asb.m, 
+med.simp.asb.m.fit <- sem(model = med.simp.asb.m, 
                         data = dat,
                         se = "bootstrap",
                         estimator = "ML")
 
-med.simp.asb.fit.summary <- summary(med.simp.asb.fit, standardized = TRUE)
+med.simp.asb.m.fit.summary <- summary(med.simp.asb.m.fit, standardized = TRUE)
+```
+
+#### Hyperactivity symptoms
+
+```{r med_hyp.simp.asb.m}
+med_hyp.simp.asb.m <- ' 
+                  # direct effect
+                   sisoem12 ~ c*hyem5
+                  
+                  # med_hypiator
+                   asbem710 ~ a*hyem5
+                   sisoem12 ~ b*asbem710
+                  
+                  # indirect effect (a*b)
+                   indirect := a*b
+                  
+                  # total effect
+                   total := c + (a*b)
+         '
+```
+
+```{r  fit med_hyp.simp.asb.m}
+med_hyp.simp.asb.m.fit <- sem(model = med_hyp.simp.asb.m, 
+                        data = dat,
+                        se = "bootstrap",
+                        estimator = "ML")
+
+med_hyp.simp.asb.m.fit.summary <- summary(med_hyp.simp.asb.m.fit, standardized = TRUE)
+```
+
+#### Inattention symptoms
+
+```{r med_inat.simp.asb.m}
+med_inat.simp.asb.m <- ' 
+                  # direct effect
+                   sisoem12 ~ c*inem5
+                  
+                  # med_inatiator
+                   asbem710 ~ a*inem5
+                   sisoem12 ~ b*asbem710
+                  
+                  # indirect effect (a*b)
+                   indirect := a*b
+                  
+                  # total effect
+                   total := c + (a*b)
+         '
+```
+
+```{r  fit med_inat.simp.asb.m}
+med_inat.simp.asb.m.fit <- sem(model = med_inat.simp.asb.m, 
+                        data = dat,
+                        se = "bootstrap",
+                        estimator = "ML")
+
+med_inat.simp.asb.m.fit.summary <- summary(med_inat.simp.asb.m.fit, standardized = TRUE)
 ```
 
 ## Teacher report
 
 ### Prosocial behaviour 
+
+#### Total ADHD symptoms 
 
 ```{r med.simp.pro.t}
 med.simp.pro.t <- ' 
@@ -920,15 +1038,73 @@ med.simp.pro.t <- '
 ```
 
 ```{r  fit med.simp.pro.t}
-med.simp.pro.fit <- sem(model = med.simp.pro.t, 
+med.simp.pro.t.fit <- sem(model = med.simp.pro.t, 
                         data = dat,
                         se = "bootstrap",
                         estimator = "ML")
 
-med.simp.pro.fit.summary <- summary(med.simp.pro.fit, standardized = TRUE)
+med.simp.pro.t.fit.summary <- summary(med.simp.pro.t.fit, standardized = TRUE)
+```
+
+#### Hyperactivity symptoms 
+
+```{r med_hyp.simp.pro.t}
+med_hyp.simp.pro.t <- ' 
+                  # direct effect
+                   sisoet12 ~ c*hyet5
+                  
+                  # med_hypiator
+                   proet710 ~ a*hyet5
+                   sisoet12 ~ b*proet710
+                  
+                  # indirect effect (a*b)
+                   indirect := a*b
+                  
+                  # total effect
+                   total := c + (a*b)
+         '
+```
+
+```{r  fit med_hyp.simp.pro.t}
+med_hyp.simp.pro.t.fit <- sem(model = med_hyp.simp.pro.t, 
+                        data = dat,
+                        se = "bootstrap",
+                        estimator = "ML")
+
+med_hyp.simp.pro.t.fit.summary <- summary(med_hyp.simp.pro.t.fit, standardized = TRUE)
+```
+
+#### Inattention symptoms 
+
+```{r med_inat.simp.pro.t}
+med_inat.simp.pro.t <- ' 
+                  # direct effect
+                   sisoet12 ~ c*inet5
+                  
+                  # med_inatiator
+                   proet710 ~ a*inet5
+                   sisoet12 ~ b*proet710
+                  
+                  # indirect effect (a*b)
+                   indirect := a*b
+                  
+                  # total effect
+                   total := c + (a*b)
+         '
+```
+
+```{r  fit med_inat.simp.pro.t}
+med_inat.simp.pro.t.fit <- sem(model = med_inat.simp.pro.t, 
+                        data = dat,
+                        se = "bootstrap",
+                        estimator = "ML")
+
+med_inat.simp.pro.t.fit.summary <- summary(med_inat.simp.pro.t.fit, standardized = TRUE)
 ```
 
 ### Antisocial behaviour 
+
+#### Total ADHD symptoms 
 
 ```{r med.simp.asb.t}
 med.simp.asb.t <- ' 
@@ -948,12 +1124,68 @@ med.simp.asb.t <- '
 ```
 
 ```{r fit med.simp.asb.t}
-med.simp.asb.fit <- sem(model = med.simp.asb.t, 
+med.simp.asb.t.fit <- sem(model = med.simp.asb.t, 
                         data = dat,
                         se = "bootstrap",
                         estimator = "ML")
 
-med.simp.asb.fit.summary <- summary(med.simp.asb.fit, standardized = TRUE)
+med.simp.asb.t.fit.summary <- summary(med.simp.asb.t.fit, standardized = TRUE)
+```
+
+#### Hyperactivity symptoms
+
+```{r med_hyp.simp.asb.t}
+med_hyp.simp.asb.t <- ' 
+                  # direct effect
+                   sisoet12 ~ c*hyet5
+                  
+                  # med_hypiator
+                   asbet710 ~ a*hyet5
+                   sisoet12 ~ b*asbet710
+                  
+                  # indirect effect (a*b)
+                   indirect := a*b
+                  
+                  # total effect
+                   total := c + (a*b)
+         '
+```
+
+```{r fit med_hyp.simp.asb.t}
+med_hyp.simp.asb.t.fit <- sem(model = med_hyp.simp.asb.t, 
+                        data = dat,
+                        se = "bootstrap",
+                        estimator = "ML")
+
+med_hyp.simp.asb.t.fit.summary <- summary(med_hyp.simp.asb.t.fit, standardized = TRUE)
+```
+
+#### Inattention symptoms
+
+```{r med_inat.simp.asb.t}
+med_inat.simp.asb.t <- ' 
+                  # direct effect
+                   sisoet12 ~ c*inet5
+                  
+                  # med_inatiator
+                   asbet710 ~ a*inet5
+                   sisoet12 ~ b*asbet710
+                  
+                  # indirect effect (a*b)
+                   indirect := a*b
+                  
+                  # total effect
+                   total := c + (a*b)
+         '
+```
+
+```{r fit med_inat.simp.asb.t}
+med_inat.simp.asb.t.fit <- sem(model = med_inat.simp.asb.t, 
+                        data = dat,
+                        se = "bootstrap",
+                        estimator = "ML")
+
+med_inat.simp.asb.t.fit.summary <- summary(med_inat.simp.asb.t.fit, standardized = TRUE)
 ```
 
 ***
@@ -7584,6 +7816,9 @@ ri.med_hyp.long4b.asb.t <- '
 
                   ###### Indirect effect (a*b) ######
                   indirect := a*b
+                  
+                  ###### Indirect effect isolation as the mediator ######
+                  indirectisolation := b*e
          '
 ```
 
