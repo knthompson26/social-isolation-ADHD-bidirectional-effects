@@ -1,0 +1,691 @@
+---
+title: "Factor models for social isolation and ADHD"
+output:  
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: 2
+    toc_float:
+      collapsed: false
+    number_sections: false
+    highlight: monochrome
+    theme: flatly
+    code_folding: hide
+    includes:
+      after_body: footer.html
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      comment = NA,
+                      prompt = FALSE,
+                      cache = FALSE,
+                      message = FALSE,
+                      warning = FALSE,
+                      results = 'asis')
+
+options(bitmapType = 'quartz') # to render fonts better
+```
+
+```{r Clear global environment, include=FALSE}
+remove(list = ls())
+```
+
+```{r Load packages, include=FALSE}
+library(knitr)
+library(haven)
+library(ltm)
+library(lavaan)
+library(tidyverse)
+library(dplyr) #conflicts with tidyverse for e.g. rename and row_number
+```
+
+```{r source the data file path, include=FALSE}
+#source raw data directory: data_raw and data included
+source("../isolation_ADHD_data_path.R")
+```
+
+```{r read in dta data file}
+dat.raw <- read_dta(paste0(data.raw_path, "Katie_19Jan22.dta"))
+colnames(dat.raw)
+
+dat <- dat.raw %>%
+  dplyr::select(id = atwinid,
+         pe2m5,   # social isolation mother report raw items (elder variables)
+         pe4m5,
+         pe7m5,
+         pe11m5,
+         pe13m5,
+         pe25m5,
+         trf11e5, # social isolation teacher report raw items (elder variables)
+         trf19e5,
+         trf24e5,
+         trf30e5,
+         trf34e5,
+         trf77e5,
+         pe2m7,   # social isolation mother report raw items (elder variables)
+         pe4m7,
+         pe7m7,
+         pe11m7,
+         pe13m7,
+         pe25m7,
+         trf11e7, # social isolation teacher report raw items (elder variables)
+         trf19e7,
+         trf24e7,
+         trf30e7,
+         trf34e7,
+         trf77e7,
+         pe2m10,   # social isolation mother report raw items (elder variables)
+         pe4m10,
+         pe7m10,
+         pe11m10,
+         pe13m10,
+         pe25m10,
+         trf11e10, # social isolation teacher report raw items (elder variables)
+         trf19e10,
+         trf24e10,
+         trf30e10,
+         trf34e10,
+         trf77e10,
+         pe2m12,   # social isolation mother report raw items (elder variables)
+         pe4m12,
+         pe7m12,
+         pe11m12,
+         pe13m12,
+         pe25m12,
+         trf11e12, # social isolation teacher report raw items (elder variables)
+         trf19e12,
+         trf24e12,
+         trf30e12,
+         trf34e12,
+         trf77e12,
+         pe81m5,  # Inattention mother report raw items (elder variables)
+         pe82m5,
+         pe83m5,
+         pe86m5,
+         pe87m5,
+         pe88m5,
+         pe89m5,
+         pe90m5,
+         pe91m5,
+         pe81m7,  # Inattention mother report raw items (elder variables)
+         pe82m7,
+         pe83m7,
+         pe86m7,
+         pe87m7,
+         pe88m7,
+         pe89m7,
+         pe90m7,
+         pe91m7,
+         pe81m10,  # Inattention mother report raw items (elder variables)
+         pe82m10,
+         pe83m10,
+         pe86m10,
+         pe87m10,
+         pe88m10,
+         pe89m10,
+         pe90m10,
+         pe91m10,
+         pe81m12,  # Inattention mother report raw items (elder variables)
+         pe82m12,
+         pe83m12,
+         pe86m12,
+         pe87m12,
+         pe88m12,
+         pe89m12,
+         pe90m12,
+         pe91m12,
+         trf89e5,  # Inattention teacher report raw items (elder variables)
+         trf90e5,
+         trf91e5,
+         trf94e5,
+         trf95e5,
+         trf96e5,
+         trf97e5,
+         trf98e5,
+         trf99e5,
+         trf89e7,  # Inattention teacher report raw items (elder variables)
+         trf90e7,
+         trf91e7,
+         trf94e7,
+         trf95e7,
+         trf96e7,
+         trf97e7,
+         trf98e7,
+         trf99e7,
+         trf89e10,  # Inattention teacher report raw items (elder variables)
+         trf90e10,
+         trf91e10,
+         trf94e10,
+         trf95e10,
+         trf96e10,
+         trf97e10,
+         trf98e10,
+         trf99e10,
+         trf89e12,  # Inattention teacher report raw items (elder variables)
+         trf90e12,
+         trf91e12,
+         trf94e12,
+         trf95e12,
+         trf96e12,
+         trf97e12,
+         trf98e12,
+         trf99e12, 
+         pe84m5,    # Hyperactivity/impulsivity mother report raw items (elder variables)
+         pe85m5,
+         pe96m5,
+         pe97m5,
+         pe92m5,   
+         pe93m5, 
+         pe94m5, 
+         pe95m5,
+         pe64m5,
+         pe84m7,    # Hyperactivity/impulsivity mother report raw items (elder variables)
+         pe85m7,
+         pe96m7,
+         pe97m7, 
+         pe92m7, 
+         pe93m7, 
+         pe94m7, 
+         pe95m7, 
+         pe64m7,
+         pe84m10,    # Hyperactivity/impulsivity mother report raw items (elder variables)
+         pe85m10,
+         pe96m10,
+         pe97m10, 
+         pe92m10, 
+         pe93m10, 
+         pe94m10, 
+         pe95m10, 
+         pe64m10,
+         pe84m12,    # Hyperactivity/impulsivity mother report raw items (elder variables)
+         pe85m12,
+         pe96m12,
+         pe97m12, 
+         pe92m12, 
+         pe93m12, 
+         pe94m12, 
+         pe95m12, 
+         pe64m12,
+         trf92e5,   # Hyperactivity/impulsivity teacher report raw items (elder variables)
+         trf93e5,
+         trf104e5,
+         trf105e5,
+         trf100e5,
+         trf101e5,
+         trf102e5,
+         trf103e5,
+         trf66e5,
+         trf92e7,   # Hyperactivity/impulsivity teacher report raw items (elder variables)
+         trf93e7,
+         trf104e7,
+         trf105e7,
+         trf100e7,
+         trf101e7,
+         trf102e7,
+         trf103e7,
+         trf66e7,
+         trf92e10,   # Hyperactivity/impulsivity teacher report raw items (elder variables)
+         trf93e10,
+         trf104e10,
+         trf105e10,
+         trf100e10,
+         trf101e10,
+         trf102e10,
+         trf103e10,
+         trf66e10,
+         trf92e12,   # Hyperactivity/impulsivity teacher report raw items (elder variables)
+         trf93e12,
+         trf104e12,
+         trf105e12,
+         trf100e12,
+         trf101e12,
+         trf102e12,
+         trf103e12,
+         trf66e12  
+  )
+
+colnames(dat)
+```
+
+***
+We willuse the trifactor model proposed by Bauer et al (2013) and later explained through two examples in Curran et al (2021). 
+
+The trifatcor model (three factor model) consists of a *common factor*, *perspective factors*, and *specific factors*: 
+
+* *Common factor*: pooled information shared by all reporters across the entire set of items (represents the construct, accounting for the reporter)
+* *Perspective factors*: represents the unique perspectives of the parent and teacher 
+* *Specific factors*: defined for each item across the reporters. Represents the possibility of some shared characteristic which is unique to a specific item. 
+
+Taking notes from Bauer (2013) and Curran (2021) we have built a typical confirmatory factor analysis, with three factors specified above, and made the following decisions: 
+* Full-information maximum likelihood is used to calculate likelihood ratio tests and subsequent score estimates
+* All informant ratings are allowed to load on the common factor - this factor thus reflects shared variability in the item responses across informants and represents the consensus view informants.
+* The perspective factors are assumed to be orthogonal to the common factor, and to each other. By imposing the constraint that the factors are orthogonal, we ensure that each perspective factor captures variance that is unique to a specific informant and that is not shared (i.e., does not covary) with other informants (in contrast to the common factor which represents shared variability across sets of ratings). **We have indicated this using** `orthogonal = TRUE`.
+* A given specific factor is defined to affect the responses of all informants to item i but to no other items. The specific factors are also assumed to be orthogonal to one another and all other factors in the model. With these constraints, the specific factors capture covariation that is unique to a particular item. 
+* The tri-factor model should be specified so that all parameters (e.g., item intercepts, factor loadings, and perspective factor means and variances) are constrained to equality across interchangeable informants but allowed to differ across structurally different informants (Nussbeck et al., 2009). Equal item intercepts and factor loadings would imply that informants interpret and respond to the items in the same way. If, additionally, perspective factor variances are equal then this would imply that the decomposition of variance in the item responses is identical across informants. Finally, if the perspective factor means are also equal, this would imply that there are no systematic differences across informants in their levels of endorsement of the items. **In our case, parents and teachers are structurally different and likely respond to the items in different ways, therefore parameters are allowed to differ**. 
+  5. Set the means and variances of the common and specific factors to zero and one, respectively (as with all latent variable models) **the cfa() and sem() functions fix the latent variable intercepts (which in this case correspond to the latent means) to zero. I have manually set this for all but the teacher perspective factor and not use lavaan()**
+  6. For structurally different informants, we standardize the scale of one perspective factor (**this is done through point 5**), while estimating the means and variances of the other perspective factors. To set the scale of the remaining perspective factors, the intercept and factor loading for at least one item must be equated across informants (**this is done through equating the a*pe25m5 and a*trf77e5 items across parent and teacher report (withdrawal)**). Comparison of the perspective factor means, variances, and scores across informants are only meaningful if equality constraints can be imposed on the intercepts and factor loadings of all (or many) items, implying factorial invariance (or partial factorial invariance). **need to test for this too**
+  7. When only two informants are present, the factor loadings for the specific factors must be equated across informants, in which case the specific factor essentially represents a residual covariance **need to check how to do this**
+
+
+Standardizing the scale of the latent factors has the advantage that all non-zero factor loadings can be estimated and compared in terms of relative magnitude. Comparing the common factor loadings to the perspective factor loadings sheds light on the subjectivity of the item ratings. 
+* A high value for the perspective factors indicates that responses to this item largely reflect the idiosyncratic views of the informants
+* A high value for the common factor indicates that the item responses largely reflect common opinions of the target’s trait level
+* A high value for the specific factor relative to the common and perspective factors suggests that the item is not a particularly good indicator of the general construct of interest (as most of the variability in item responses is driven by the specific factor). Inspection of the relative magnitude of the factor loadings can thus aid in scale evaluation and development.
+
+
+
+# Social isolation 
+
+## Age 5 
+
+### Unconstrained TFM
+* factor loadings and intercepts for the first item on each perspective factors were set to equality: `a*trf77e5` and `a*pe25m5`
+* factor loadings for the items in the specific factors are equated across informants (constrains b-g)
+* the common factor, the `perspective.parent` factor, and all specific factors were constrained to have a mean of zero and a variance of 1 (standardised). The mean and variance of the peer perspective factor was freely estimated. 
+* **I don't know if the first item on each factor should be set to 1 or not - when run this way, the fit decreases substantially (running using lavaan() versus cfa())**
+
+```{r cfa.isolation5}
+cfa.isolation5 <- '
+              # Common factor (all items)
+              common.isolation =~ pe2m5 + trf11e5 + pe4m5 + trf19e5 + pe7m5 + trf24e5 + pe11m5 + trf30e5 + pe13m5 + trf34e5 + pe25m5 + trf77e5
+              
+              # Perspective factors (reporter items)
+              perspective.parent =~ a*pe25m5 + pe4m5 + pe7m5 + pe11m5 + pe13m5 + pe2m5
+              perspective.teacher =~ a*trf77e5 + trf19e5 + trf24e5 + trf30e5 + trf34e5 + trf11e5
+              
+              # Specific factors (pairs of items)
+              specific.loneliness =~ b*pe2m5 + b*trf11e5
+              specific.get_along =~ c*pe4m5 + c*trf19e5
+              specific.noone_loves =~ d*pe7m5 + d*trf24e5
+              specific.alone =~ e*pe11m5 + e*trf30e5
+              specific.not_liked =~ f*pe13m5 + f*trf34e5
+              specific.withdrawn =~ g*pe25m5 + g*trf77e5
+              
+              # Intercepts (means) for common and specific factors fixed to 0 (allow teacher perspective factor means to vary)
+              common.isolation + perspective.parent + specific.loneliness + specific.get_along + specific.noone_loves + specific.alone + specific.not_liked + specific.withdrawn ~ 0*1
+              
+              # Variance for common and specific factors fixed to 1 (allow teacherperspective factor means to vary)
+              common.isolation ~~ 1*common.isolation
+              perspective.parent ~~ 1*perspective.parent
+              specific.loneliness ~~ 1*specific.loneliness
+              specific.get_along ~~ 1*specific.get_along
+              specific.noone_loves ~~ 1*specific.noone_loves
+              specific.alone ~~ 1*specific.alone
+              specific.not_liked ~~ 1*specific.not_liked
+              specific.withdrawn ~~ 1*specific.withdrawn
+'
+```
+
+```{r fit cfa.isolation5}
+cfa.isolation5.fit <- lavaan(cfa.isolation5, 
+                        data = dat, 
+                        ordered = TRUE,
+                        orthogonal = TRUE,
+                       # meanstructure = TRUE
+                        )
+
+summary(cfa.isolation5.fit, fit.measures = TRUE, standardized = TRUE) 
+```
+
+### Constrained TFM
+
+* imposed equality constraints to loadings (h-l)  of parent and teacher items to check for measurement invariance 
+
+```{r cfa.isolation5.con1}
+cfa.isolation5.con1 <- '
+              # Common factor (all items)
+              common.isolation =~ pe2m5 + trf11e5 + pe4m5 + trf19e5 + pe7m5 + trf24e5 + pe11m5 + trf30e5 + pe13m5 + trf34e5 + pe25m5 + trf77e5
+              
+              # Perspective factors (reporter items)
+              perspective.parent =~ a*pe25m5 + h*pe4m5 + i*pe7m5 + j*pe11m5 + k*pe13m5 + l*pe2m5
+              perspective.teacher =~ a*trf77e5 + h*trf19e5 + i*trf24e5 + j*trf30e5 + k*trf34e5 + l*trf11e5
+              
+              # Specific factors (pairs of items)
+              specific.loneliness =~ b*pe2m5 + b*trf11e5
+              specific.get_along =~ c*pe4m5 + c*trf19e5
+              specific.noone_loves =~ d*pe7m5 + d*trf24e5
+              specific.alone =~ e*pe11m5 + e*trf30e5
+              specific.not_liked =~ f*pe13m5 + f*trf34e5
+              specific.withdrawn =~ g*pe25m5 + g*trf77e5
+              
+              # Intercepts (means) for common and specific factors fixed to 0 (allow teacher perspective factor means to vary)
+              common.isolation + perspective.parent + specific.loneliness + specific.get_along + specific.noone_loves + specific.alone + specific.not_liked + specific.withdrawn ~ 0*1
+              
+              # Variance for common and specific factors fixed to 1 (allow teacherperspective factor means to vary)
+              common.isolation ~~ 1*common.isolation
+              perspective.parent ~~ 1*perspective.parent
+              specific.loneliness ~~ 1*specific.loneliness
+              specific.get_along ~~ 1*specific.get_along
+              specific.noone_loves ~~ 1*specific.noone_loves
+              specific.alone ~~ 1*specific.alone
+              specific.not_liked ~~ 1*specific.not_liked
+              specific.withdrawn ~~ 1*specific.withdrawn
+              
+'
+```
+
+```{r fit cfa.isolation5.con1}
+cfa.isolation5.con1.fit <- lavaan(cfa.isolation5.con1, 
+                        data = dat, 
+                        ordered = TRUE,
+                        orthogonal = TRUE)
+
+summary(cfa.isolation5.con1.fit, fit.measures = TRUE, standardized = TRUE) 
+```
+
+```{r LRT for cfa.isolation5 and cfa.isolation5.con1}
+lavTestLRT(cfa.isolation5.fit, cfa.isolation5.con1.fit)
+```
+
+Not significantly worse fit (p=0.7363), now move onto constraint model 2. 
+
+HOWEVER **we also need to consider that the common isolation items should load the same across teacher and parent reported items - and they don't. When constraining the teacher and parent items to have equal loadings this results in significantly worse fit.** 
+
+Measurement invariance does not hold here across parents and teachers - this is a big problem. 
+
+### Constrained TFM 2 
+
+* Constrained item intercepts across perspectives 
+
+```{r cfa.isolation5.con2}
+cfa.isolation5.con2 <- '
+              # Common factor (all items)
+              common.isolation =~ pe2m5 + trf11e5 + pe4m5 + trf19e5 + pe7m5 + trf24e5 + pe11m5 + trf30e5 + pe13m5 + trf34e5 + pe25m5 + trf77e5
+              
+              # Perspective factors (reporter items)
+              perspective.parent =~ a*pe25m5 + h*pe4m5 + i*pe7m5 + j*pe11m5 + k*pe13m5 + l*pe2m5
+              perspective.teacher =~ a*trf77e5 + h*trf19e5 + i*trf24e5 + j*trf30e5 + k*trf34e5 + l*trf11e5
+              
+              # Specific factors (pairs of items)
+              specific.loneliness =~ b*pe2m5 + b*trf11e5
+              specific.get_along =~ c*pe4m5 + c*trf19e5
+              specific.noone_loves =~ d*pe7m5 + d*trf24e5
+              specific.alone =~ e*pe11m5 + e*trf30e5
+              specific.not_liked =~ f*pe13m5 + f*trf34e5
+              specific.withdrawn =~ g*pe25m5 + g*trf77e5
+              
+              # Intercepts (means) for common and specific factors fixed to 0 (allow teacher perspective factor means to vary)
+              common.isolation + perspective.parent + specific.loneliness + specific.get_along + specific.noone_loves + specific.alone + specific.not_liked + specific.withdrawn ~ 0*1
+
+              # Variance for common and specific factors fixed to 1 (allow teacherperspective factor means to vary)
+              common.isolation ~~ 1*common.isolation
+              perspective.parent ~~ 1*perspective.parent
+              specific.loneliness ~~ 1*specific.loneliness
+              specific.get_along ~~ 1*specific.get_along
+              specific.noone_loves ~~ 1*specific.noone_loves
+              specific.alone ~~ 1*specific.alone
+              specific.not_liked ~~ 1*specific.not_liked
+              specific.withdrawn ~~ 1*specific.withdrawn
+              
+              # Item intercepts constrained to be equal across perspectives
+              pe25m5 + trf77e5 ~ m*1
+              pe4m5 + trf19e5 ~ n*1
+              pe7m5 + trf24e5 ~ o*1
+              pe11m5 + trf30e5 ~ p*1
+              pe13m5 + trf34e5 ~ q*1
+              pe2m5 + trf11e5 ~ r*1
+              
+'
+```
+
+```{r fit cfa.isolation5.con2}
+cfa.isolation5.con2.fit <- lavaan(cfa.isolation5.con2, 
+                        data = dat, 
+                        ordered = TRUE,
+                        orthogonal = TRUE)
+
+summary(cfa.isolation5.con2.fit, fit.measures = TRUE, standardized = TRUE) 
+```
+
+```{r LRT for cfa.isolation5.con1 and cfa.isolation5.con2}
+lavTestLRT(cfa.isolation5.con1.fit, cfa.isolation5.con2.fit)
+```
+
+Not significantly worse fit (p=0.9805), now move onto constraint model 3.  
+
+### Constrained TFM 3
+
+* Mothers and teachers functioned similarly to interchangeable raters, therefore, we adopt the scaling convention to set the intercept and variance of the factors to 0 and 1. 
+* Setting the perspective factor mean and variance to zero and 1 for both informants, this is done using `std.lv = TRUE` and deleting this manual fixing in the syntax. 
+
+```{r cfa.isolation5.con3}
+cfa.isolation5.con3 <- '
+              # Common factor (all items)
+              common.isolation =~ pe2m5 + trf11e5 + pe4m5 + trf19e5 + pe7m5 + trf24e5 + pe11m5 + trf30e5 + pe13m5 + trf34e5 + pe25m5 + trf77e5
+              
+              # Perspective factors (reporter items)
+              perspective.parent =~ a*pe25m5 + h*pe4m5 + i*pe7m5 + j*pe11m5 + k*pe13m5 + l*pe2m5
+              perspective.teacher =~ a*trf77e5 + h*trf19e5 + i*trf24e5 + j*trf30e5 + k*trf34e5 + l*trf11e5
+              
+              # Specific factors (pairs of items)
+              specific.loneliness =~ b*pe2m5 + b*trf11e5
+              specific.get_along =~ c*pe4m5 + c*trf19e5
+              specific.noone_loves =~ d*pe7m5 + d*trf24e5
+              specific.alone =~ e*pe11m5 + e*trf30e5
+              specific.not_liked =~ f*pe13m5 + f*trf34e5
+              specific.withdrawn =~ g*pe25m5 + g*trf77e5
+              
+              # Item intercepts constrained to be equal across perspectives
+              pe25m5 + trf77e5 ~ m*1
+              pe4m5 + trf19e5 ~ n*1
+              pe7m5 + trf24e5 ~ o*1
+              pe11m5 + trf30e5 ~ p*1
+              pe13m5 + trf34e5 ~ q*1
+              pe2m5 + trf11e5 ~ r*1
+'
+```
+
+```{r fit cfa.isolation5.con3}
+cfa.isolation5.con3.fit <- lavaan(cfa.isolation5.con3, 
+                        data = dat, 
+                        ordered = TRUE,
+                        orthogonal = TRUE,
+                        std.lv = TRUE # standardise all latent varibles
+                        )
+
+summary(cfa.isolation5.con3.fit, fit.measures = TRUE, standardized = TRUE) 
+```
+
+This looks much better.
+Fit: 
+* CFI: 0.954
+* TLI: 0.949
+* RMSEA: 0.049
+* SRMR: 0.096
+
+**However, there is a negative variance for the item pe25m5 (-0.067). Negative variances are often a sign that something is wrong with the model. I will now try to set this variance to zero**
+ 
+### Constrained TFM 4
+ * set variance of item pe25m5 to zero
+
+```{r cfa.isolation5.con4}
+cfa.isolation5.con4 <- '
+              # Common factor (all items)
+              common.isolation =~ pe2m5 + trf11e5 + pe4m5 + trf19e5 + pe7m5 + trf24e5 + pe11m5 + trf30e5 + pe13m5 + trf34e5 + pe25m5 + trf77e5
+              
+              # Perspective factors (reporter items)
+              perspective.parent =~ a*pe25m5 + h*pe4m5 + i*pe7m5 + j*pe11m5 + k*pe13m5 + l*pe2m5
+              perspective.teacher =~ a*trf77e5 + h*trf19e5 + i*trf24e5 + j*trf30e5 + k*trf34e5 + l*trf11e5
+              
+              # Specific factors (pairs of items)
+              specific.loneliness =~ b*pe2m5 + b*trf11e5
+              specific.get_along =~ c*pe4m5 + c*trf19e5
+              specific.noone_loves =~ d*pe7m5 + d*trf24e5
+              specific.alone =~ e*pe11m5 + e*trf30e5
+              specific.not_liked =~ f*pe13m5 + f*trf34e5
+              specific.withdrawn =~ g*pe25m5 + g*trf77e5
+              
+              # Item intercepts constrained to be equal across perspectives
+              pe25m5 + trf77e5 ~ m*1
+              pe4m5 + trf19e5 ~ n*1
+              pe7m5 + trf24e5 ~ o*1
+              pe11m5 + trf30e5 ~ p*1
+              pe13m5 + trf34e5 ~ q*1
+              pe2m5 + trf11e5 ~ r*1
+              
+              # Set variance of item pe25m5 to zero
+               pe25m5 ~~ 0*pe25m5
+'
+```
+
+```{r fit cfa.isolation5.con4}
+cfa.isolation5.con4.fit <- lavaan(cfa.isolation5.con4, 
+                        data = dat, 
+                        ordered = TRUE,
+                        orthogonal = TRUE,
+                        std.lv = TRUE # standardise all latent varibles
+                        )
+
+cfa.isolation5.con4.fit.summary <- summary(cfa.isolation5.con4.fit, fit.measures = TRUE, standardized = TRUE) 
+```
+
+This didn't work - the variance is still negative. But there is no lavaan warning for this? **Not sure if this is a problem or not?**
+
+### Constrained TFM 5
+ * constrain the parent and teacher items on the common factor (apart from lonely and compplains no one loves them as these had different factor loadings)
+
+```{r cfa.isolation5.con5}
+cfa.isolation5.con5 <- '
+              # Common factor (all items)
+              common.isolation =~ pe2m5 + trf11e5 + t*pe4m5 + t*trf19e5 + pe7m5 + trf24e5 + v*pe11m5 + v*trf30e5 + w*pe13m5 + w*trf34e5 + x*pe25m5 + x*trf77e5
+              
+              # Perspective factors (reporter items)
+              perspective.parent =~ a*pe25m5 + h*pe4m5 + i*pe7m5 + j*pe11m5 + k*pe13m5 + l*pe2m5
+              perspective.teacher =~ a*trf77e5 + h*trf19e5 + i*trf24e5 + j*trf30e5 + k*trf34e5 + l*trf11e5
+              
+              # Specific factors (pairs of items)
+              specific.loneliness =~ b*pe2m5 + b*trf11e5
+              specific.get_along =~ c*pe4m5 + c*trf19e5
+              specific.noone_loves =~ d*pe7m5 + d*trf24e5
+              specific.alone =~ e*pe11m5 + e*trf30e5
+              specific.not_liked =~ f*pe13m5 + f*trf34e5
+              specific.withdrawn =~ g*pe25m5 + g*trf77e5
+              
+              # Item intercepts constrained to be equal across perspectives
+              pe25m5 + trf77e5 ~ m*1
+              pe4m5 + trf19e5 ~ n*1
+              pe7m5 + trf24e5 ~ o*1
+              pe11m5 + trf30e5 ~ p*1
+              pe13m5 + trf34e5 ~ q*1
+              pe2m5 + trf11e5 ~ r*1
+'
+```
+
+```{r fit cfa.isolation5.con5}
+cfa.isolation5.con5.fit <- lavaan(cfa.isolation5.con5, 
+                        data = dat, 
+                        ordered = TRUE,
+                        orthogonal = TRUE,
+                        std.lv = TRUE # standardise all latent varibles
+                        )
+
+cfa.isolation5.con5.fit.summary <- summary(cfa.isolation5.con5.fit, fit.measures = TRUE, standardized = TRUE) 
+```
+
+```{r LRT for cfa.isolation5.con1 and cfa.isolation5.con2}
+lavTestLRT(cfa.isolation5.con4.fit, cfa.isolation5.con5.fit)
+```
+
+Change in model fit:
+con4 fit statistics 
+Comparative Fit Index (CFI)  0.954  (>0.95)
+Tucker-Lewis Index (TLI)     0.949  (>0.95)
+RMSEA                        0.049  (<0.06)
+SRMR                         0.096  (<0.08) not great fit
+con5 fit statistics
+Comparative Fit Index (CFI)  0.950  (0.004 decrease)
+Tucker-Lewis Index (TLI)     0.948  (0.001 decrease)
+RMSEA                        0.050  (0.001 increase)
+SRMR                         0.100  (0.004 increase)
+
+Therefore we can assume that there was not a substantial loss in model fit no increases/decreases >0.01. 
+
+**Cannot assume full measurement variance here, only partial measurement invariance**. Items "Complains of loneliness" and "Complains no one loves them" is associated differently with social isolation depending on if parents or teachers are reporting (does this mean that these items are interpreted differently between parents and teachers?)
+
+### Table of factor loadings for cfa.isolation5.con5
+
+```{r table of factor loadings}
+# get common factor loadings
+cfa.isolation5.loadings.common <- as.tibble(cfa.isolation5.con5.fit.summary$PE) %>%
+  dplyr::filter(lhs == "common.isolation" & op == "=~") %>%
+  dplyr::select(Item.raw = rhs, 
+                Common = std.lv)
+
+# get perspective factor loadings
+cfa.isolation5.loadings.perspective <- as.tibble(cfa.isolation5.con5.fit.summary$PE) %>%
+  dplyr::filter(op == "=~") %>%
+  dplyr::filter(lhs == "perspective.parent" | lhs == "perspective.teacher") %>%
+  dplyr::select(Item.raw = rhs, 
+                Perspective = std.lv)
+
+# get specific factor loadings
+cfa.isolation5.loadings.specific <- as.tibble(cfa.isolation5.con5.fit.summary$PE) %>%
+  dplyr::filter(op == "=~") %>%
+  dplyr::filter(lhs == "specific.loneliness" | 
+                  lhs == "specific.get_along" |
+                  lhs == "specific.noone_loves" |
+                  lhs == "specific.alone" |
+                  lhs == "specific.not_liked" |
+                  lhs == "specific.withdrawn") %>%
+  dplyr::select(lhs,
+                Item.raw = rhs, 
+                Specific = std.lv)
+
+# combine them
+loadings.list <- list(cfa.isolation5.loadings.common, cfa.isolation5.loadings.perspective, cfa.isolation5.loadings.specific)
+cfa.isolation5.loadings.common.perspective.specific <- plyr::join_all(loadings.list, "Item.raw")
+
+# Add in mother/ teacher report and item names 
+cfa.isolation5.loadings <- cfa.isolation5.loadings.common.perspective.specific %>%
+  mutate(Reporter =
+           rep(c("Mother", "Teacher"), 6)
+  ) %>%
+  mutate(Item = 
+           case_when(
+             Item.raw == "pe2m5" | Item.raw == "trf11e5" ~ "Complains they are lonely",
+             Item.raw == "pe4m5" | Item.raw == "trf19e5" ~ "Doesn't get along with other children",
+             Item.raw == "pe7m5" | Item.raw == "trf24e5" ~ "Complains no one loves them",
+             Item.raw == "pe11m5" | Item.raw == "trf30e5" ~ "Would rather be alone",
+             Item.raw == "pe13m5" | Item.raw == "trf34e5" ~ "Not liked by other children",
+             Item.raw == "pe25m5" | Item.raw == "trf77e5" ~ "Withdrawn"
+           )) %>%
+  mutate_if(is.numeric, round, 3) %>%
+  dplyr::select(Item, Reporter, Common, Perspective, Specific)
+
+cfa.isolation5.loadings
+```
+
+**Interpretation of the factor loadings**
+* The standardized solution is particularly informative as the magnitudes of the standardized factor loadings are directly comparable and indicate the relative effects of the common, perspective, and specific factors on the items. 
+* We can see which items most reflect the common factor and are least susceptible to perspective differences.
+  + The common factor often contributes more to the item ratings than variation uniquely associated with the informant
+  + Endorsement of the items `Would raher be alone` and `Withdrawn` is almost exclusively due to unique perspective effects, something that would not be revealed in a factor analysis of a single informant’s ratings.
+  + For the two items not constrained to be equal (lonely and no one loves them), the *teacher report* common factor loadings are much higher than the perspective loadings - this suggests that for teacher report, the isolation common factor contributes more to the item ratings than variation uniquely associated with the informant. 
+  + All items positively load onto the common factor (representing social isolation without reporter bias) above 0.29. 
+
+
+Questions for Tim:
+- do we think that using the factor scores for common factor (accounting for different perspectives)?
+- does it make sense to compare factor scores for the teacher and parent perspective factors? 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
