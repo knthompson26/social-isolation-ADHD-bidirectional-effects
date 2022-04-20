@@ -83,7 +83,11 @@ dat <- dat.raw %>%
          inet5,    # inattention ADHD teacher report
          inet7,
          inet10,
-         inet12
+         inet12,
+         sisoe5,
+         sisoe7,
+         sisoe10,
+         sisoe12
   )
 
 colnames(dat)
@@ -120,6 +124,7 @@ table.model.coef <- function(model, type, constraints){
 ```
 
 ***
+
 # Normality checks
 
 If the data is non-normal - we should use robust test statistics for all models going forward. Robust standard errors will also be calculated to account for the use of twins in our sample. 
@@ -182,40 +187,42 @@ The CLPM requires only two waves of data, but the RI-CLPM requires at least *thr
 We conducted RI-CLPM to assess bidirectional associations between social isolation and ADHD symptoms. All models in this script have used sum scores for total ADHD symptoms, hyperactivity symptoms, inattention symptoms, and social isolation. Separate models have been conducted for mother and teacher scores. See the table below for a list of all models and how they are labeled throughout the code. 
 
 
-| Model            | Description                                                                                                                       | 
-| ---------------  | --------------------------------------------------------------------------------------------------------------------------------  |
-|   CLPM           |  Cross-lagged panel model without random intercepts using **mother report** and **total ADHD** scores                             |
-|   RICLPM         |  Basic RI-CLPM model using **mother report** ratings for AD and SI, and **total ADHD** scores                                     |
-|   RICLPM2        |  RICLPM but with fixed autoregressive and cross-lagged relations over time                                                        |
-|   RICLPM2a       |  RICLPM but with fixed ADHD autoregressive over time                                                                              |
-|   RICLPM2b       |  RICLPM but with fixed social isolation autoregressive over time                                                                  |
-|   RICLPM2c       |  RICLPM but with fixed ADHD to social isolation cross-lagged relations over time                                                  |
-|   RICLPM2d       |  RICLPM but with fixed all cross-lagged relations over time                                                                       |
-|   RICLPM3        |  RICLPM but with constrained grand means for AD and SI                                                                            |
-|   RICLPM_hyp     |  Basic RI-CLPM model using **mother report** ratings for AD and SI, and **hyperacitivty** scores                                  |
-|   RICLPM_hyp2    |  RICLPM_hyp but with fixed autoregressive and cross-lagged relations over time                                                    |
-|   RICLPM_hyp2a   |  RICLPM_hyp but with fixed ADHD autoregressive over time                                                                          |
-|   RICLPM_hyp2b   |  RICLPM_hyp but with fixed social isolation autoregressive over time                                                              |
-|   RICLPM_hyp2c   |  RICLPM_hyp but with fixed ADHD to social isolation cross-lagged relations over time                                              |
-|   RICLPM_hyp2d   |  RICLPM_hyp but with fixed all cross-lagged relations over time                                                                   |
-|   RICLPM_hyp3    |  RICLPM_hyp but with constrained grand means for AD and SI                                                                        |
-|   RICLPM_inat    |  Basic RI-CLPM model using **mother report** ratings for AD and SI, and **inattention** scores                                    |
-|   RICLPM_inat2   |  RICLPM_inat but with fixed autoregressive and cross-lagged relations over time                                                   |
-|   RICLPM_inat2a  |  RICLPM_inat but with fixed ADHD autoregressive over time                                                                         |
-|   RICLPM_inat2b  |  RICLPM_inat but with fixed social isolation autoregressive over time                                                             |
-|   RICLPM_inat2c  |  RICLPM_inat but with fixed ADHD to social isolation cross-lagged relations over time                                             |
-|   RICLPM_inat2d  |  RICLPM_inat but with fixed all cross-lagged relations over time                                                                  |
-|   RICLPM_inat3   |  RICLPM_inat but with constrained grand means for AD and SI                                                                       |
-|   CLPMt          |  Cross-lagged panel model without random intercepts using **teacher report** and **total ADHD** scores                            |
-|   RICLPMt        |  Basic RI-CLPM model using **teacher report** ratings for AD and SI, and **total ADHD** scores                                    |
-|   RICLPMt2       |  RICLPMt but with fixed autoregressive and cross-lagged relations over time                                                       |
-|   RICLPMt3       |  RICLPMt but with constrained grand means for AD and SI                                                                           |
-|   RICLPMt_hyp    |  Basic RI-CLPM model using **teacher report** ratings for AD and SI, and **hyperacitivty** scores                                 |
-|   RICLPMt_hyp2   |  RICLPMt_hyp but with fixed autoregressive and cross-lagged relations over time                                                   |
-|   RICLPMt_hyp3   |  RICLPMt_hyp but with constrained grand means for AD and SI                                                                       |
-|   RICLPMt_inat   |  Basic RI-CLPM model using **teacher report** ratings for AD and SI, and **inattention** scores                                   |
-|   RICLPMt_inat2  |  RICLPMt_inat but with fixed autoregressive and cross-lagged relations over time                                                  |
-|   RICLPMt_inat3  |  RICLPMt_inat but with constrained grand means for AD and SI                                                                      |
+| Model               | Description                                                                                                                       | 
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------  |
+|   CLPM              |  Cross-lagged panel model without random intercepts using **mother report** and **total ADHD** scores                             |
+|   RICLPM            |  Basic RI-CLPM model using **mother report** ratings for AD and SI, and **total ADHD** scores                                     |
+|   RICLPM2           |  RICLPM but with fixed autoregressive and cross-lagged relations over time                                                        |
+|   RICLPM2a          |  RICLPM but with fixed ADHD autoregressive over time                                                                              |
+|   RICLPM2b          |  RICLPM but with fixed social isolation autoregressive over time                                                                  |
+|   RICLPM2c          |  RICLPM but with fixed ADHD to social isolation cross-lagged relations over time                                                  |
+|   RICLPM2d          |  RICLPM but with fixed all cross-lagged relations over time                                                                       |
+|   RICLPM3           |  RICLPM but with constrained grand means for AD and SI                                                                            |
+|   RICLPM_hyp        |  Basic RI-CLPM model using **mother report** ratings for AD and SI, and **hyperactivity** scores                                  |
+|   RICLPM_hyp2       |  RICLPM_hyp but with fixed autoregressive and cross-lagged relations over time                                                    |
+|   RICLPM_hyp2a      |  RICLPM_hyp but with fixed ADHD autoregressive over time                                                                          |
+|   RICLPM_hyp2b      |  RICLPM_hyp but with fixed social isolation autoregressive over time                                                              |
+|   RICLPM_hyp2c      |  RICLPM_hyp but with fixed ADHD to social isolation cross-lagged relations over time                                              |
+|   RICLPM_hyp2d      |  RICLPM_hyp but with fixed all cross-lagged relations over time                                                                   |
+|   RICLPM_hyp3       |  RICLPM_hyp but with constrained grand means for AD and SI                                                                        |
+|   RICLPM_inat       |  Basic RI-CLPM model using **mother report** ratings for AD and SI, and **inattention** scores                                    |
+|   RICLPM_inat2      |  RICLPM_inat but with fixed autoregressive and cross-lagged relations over time                                                   |
+|   RICLPM_inat2a     |  RICLPM_inat but with fixed ADHD autoregressive over time                                                                         |
+|   RICLPM_inat2b     |  RICLPM_inat but with fixed social isolation autoregressive over time                                                             |
+|   RICLPM_inat2c     |  RICLPM_inat but with fixed ADHD to social isolation cross-lagged relations over time                                             |
+|   RICLPM_inat2d     |  RICLPM_inat but with fixed all cross-lagged relations over time                                                                  |
+|   RICLPM_inat3      |  RICLPM_inat but with constrained grand means for AD and SI                                                                       |
+|   CLPMt             |  Cross-lagged panel model without random intercepts using **teacher report** and **total ADHD** scores                            |
+|   RICLPMt           |  Basic RI-CLPM model using **teacher report** ratings for AD and SI, and **total ADHD** scores                                    |
+|   RICLPMt2          |  RICLPMt but with fixed autoregressive and cross-lagged relations over time                                                       |
+|   RICLPMt3          |  RICLPMt but with constrained grand means for AD and SI                                                                           |
+|   RICLPMt_hyp       |  Basic RI-CLPM model using **teacher report** ratings for AD and SI, and **hyperactivity** scores                                 |
+|   RICLPMt_hyp2      |  RICLPMt_hyp but with fixed autoregressive and cross-lagged relations over time                                                   |
+|   RICLPMt_hyp3      |  RICLPMt_hyp but with constrained grand means for AD and SI                                                                       |
+|   RICLPMt_inat      |  Basic RI-CLPM model using **teacher report** ratings for AD and SI, and **inattention** scores                                   |
+|   RICLPMt_inat2     |  RICLPMt_inat but with fixed autoregressive and cross-lagged relations over time                                                  |
+|   RICLPMt_inat3     |  RICLPMt_inat but with constrained grand means for AD and SI                                                                      |
+
+
 
 ***
 
@@ -773,7 +780,6 @@ RICLPM2d.fit.summary.fit <- table.model.fit(RICLPM2d.fit.summary)
 RICLPM2d.fit.summary.fit
 #Table of regression coefficients and covariances (concurrent associations)
 RICLPM2d.fit.summary.reg <- table.model.coef(model = RICLPM2d.fit.summary, type = "RICLPM", constraints = "Yes")
-RICLPM2d.fit.summary.reg
 ```
 
 ```{r LRT for RICLPM2c and RICLPM2d}
@@ -2749,3 +2755,21 @@ If the grand means cannot be constrained to be invariant over time, this implies
 *This makes sense as we have shown variation in social isolation over time and other literature has shown variation in ADHD over time.*
 
 ***
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

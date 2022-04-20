@@ -304,6 +304,303 @@ cronbach.alpha(dat[isolation.teacher.age12], standardized = TRUE, CI = TRUE, na.
 
 ***
 
+Endorsement rates of each item
+
+```{r}
+isolation.mum.cat.items5 <- c("lonely.report.mum.5",
+                     "get.along.report.mum.5",
+                     "no.one.loves.report.mum.5",
+                     "rather.alone.report.mum.5",
+                     "not.liked.report.mum.5",
+                     "withdrawn.report.mum.5")
+
+isolation.teach.cat.items5 <- c("lonely.report.teach.5",
+                     "get.along.report.teach.5",
+                     "no.one.loves.report.teach.5",
+                     "rather.alone.report.teach.5",
+                     "not.liked.report.teach.5",
+                     "withdrawn.report.teach.5")
+
+
+isolation.mum.teach.cat.items5 <- c("lonely.report.mum.5",
+                                    "lonely.report.teach.5",
+                     "get.along.report.mum.5",
+                     "get.along.report.teach.5",
+                     "no.one.loves.report.mum.5",
+                     "no.one.loves.report.teach.5",
+                     "rather.alone.report.mum.5",
+                     "rather.alone.report.teach.5",
+                     "not.liked.report.mum.5",
+                     "not.liked.report.teach.5",
+                     "withdrawn.report.mum.5",
+                     "withdrawn.report.teach.5")
+
+
+
+
+
+isolation.mum.items5 <- c("pe2m5",
+                     "pe4m5",
+                     "pe7m5",
+                     "pe11m5",
+                     "pe13m5",
+                     "pe25m5")
+
+isolation.teach.items5 <- c("trf11e5",
+                     "trf19e5",
+                     "trf24e5",
+                     "trf30e5",
+                     "trf34e5",
+                     "trf77e5")
+
+
+
+
+isolation.mum.items7 <- c("lonely.report.7",
+                     "get.along.report.7",
+                     "no.one.loves.report.7",
+                     "rather.alone.report.7",
+                     "not.liked.report.7",
+                     "withdrawn.report.7")
+
+isolation.mum.items10 <- c("lonely.report.10",
+                     "get.along.report.10",
+                     "no.one.loves.report.10",
+                     "rather.alone.report.10",
+                     "not.liked.report.10",
+                     "withdrawn.report.10")
+```
+
+```{r isolation age 5 teach}
+dat <- dat %>%
+  mutate(lonely.report.teach.5 = 
+    if_else(
+      trf11e5 > 0, 
+      "Reported",   
+      "Not reported"
+  )) %>%
+  mutate(get.along.report.teach.5 = 
+    if_else(
+      trf19e5 > 0, 
+      "Reported",   
+      "Not reported"
+  )) %>%
+  mutate(no.one.loves.report.teach.5 = 
+    if_else(
+      trf24e5 > 0, 
+      "Reported",   
+      "Not reported"
+  )) %>%
+  mutate(rather.alone.report.teach.5 = 
+    if_else(
+      trf30e5 > 0, 
+      "Reported",   
+      "Not reported"
+  )) %>%
+  mutate(not.liked.report.teach.5 = 
+    if_else(
+      trf34e5 > 0, 
+      "Reported",   
+      "Not reported"
+  )) %>%
+  mutate(withdrawn.report.teach.5 = 
+    if_else(
+      trf77e5 > 0, 
+      "Reported",   
+      "Not reported"
+  ))
+```
+
+```{r isolation age 5}
+dat <- dat %>%
+  mutate(lonely.report.mum.5 = 
+    if_else(
+      pe2m5 > 0, 
+      "Reported",   
+      "Not reported"
+  )) %>%
+  mutate(get.along.report.mum.5 = 
+    if_else(
+      pe4m5 > 0, 
+      "Reported",   
+      "Not reported"
+  )) %>%
+  mutate(no.one.loves.report.mum.5 = 
+    if_else(
+      pe7m5 > 0, 
+      "Reported",   
+      "Not reported"
+  )) %>%
+  mutate(rather.alone.report.mum.5 = 
+    if_else(
+      pe11m5 > 0, 
+      "Reported",   
+      "Not reported"
+  )) %>%
+  mutate(not.liked.report.mum.5 = 
+    if_else(
+      pe13m5 > 0, 
+      "Reported",   
+      "Not reported"
+  )) %>%
+  mutate(withdrawn.report.mum.5 = 
+    if_else(
+      pe25m5 > 0, 
+      "Reported",   
+      "Not reported"
+  ))
+```
+
+```{r}
+endorsement_plot.mum.isolation5 <- sjPlot::plot_likert(
+  items = dat[,isolation.mum.cat.items5], 
+  title = "Mother endorsement of social isolation items at age 5",
+  axis.labels = c("Complains of loneliness",
+             "Doesn't get along with other children",
+             "Feels no one loves them",
+             "Would rather be alone",
+             "Not liked by other children",
+             "Withdrawn"),
+  wrap.labels = 20,
+  digits = 0,
+  reverse.scale = TRUE,
+  cat.neutral = NULL,
+  value = "sum.inside",
+  catcount = 2,
+  geom.colors = c("#b7dee8","#efc00b"))
+
+#have a look at the plot
+endorsement_plot.mum.isolation5
+```
+
+```{r}
+endorsement_plot.teach.isolation5 <- sjPlot::plot_likert(
+  items = dat[,isolation.teach.cat.items5], 
+  title = "Teacher endorsement of social isolation items at age 5",
+  axis.labels = c("Complains of loneliness",
+             "Doesn't get along with other children",
+             "Feels no one loves them",
+             "Would rather be alone",
+             "Not liked by other children",
+             "Withdrawn"),
+  wrap.labels = 20,
+  digits = 0,
+  reverse.scale = TRUE,
+  cat.neutral = NULL,
+  value = "sum.inside",
+  catcount = 2,
+  geom.colors = c("#b7dee8","#efc00b"))
+
+#have a look at the plot
+endorsement_plot.teach.isolation5
+```
+isolation.mum.teach.cat.items5
+
+```{r}
+endorsement_plot.mum.teach.isolation5 <- sjPlot::plot_likert(
+  items = dat[,isolation.mum.teach.cat.items5], 
+  title = "Endorsement of social isolation items at age 5",
+  axis.labels = c("Complains of loneliness",
+             "Doesn't get along with other children",
+             "Feels no one loves them",
+             "Would rather be alone",
+             "Not liked by other children",
+             "Withdrawn"),
+  groups = c(1,2,1,2,1,2,1,2,1,2,1,2),
+  wrap.labels = 20,
+  digits = 0,
+  reverse.scale = TRUE,
+  cat.neutral = NULL,
+  value = "sum.inside",
+  catcount = 2,
+  geom.colors = c("#b7dee8","#efc00b"))
+
+#have a look at the plot
+endorsement_plot.mum.teach.isolation5
+```
+
+
+
+```{r isolation age 5 mother}
+dat <- dat %>%
+  mutate(lonely.report.5 = 
+    case_when(
+      pe2m5 > 0 ~ "Mother reported symptom",
+      trf11e5 > 0 ~ "Teacher reported symptom"
+  )) %>%
+  mutate(get.along.report.5 = 
+    case_when(
+      pe4m5 > 0 ~ "Mother reported symptom",
+      trf19e5 > 0 ~ "Teacher reported symptom"
+  )) %>%
+  mutate(no.one.loves.report.5 = 
+    case_when(
+      pe7m5 > 0 ~ "Mother reported symptom",
+      trf24e5 > 0 ~ "Teacher reported symptom"
+  )) %>%
+  mutate(rather.alone.report.5 = 
+    case_when(
+      pe11m5 > 0 ~ "Mother reported symptom",
+      trf30e5 > 0 ~ "Teacher reported symptom"
+  )) %>%
+  mutate(not.liked.report.5 = 
+    case_when(
+      pe13m5 > 0 ~ "Mother reported symptom",
+      trf34e5 > 0 ~ "Teacher reported symptom"
+  )) %>%
+  mutate(withdrawn.report.5 = 
+    case_when(
+      pe25m5 > 0 ~ "Mother reported symptom",
+      trf77e5 > 0 ~ "Teacher reported symptom"
+  ))
+```
+
+
+```{r isolation age 7}
+dat <- dat %>%
+  mutate(lonely.report.7 = 
+    case_when(
+      pe2m7 > 0 ~ "Mother reported symptom",
+      trf11e7 > 0 ~ "Teacher reported symptom"
+  )) %>%
+  mutate(get.along.report.7 = 
+    case_when(
+      pe4m7 > 0 ~ "Mother reported symptom",
+      trf19e7 > 0 ~ "Teacher reported symptom"
+  )) %>%
+  mutate(no.one.loves.report.7 = 
+    case_when(
+      pe7m7 > 0 ~ "Mother reported symptom",
+      trf24e7 > 0 ~ "Teacher reported symptom"
+  )) %>%
+  mutate(rather.alone.report.7 = 
+    case_when(
+      pe11m7 > 0 ~ "Mother reported symptom",
+      trf30e7 > 0 ~ "Teacher reported symptom"
+  )) %>%
+  mutate(not.liked.report.7 = 
+    case_when(
+      pe13m7 > 0 ~ "Mother reported symptom",
+      trf34e7 > 0 ~ "Teacher reported symptom"
+  )) %>%
+  mutate(withdrawn.report.7 = 
+    case_when(
+      pe25m7 > 0 ~ "Mother reported symptom",
+      trf77e7 > 0 ~ "Teacher reported symptom"
+  ))
+```
+
+
+```{r}
+
+```
+
+
+
+
+
+
+
 The loaded data is for se = robust and listwise deletion models.
 Need to create a new saved dataset where all models are robust standard errors and pairwise deletion. 
 For now the robust standard errors isn't computing for the pairwise deletion (I think this is an issue with the package). *So all models have se='robust' hashed out for now.*
