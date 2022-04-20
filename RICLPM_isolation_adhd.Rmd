@@ -222,8 +222,6 @@ We conducted RI-CLPM to assess bidirectional associations between social isolati
 |   RICLPMt_inat2     |  RICLPMt_inat but with fixed autoregressive and cross-lagged relations over time                                                  |
 |   RICLPMt_inat3     |  RICLPMt_inat but with constrained grand means for AD and SI                                                                      |
 
-
-
 ***
 
 # RI-CLPM: Mother report only, total ADHD symptoms
