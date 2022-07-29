@@ -1,5 +1,5 @@
 ---
-title: "Random intercept cross lagged panel models for social isolation and ADHD symptoms in childhood - sex differences"
+title: "Sex differences in RI-CLPM for social isolation and ADHD symptoms in childhood"
 output:  
   html_document:
     df_print: paged

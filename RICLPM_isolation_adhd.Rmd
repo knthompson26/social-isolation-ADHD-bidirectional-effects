@@ -1,5 +1,5 @@
 ---
-title: "Random intercept cross lagged panel models for social isolation and ADHD symptoms in childhood"
+title: "Separate mother and teacher RI-CLPM for social isolation and ADHD symptoms in childhood"
 output:  
   html_document:
     df_print: paged
@@ -372,28 +372,24 @@ The use of the chi-square difference test is wide-spread in the SEM community to
   4. performing the χ¯2-test using the ChiBarSq.DiffTest package (Kuiper 2020).
   
 ```{r chi square bar test CLPM RICLPM}
-# Step 2: check which indices you need to get the covariance matrix of the random intercepts. 
-vcov(RICLPM.fit) # Full covariance matrix
-indices <- c(17, 18) # From the matrix above, you need the variance of each intercept. Here, the 17th and the 18th indices regard the random intercepts. 
-number <- length(indices) # Number of random intercepts
-cov.matrix <- vcov(RICLPM.fit)[indices, indices] # Extract full covariance matrix of the random intercepts
-
-# Step 3: call Chi square and degrees of freedom from each model
-Chi2_CLPM <- summary(CLPM.fit, fit.measures = TRUE)[1]$FIT[c("chisq")] # Extract chi-square value of CLPM
-Chi2_RICLPM <- summary(RICLPM.fit, fit.measures = TRUE)[1]$FIT[c("chisq")] # Extract chi-square value of RI-CLPM
-
-df_CLPM <- summary(CLPM.fit, fit.measures = TRUE)[1]$FIT[c("df")] # Extract df of CLPM
-df_RICLPM <- summary(RICLPM.fit, fit.measures = TRUE)[1]$FIT[c("df")] # Extract df of RI-CLPM
-
-# Step 4: run function to do chi-bar-square test (and also obtain Chi-bar-square weigths)
-ChiBar2DiffTest <- ChiBarSq.DiffTest(number, cov.matrix, Chi2_CLPM, Chi2_RICLPM, df_CLPM, df_RICLPM)
-ChiBar2DiffTest
-ChiBar2DiffTest$p_value
+# # Step 2: check which indices you need to get the covariance matrix of the random intercepts. 
+# vcov(RICLPM.fit) # Full covariance matrix
+# indices <- c(17, 18) # From the matrix above, you need the variance of each intercept. Here, the 17th and the 18th indices regard the random intercepts. 
+# number <- length(indices) # Number of random intercepts
+# cov.matrix <- vcov(RICLPM.fit)[indices, indices] # Extract full covariance matrix of the random intercepts
+# 
+# # Step 3: call Chi square and degrees of freedom from each model
+# Chi2_CLPM <- summary(CLPM.fit, fit.measures = TRUE)[1]$FIT[c("chisq")] # Extract chi-square value of CLPM
+# Chi2_RICLPM <- summary(RICLPM.fit, fit.measures = TRUE)[1]$FIT[c("chisq")] # Extract chi-square value of RI-CLPM
+# 
+# df_CLPM <- summary(CLPM.fit, fit.measures = TRUE)[1]$FIT[c("df")] # Extract df of CLPM
+# df_RICLPM <- summary(RICLPM.fit, fit.measures = TRUE)[1]$FIT[c("df")] # Extract df of RI-CLPM
+# 
+# # Step 4: run function to do chi-bar-square test (and also obtain Chi-bar-square weigths)
+# ChiBar2DiffTest <- ChiBarSq.DiffTest(number, cov.matrix, Chi2_CLPM, Chi2_RICLPM, df_CLPM, df_RICLPM)
+# ChiBar2DiffTest
+# ChiBar2DiffTest$p_value
 ```
-
-***
-We have a significant chi square bar test here - what does this mean?? Significantly worse fit between the CLPM and RICLPM? 
-***
 
 ## RI-CLPM Constraints over time {.tabset .tabset-fade}
 

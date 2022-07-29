@@ -1,0 +1,77 @@
+---
+title: "Longitudinal within-person associations between ADHD symptoms and social isolation"
+output:  
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: 2
+    toc_float:
+      collapsed: false
+    number_sections: false
+    highlight: monochrome
+    theme: flatly
+    code_folding: hide
+    includes:
+      after_body: footer.html
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      comment = NA,
+                      prompt = FALSE,
+                      cache = FALSE,
+                      message = FALSE,
+                      warning = FALSE,
+                      results = 'asis')
+
+options(bitmapType = 'quartz') # to render fonts better
+```
+
+***
+
+This websites holds analysis code and results for the manuscript titled: **Do children with ADHD symptoms become socially isolated? Longitudinal within-person associations in a UK representative cohort ** 
+
+
+Authors: Katherine N. Thompson, Jessica C. Agnew-Blais, Bridget T. Bryan, Andrea Danese,  Candice L. Odgers, Timothy Matthews, and Louise Arseneault
+
+All code written by Katherine N Thompson and reviewed by XXX. Analyses for this project were conducted in R studio version 4.0.3 using lavaan.  
+
+All data provided by the **Environmental Risk Longitudinal Twin (E-Risk) Study**.
+
+***
+## Analysis steps 
+
+### RI-CLPM 
+
+* [RI-CLPM: combined parent and teacher reports](RICLPMcomb_isolation_adhd.html)
+
+### Sex, SES, and informant differences
+
+* [Separate RI-CLPM for mother and teacher report](RICLPM_isolation_adhd.html)
+* [Sex differences using multiple group RI-CLPM](RICLPM_isolation_adhd_sex.html)
+* [SES differences using multiple group RI-CLPM](RICLPM_isolation_adhd_SES.html)
+
+
+
+mediation_model_isolation_adhd.Rmd. Longitudinal mediation using 3 variable RI-CLPM to assess mediator effects of prosocial behaviour and antisocial behaviour. Combined mother and teacher report only. Longitudinal mediation computed for hyperactivity, inattention, and total ADHD symptoms. Constraint testing applied throughout.
+Sensitivity analyses
+
+RICLPM_measurement_model_isolation_adhd.Rmd. NEEDS UPDATING.
+
+### Longitudinal mediation
+
+* [Longitudinal mediation of prosocial and antisocial behaviour](mediation_model_isolation_adhd.html)
+
+### Sensitivity analyses
+
+* [Measurement invariance](RICLPM_measurement_model_isolation_adhd.html)
+
+***
+
+Please note that all analyses have not yet undergone peer review. Once published, the reference and DOI will be provided.
+
+***
+
+## Acknowledgements 
+
+We are grateful to the E-Risk Study members and their families for their participation. Our thanks to CACI, Inc., and to members of the E-Risk team for their dedication, hard work, and insights.

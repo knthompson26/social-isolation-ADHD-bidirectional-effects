@@ -306,7 +306,7 @@ cronbach.alpha(dat[isolation.teacher.age12], standardized = TRUE, CI = TRUE, na.
 
 Endorsement rates of each item
 
-```{r}
+```{r endorsemenr rate items lists}
 isolation.mum.cat.items5 <- c("lonely.report.mum.5",
                      "get.along.report.mum.5",
                      "no.one.loves.report.mum.5",
@@ -451,7 +451,7 @@ dat <- dat %>%
   ))
 ```
 
-```{r}
+```{r endorsement plot mother}
 endorsement_plot.mum.isolation5 <- sjPlot::plot_likert(
   items = dat[,isolation.mum.cat.items5], 
   title = "Mother endorsement of social isolation items at age 5",
@@ -473,7 +473,7 @@ endorsement_plot.mum.isolation5 <- sjPlot::plot_likert(
 endorsement_plot.mum.isolation5
 ```
 
-```{r}
+```{r endorsement plot teacher}
 endorsement_plot.teach.isolation5 <- sjPlot::plot_likert(
   items = dat[,isolation.teach.cat.items5], 
   title = "Teacher endorsement of social isolation items at age 5",
@@ -494,9 +494,8 @@ endorsement_plot.teach.isolation5 <- sjPlot::plot_likert(
 #have a look at the plot
 endorsement_plot.teach.isolation5
 ```
-isolation.mum.teach.cat.items5
 
-```{r}
+```{r endorsement plot teacher mother}
 endorsement_plot.mum.teach.isolation5 <- sjPlot::plot_likert(
   items = dat[,isolation.mum.teach.cat.items5], 
   title = "Endorsement of social isolation items at age 5",
@@ -519,100 +518,114 @@ endorsement_plot.mum.teach.isolation5 <- sjPlot::plot_likert(
 endorsement_plot.mum.teach.isolation5
 ```
 
-
-
 ```{r isolation age 5 mother}
-dat <- dat %>%
-  mutate(lonely.report.5 = 
-    case_when(
-      pe2m5 > 0 ~ "Mother reported symptom",
-      trf11e5 > 0 ~ "Teacher reported symptom"
-  )) %>%
-  mutate(get.along.report.5 = 
-    case_when(
-      pe4m5 > 0 ~ "Mother reported symptom",
-      trf19e5 > 0 ~ "Teacher reported symptom"
-  )) %>%
-  mutate(no.one.loves.report.5 = 
-    case_when(
-      pe7m5 > 0 ~ "Mother reported symptom",
-      trf24e5 > 0 ~ "Teacher reported symptom"
-  )) %>%
-  mutate(rather.alone.report.5 = 
-    case_when(
-      pe11m5 > 0 ~ "Mother reported symptom",
-      trf30e5 > 0 ~ "Teacher reported symptom"
-  )) %>%
-  mutate(not.liked.report.5 = 
-    case_when(
-      pe13m5 > 0 ~ "Mother reported symptom",
-      trf34e5 > 0 ~ "Teacher reported symptom"
-  )) %>%
-  mutate(withdrawn.report.5 = 
-    case_when(
-      pe25m5 > 0 ~ "Mother reported symptom",
-      trf77e5 > 0 ~ "Teacher reported symptom"
-  ))
+# dat <- dat %>%
+#   mutate(lonely.report.5 = 
+#     case_when(
+#       pe2m5 > 0 ~ "Mother reported symptom",
+#       trf11e5 > 0 ~ "Teacher reported symptom"
+#   )) %>%
+#   mutate(get.along.report.5 = 
+#     case_when(
+#       pe4m5 > 0 ~ "Mother reported symptom",
+#       trf19e5 > 0 ~ "Teacher reported symptom"
+#   )) %>%
+#   mutate(no.one.loves.report.5 = 
+#     case_when(
+#       pe7m5 > 0 ~ "Mother reported symptom",
+#       trf24e5 > 0 ~ "Teacher reported symptom"
+#   )) %>%
+#   mutate(rather.alone.report.5 = 
+#     case_when(
+#       pe11m5 > 0 ~ "Mother reported symptom",
+#       trf30e5 > 0 ~ "Teacher reported symptom"
+#   )) %>%
+#   mutate(not.liked.report.5 = 
+#     case_when(
+#       pe13m5 > 0 ~ "Mother reported symptom",
+#       trf34e5 > 0 ~ "Teacher reported symptom"
+#   )) %>%
+#   mutate(withdrawn.report.5 = 
+#     case_when(
+#       pe25m5 > 0 ~ "Mother reported symptom",
+#       trf77e5 > 0 ~ "Teacher reported symptom"
+#   ))
 ```
-
 
 ```{r isolation age 7}
-dat <- dat %>%
-  mutate(lonely.report.7 = 
-    case_when(
-      pe2m7 > 0 ~ "Mother reported symptom",
-      trf11e7 > 0 ~ "Teacher reported symptom"
-  )) %>%
-  mutate(get.along.report.7 = 
-    case_when(
-      pe4m7 > 0 ~ "Mother reported symptom",
-      trf19e7 > 0 ~ "Teacher reported symptom"
-  )) %>%
-  mutate(no.one.loves.report.7 = 
-    case_when(
-      pe7m7 > 0 ~ "Mother reported symptom",
-      trf24e7 > 0 ~ "Teacher reported symptom"
-  )) %>%
-  mutate(rather.alone.report.7 = 
-    case_when(
-      pe11m7 > 0 ~ "Mother reported symptom",
-      trf30e7 > 0 ~ "Teacher reported symptom"
-  )) %>%
-  mutate(not.liked.report.7 = 
-    case_when(
-      pe13m7 > 0 ~ "Mother reported symptom",
-      trf34e7 > 0 ~ "Teacher reported symptom"
-  )) %>%
-  mutate(withdrawn.report.7 = 
-    case_when(
-      pe25m7 > 0 ~ "Mother reported symptom",
-      trf77e7 > 0 ~ "Teacher reported symptom"
-  ))
+# dat <- dat %>%
+#   mutate(lonely.report.7 = 
+#     case_when(
+#       pe2m7 > 0 ~ "Mother reported symptom",
+#       trf11e7 > 0 ~ "Teacher reported symptom"
+#   )) %>%
+#   mutate(get.along.report.7 = 
+#     case_when(
+#       pe4m7 > 0 ~ "Mother reported symptom",
+#       trf19e7 > 0 ~ "Teacher reported symptom"
+#   )) %>%
+#   mutate(no.one.loves.report.7 = 
+#     case_when(
+#       pe7m7 > 0 ~ "Mother reported symptom",
+#       trf24e7 > 0 ~ "Teacher reported symptom"
+#   )) %>%
+#   mutate(rather.alone.report.7 = 
+#     case_when(
+#       pe11m7 > 0 ~ "Mother reported symptom",
+#       trf30e7 > 0 ~ "Teacher reported symptom"
+#   )) %>%
+#   mutate(not.liked.report.7 = 
+#     case_when(
+#       pe13m7 > 0 ~ "Mother reported symptom",
+#       trf34e7 > 0 ~ "Teacher reported symptom"
+#   )) %>%
+#   mutate(withdrawn.report.7 = 
+#     case_when(
+#       pe25m7 > 0 ~ "Mother reported symptom",
+#       trf77e7 > 0 ~ "Teacher reported symptom"
+#   ))
 ```
 
+*** 
 
-```{r}
-
-```
-
-
-
-
-
-
+# Load data 
 
 The loaded data is for se = robust and listwise deletion models.
 Need to create a new saved dataset where all models are robust standard errors and pairwise deletion. 
-For now the robust standard errors isn't computing for the pairwise deletion (I think this is an issue with the package). *So all models have se='robust' hashed out for now.*
+For now the robust standard errors isn't computing for the pairwise deletion (I think this is an issue with the package). *So all models have se='robust' hashed out*
+
 ```{r load saved environment with models run}
 load("../../data_full/data/measurement_models_ordered_WLSMVestimator_8March22.RData")
 ```
 
-# All RI-CLPM models displayed here **This needs to be updated**
+# All RI-CLPM models displayed here 
 
 | Model                 | Description                                                                                                                    |
 | --------------------- | -----------------------------------------------------------------------------------------------------------------------------  |
-| RICLPM_multi_inat_S1  |  RI-CLPM model using latent factors for **mother report** ratings for AD and SI, and **total ADHD** scores, Step 1             |
+| RICLPM_multi_inat_S1  |  RI-CLPM model using latent factors for **mother report** ratings for AD and SI, and **inattention** scores, Step 1            |
+| RICLPM_multi_inat_S2  |  RI-CLPM model using latent factors for **mother report** ratings for AD and SI, and **inattention** scores, Step 2            |
+| RICLPM_multi_inat_S3  |  RI-CLPM model using latent factors for **mother report** ratings for AD and SI, and **inattention** scores, Step 3            |
+| RICLPM_multi_inat_S4  |  RI-CLPM model using latent factors for **mother report** ratings for AD and SI, and **inattention** scores, Step 4            |
+| RICLPM_multi_hyp_S1   |  RI-CLPM model using latent factors for **mother report** ratings for AD and SI, and **hyperactivity** scores, Step 1          |
+| RICLPM_multi_hyp_S2   |  RI-CLPM model using latent factors for **mother report** ratings for AD and SI, and **hyperactivity** scores, Step 2          |
+| RICLPM_multi_hyp_S3   |  RI-CLPM model using latent factors for **mother report** ratings for AD and SI, and **hyperactivity** scores, Step 3          |
+| RICLPM_multi_hyp_S4   |  RI-CLPM model using latent factors for **mother report** ratings for AD and SI, and **hyperactivity** scores, Step 4          |
+| RICLPM_multi_adhd_S1  |  RI-CLPM model using latent factors for **mother report** ratings for AD and SI, and **total adhd** scores, Step 1             |
+| RICLPM_multi_adhd_S2  |  RI-CLPM model using latent factors for **mother report** ratings for AD and SI, and **total adhd** scores, Step 2             |
+| RICLPM_multi_adhd_S3  |  RI-CLPM model using latent factors for **mother report** ratings for AD and SI, and **total adhd** scores, Step 3             |
+| RICLPM_multi_adhd_S4  |  RI-CLPM model using latent factors for **mother report** ratings for AD and SI, and **total adhd** scores, Step 4             |
+| RICLPMt_multi_inat_S1 |  RI-CLPM model using latent factors for **teacher report** ratings for AD and SI, and **inattention** scores, Step 1            |
+| RICLPMt_multi_inat_S2 |  RI-CLPM model using latent factors for **teacher report** ratings for AD and SI, and **inattention** scores, Step 2            |
+| RICLPMt_multi_inat_S3 |  RI-CLPM model using latent factors for **teacher report** ratings for AD and SI, and **inattention** scores, Step 3            |
+| RICLPMt_multi_inat_S4 |  RI-CLPM model using latent factors for **teacher report** ratings for AD and SI, and **inattention** scores, Step 4            |
+| RICLPMt_multi_hyp_S1  |  RI-CLPM model using latent factors for **teacher report** ratings for AD and SI, and **hyperactivity** scores, Step 1          |
+| RICLPMt_multi_hyp_S2  |  RI-CLPM model using latent factors for **teacher report** ratings for AD and SI, and **hyperactivity** scores, Step 2          |
+| RICLPMt_multi_hyp_S3  |  RI-CLPM model using latent factors for **teacher report** ratings for AD and SI, and **hyperactivity** scores, Step 3          |
+| RICLPMt_multi_hyp_S4  |  RI-CLPM model using latent factors for **teacher report** ratings for AD and SI, and **hyperactivity** scores, Step 4          |
+| RICLPMt_multi_adhd_S1 |  RI-CLPM model using latent factors for **teacher report** ratings for AD and SI, and **total adhd** scores, Step 1             |
+| RICLPMt_multi_adhd_S2 |  RI-CLPM model using latent factors for **teacher report** ratings for AD and SI, and **total adhd** scores, Step 2             |
+| RICLPMt_multi_adhd_S3 |  RI-CLPM model using latent factors for **teacher report** ratings for AD and SI, and **total adhd** scores, Step 3             |
+| RICLPMt_multi_adhd_S4 |  RI-CLPM model using latent factors for **teacher report** ratings for AD and SI, and **total adhd** scores, Step 4             |
 
 ***
 
@@ -644,8 +657,6 @@ The configural model is the least stringent test of invariance, it is designed t
 We have six indicators of $Social isolation$, measured at four waves, we specify six random intercepts to capture the trait-like part of each indicator, that is, `RIX1 =~ 1*x11 1*x21 ...`, and `RIX2 =~ 1*x121 1*x22@1 ...`. In addition, we specify four within-unit components that capture the state-like part at each wave, using `WFX1 =~ x11 x12 x13; WFX2 =~ x21 x22 x23; ...`.
 
 At the latent within-unit level, we specify the dynamic model using `WFX2 ~ WFY1 + WFX1; WFX3 ~ WFY2 + WFX2; ...`. In addition, we allow the within-person factors at the first wave, and their residuals at subsequent waves to be correlated within each wave, `WFX1 ~~ WFY1; WFX2 ~~ WFY2; ...`. The random intercepts are allowed to be freely correlated with each other through using the cfa() command below. 
-
-
 
 **At the moment all models are using pairwise deletion**
 
@@ -1121,10 +1132,6 @@ To key points from [Hamaker et al., 2015](https://www.tandfonline.com/doi/pdf/10
 1. The disadvantage of using sum and mean scores however is that one assumes an absence of measurement error, which often is an unrealistic assumption, especially within the social sciences (Griliches & Hausman, 1986). Failing to properly account for measurement error can bias lagged-parameter estimates downward, leading to a loss of power. Also, the estimation of factor scores is difficult due to the problem of factor indeterminacy (i.e., there are multiple ways to obtain factor scores, each with their own set of advantages and disadvantages), and it is unclear how this affects the results of the RI-CLPM.
 2. The procedure described above for establishing measurement invariance relies heavily on chi-square difference testing which, as mentioned before, can have serious disadvantages such as an increased Type I and Type II error rate when the base model is misspecified (Yuan & Bentler, 2004). Alternatively, researchers can use equivalence testing **(Yuan & Chan, 2016)**, which allows researchers to explicitly specify an acceptable level of model misfit. 
 
-***
-So if the S3 model is the way to go here - then I need to figure out how to interpret this 
-***
-
 # Multiple indicator RI-CLPM: Hyperactivity and social isolation
 
 ## RICLPM_multi_hyp_S1: Hyperactivity/Implsivity step 1
@@ -1438,7 +1445,7 @@ Again this function does not run - perhaps there is something wrong with the way
 
 **But the model shows almost no change in model fit from S2 - so we assume strong measurement invariance.**
 
-```{r tables for inattention ADHD S3}
+```{r tables for hyperactivity ADHD S3}
 # Table of model fit 
 RICLPM_multi_hyp_S3.fit.summary.fit <- table.model.fit(RICLPM_multi_hyp_S3.fit.summary)
 # Table of regression coefficients and covariances 
@@ -1567,10 +1574,6 @@ summary(semTools::compareFit(RICLPM_multi_hyp_S3.fit, RICLPM_multi_hyp_S4.fit, n
 ```
 
 **As all fit indices changed by more than 0.01 - we cannot accept this measurement model.**
-
-***
-So if the S3 model is the way to go here - then I need to figure out how to interpret this 
-***
 
 # Multiple indicator RI-CLPM: ADHD and social isolation
 
@@ -1923,17 +1926,6 @@ SRMR                                           0.038 (≤ 0.08) Change in SRMR: 
 
 ```{r compare fit RICLPM_multi_adhd_S2 and RICLPM_hyp_adhd_S3}
 #summary(semTools::compareFit(RICLPM_multi_adhd_S2.fit, RICLPM_multi_adhd_S3.fit, nested = TRUE)) #† indicates the best fitting model 
-```
-
-*** 
-below table rows need updating 
-***
-
-```{r tables for total ADHD S3}
-# Table of model fit 
-# RICLPM_multi_adhd_S3.fit.summary.fit <- table.model.fit(RICLPM_multi_adhd_S3.fit.summary)
-# Table of regression coefficient 
-# RICLPM2d.fit.summary.reg <- as.tibble(RICLPM2d.fit.summary$PE[c(17:28),-c(4,5)]) table.model.coef(mdoel = RICLPM_multi_adhd_S3.fit.summary, step = "S3")
 ```
 
 ## RICLPM_multi_adhd_S4: Total ADHD symptoms step 4 - *Full model*
@@ -3004,17 +2996,4 @@ Now we need to conduct a Likelihood ratio test to see if the constrained model i
 
 **As all fit indices changed by more than 0.01 - we cannot accept this measurement model.**
 
-***
-
-So if the S3 model is the way to go here - then I need to figure out how to interpret this 
-
-***
-NOW NEED TO EXPORT THE TABLES OF THE MODEL THAT WE'VE CHOSEN 
-```{r tables for inattention ADHD S3}
-# Table of model fit 
-# RICLPMt_multi_hyp_S3.fit.summary.fit <- as.data.frame(t(as.data.frame(RICLPMt_multi_hyp_S3.fit.summary$FIT)))[,c(6,7,19,20,27,28,29,35)]
-
-# Table of regression coefficients and covariances 
-# RICLPMt_multi_hyp_S3.fit.summary.reg <- as.tibble(RICLPMt_multi_hyp_S3.fit.summary$PE[c(187:202),-c(4,5)])
-```
 

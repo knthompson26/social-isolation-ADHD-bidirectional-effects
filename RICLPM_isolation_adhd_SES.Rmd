@@ -1,5 +1,5 @@
 ---
-title: "Random intercept cross lagged panel models for social isolation and ADHD symptoms in childhood - for different levels of SES"
+title: "SES differences in RI-CLPM for social isolation and ADHD symptoms in childhood"
 output:  
   html_document:
     df_print: paged
@@ -45,7 +45,7 @@ source("../isolation_ADHD_data_path.R")
 ```
 
 ```{r read in dta data file}
-dat.raw <- read_dta(paste0(data.raw_path, "Katie_19Jan22.dta"))
+dat.raw <- read_dta(paste0(data.raw_path, "Katie_10Mar22.dta"))
 
 dat <- dat.raw %>%
   dplyr::select(id = atwinid,
@@ -86,7 +86,23 @@ dat <- dat.raw %>%
          inet5,    # inattention ADHD teacher report
          inet7,
          inet10,
-         inet12
+         inet12,
+         proem5,    # prosocial total scores mother report
+         proem7,
+         proem10,
+         proem12, 
+         proet5,    # prosocial total scores teacher report
+         proet7,
+         proet10,
+         proet12, 
+         asbem5,   # antisocial total scores mother report
+         asbem7,
+         asbem10,
+         asbem12, 
+         asbet5,   # antisocial total scores teacher report
+         asbet7,
+         asbet10,
+         asbet12
   )
 
 colnames(dat)
@@ -252,6 +268,88 @@ dat <- dat %>%
   )
 ```
 
+## Combined report prosocial variables
+
+```{r create combined report prosocial variables }
+# age 5
+dat <- dat %>%
+  mutate(proe5 = 
+           case_when(
+             is.na(proem5) & is.na(proet5) ~ NA_real_,
+             is.na(proem5) & !is.na(proet5) ~ as.numeric(proet5),
+             is.na(proet5) & !is.na(proem5) ~ as.numeric(proem5),
+             !is.na(proem5) & !is.na(proet5) ~ as.numeric(rowMeans(across(.cols = c(proem5,proet5)))))
+  )
+# age 7
+dat <- dat %>%
+  mutate(proe7 = 
+           case_when(
+             is.na(proem7) & is.na(proet7) ~ NA_real_,
+             is.na(proem7) & !is.na(proet7) ~ as.numeric(proet7),
+             is.na(proet7) & !is.na(proem7) ~ as.numeric(proem7),
+             !is.na(proem7) & !is.na(proet7) ~ as.numeric(rowMeans(across(.cols = c(proem7,proet7)))))
+  )
+# age 10
+dat <- dat %>%
+  mutate(proe10 = 
+           case_when(
+             is.na(proem10) & is.na(proet10) ~ NA_real_,
+             is.na(proem10) & !is.na(proet10) ~ as.numeric(proet10),
+             is.na(proet10) & !is.na(proem10) ~ as.numeric(proem10),
+             !is.na(proem10) & !is.na(proet10) ~ as.numeric(rowMeans(across(.cols = c(proem10,proet10)))))
+  )
+# age 12
+dat <- dat %>%
+  mutate(proe12 = 
+           case_when(
+             is.na(proem12) & is.na(proet12) ~ NA_real_,
+             is.na(proem12) & !is.na(proet12) ~ as.numeric(proet12),
+             is.na(proet12) & !is.na(proem12) ~ as.numeric(proem12),
+             !is.na(proem12) & !is.na(proet12) ~ as.numeric(rowMeans(across(.cols = c(proem12,proet12)))))
+  )
+```
+
+## Combined report antisocial variables
+
+```{r create combined report asbsocial variables }
+# age 5
+dat <- dat %>%
+  mutate(asbe5 = 
+           case_when(
+             is.na(asbem5) & is.na(asbet5) ~ NA_real_,
+             is.na(asbem5) & !is.na(asbet5) ~ as.numeric(asbet5),
+             is.na(asbet5) & !is.na(asbem5) ~ as.numeric(asbem5),
+             !is.na(asbem5) & !is.na(asbet5) ~ as.numeric(rowMeans(across(.cols = c(asbem5,asbet5)))))
+  )
+# age 7
+dat <- dat %>%
+  mutate(asbe7 = 
+           case_when(
+             is.na(asbem7) & is.na(asbet7) ~ NA_real_,
+             is.na(asbem7) & !is.na(asbet7) ~ as.numeric(asbet7),
+             is.na(asbet7) & !is.na(asbem7) ~ as.numeric(asbem7),
+             !is.na(asbem7) & !is.na(asbet7) ~ as.numeric(rowMeans(across(.cols = c(asbem7,asbet7)))))
+  )
+# age 10
+dat <- dat %>%
+  mutate(asbe10 = 
+           case_when(
+             is.na(asbem10) & is.na(asbet10) ~ NA_real_,
+             is.na(asbem10) & !is.na(asbet10) ~ as.numeric(asbet10),
+             is.na(asbet10) & !is.na(asbem10) ~ as.numeric(asbem10),
+             !is.na(asbem10) & !is.na(asbet10) ~ as.numeric(rowMeans(across(.cols = c(asbem10,asbet10)))))
+  )
+# age 12
+dat <- dat %>%
+  mutate(asbe12 = 
+           case_when(
+             is.na(asbem12) & is.na(asbet12) ~ NA_real_,
+             is.na(asbem12) & !is.na(asbet12) ~ as.numeric(asbet12),
+             is.na(asbet12) & !is.na(asbem12) ~ as.numeric(asbem12),
+             !is.na(asbem12) & !is.na(asbet12) ~ as.numeric(rowMeans(across(.cols = c(asbem12,asbet12)))))
+  )
+```
+
 ***
 
 # Constrained model with SES differences 
@@ -363,7 +461,6 @@ RICLPMcomb.lag.c.fit.summary.reg.high %>% select(lhs, op, rhs, std.all, pvalue) 
 ```
 
 Now we want to apply constraints over time to test if lagged parameters are invariant across groups, if the chi square is significant then the lagged effects for boys and girls are different.  
-
 ```{r specify RICLPMcomb.ses.lag.c}
 RICLPMcomb.ses.lag.c <- '
   # Create between components (random intercepts treated as factors here)
@@ -517,7 +614,6 @@ RICLPMcomb_hyp.lag.c.fit.summary.reg.high %>% select(lhs, op, rhs, std.all, pval
 ```
 
 Now we want to apply constraints over time to test if lagged parameters are invariant across groups, if the chi square is significant then the lagged effects for boys and girls are different.  
-
 ```{r specify RICLPMcomb_hyp.ses.lag.c}
 RICLPMcomb_hyp.ses.lag.c <- '
   # Create between components (random intercepts treated as factors here)
@@ -1718,3 +1814,532 @@ SES differences found:
 *Can conclude here that there are no SES differences in inattention cross-lags*
 
 ***
+
+# Three variable longitudinal mediation - stratified by SES
+
+All models using total combined ADHD symptoms and cross-lags are constrained to be equal across time. 
+
+## Prosocial behaviours 
+
+### Constrained full cross-lag RI-CLPM mediation model 
+
+Cross-lagged paths are constrained to be equal across time, but freely estimated across SES groups. Autoregressive paths are freely estimated across time and SES groups. 
+
+```{r ri.med.long.pro.c}
+ri.med.long.pro.c <- ' 
+                  ###### Create random intercepts ###### 
+                  RIad =~ 1*tadhde5 + 1*tadhde7 + 1*tadhde10 + 1*tadhde12 
+                  RIsi =~ 1*sisoe5 + 1*sisoe7 + 1*sisoe10 + 1*sisoe12 
+                  RIpro =~ 1*proe5 + 1*proe7 + 1*proe10  + 1*proe12
+                
+                  ###### Create within-person variables ######
+                  ## Isolation
+                  wsi5 =~ 1*sisoe5
+                  wsi7 =~ 1*sisoe7
+                  wsi10 =~ 1*sisoe10
+                  wsi12 =~ 1*sisoe12
+                  ## ADHD
+                  wad5 =~ 1*tadhde5
+                  wad7 =~ 1*tadhde7
+                  wad10 =~ 1*tadhde10
+                  wad12 =~ 1*tadhde12
+                  ## Prosocial 
+                  wpro5 =~ 1*proe5
+                  wpro7 =~ 1*proe7
+                  wpro10 =~ 1*proe10
+                  wpro12 =~ 1*proe12
+                  
+                  ###### Autoregressive lags ###### 
+                  ## Isolation
+                  wsi7 ~ wsi5
+                  wsi10 ~ wsi7
+                  wsi12 ~ wsi10
+                  ## Pro social bahviour
+                  wpro7 ~ wpro5
+                  wpro10 ~ wpro7
+                  wpro12 ~ wpro10
+                  ## ADHD
+                  wad7 ~ wad5
+                  wad10 ~ wad7
+                  wad12 ~ wad10
+                  
+                  ###### Cross lag paths ######
+                  ## Isolation
+                  wad7 ~ c(e1,e2,e3)*wsi5
+                  wad10 ~ c(e1,e2,e3)*wsi7
+                  wad12 ~ c(e1,e2,e3)*wsi10
+                  ## ADHD
+                  wsi7 ~ c(f1,f2,f3)*wad5
+                  wsi10 ~ c(f1,f2,f3)*wad7
+                  wsi12 ~ c(f1,f2,f3)*wad10
+                  ## Prosocial
+                  wsi7 ~ c(b1,b2,b3)*wpro5
+                  wad7 ~ c(d1,d2,d3)*wpro5
+                  wpro12 ~ c(c1,c2,c3)*wsi10
+                  wpro12 ~ c(a1,a2,a3)*wad10
+                  
+                  ###### Mediation paths ######
+                  ## ADHD to Isolation
+                  wpro7 ~ c(a1,a2,a3)*wad5 
+                  wsi10 ~ c(b1,b2,b3)*wpro7
+                  wpro10 ~ c(a1,a2,a3)*wad7 
+                  wsi12 ~ c(b1,b2,b3)*wpro10
+                  ## Isolation to ADHD
+                  wpro7 ~ c(c1,c2,c3)*wsi5
+                  wad10 ~ c(d1,d2,d3)*wpro7
+                  wpro10 ~ c(c1,c2,c3)*wsi7
+                  wad12 ~ c(d1,d2,d3)*wpro10
+                  
+                  ###### Covariances ######
+                  wsi5 ~~ wpro5
+                  wpro5 ~~ wad5
+                  wsi5 ~~ wad5
+                  wsi7 ~~ wpro7
+                  wpro7 ~~ wad7
+                  wsi7 ~~ wad7
+                  wsi10 ~~ wpro10
+                  wpro10 ~~ wad10
+                  wsi10 ~~ wad10
+                  wsi12 ~~ wpro12
+                  wpro12 ~~ wad12
+                  wsi12 ~~ wad12
+                    
+                  ###### Variances ######
+                  ## Variances
+                  wad5 ~~ wad5 
+                  wsi5 ~~ wsi5 
+                  wpro5 ~~ wpro5
+                  ## Residual variances
+                  wad7 ~~ wad7 
+                  wsi7 ~~ wsi7 
+                  wpro7 ~~ wpro7
+                  wad10 ~~ wad10 
+                  wsi10 ~~ wsi10 
+                  wpro10 ~~ wpro10
+                  wad12 ~~ wad12 
+                  wsi12 ~~ wsi12
+                  wpro12 ~~ wpro12
+                  
+                  ###### Variance and covariance of random intercepts ######
+                  RIad ~~ RIad
+                  RIsi ~~ RIsi
+                  RIpro ~~ RIpro
+                  RIad ~~ RIsi
+                  RIad ~~ RIpro
+                  RIsi ~~ RIpro
+
+                  ###### Indirect effect (a*b) ######
+                  indirect1mid := a1*b1
+                  indirect1low := a2*b2
+                  indirect1high := a3*b3
+                  indirect2mid := c1*d1
+                  indirect2low := c2*d2
+                  indirect2high := c3*d3
+         '
+```
+
+```{r fit ri.med.long.pro}
+ri.med.long.pro.c.fit <- lavaan(model = ri.med.long.pro.c, 
+                        data = dat,
+                        missing = 'ML',
+                        group = "SES",
+                        meanstructure = TRUE, 
+                        int.ov.free = TRUE,   
+                        estimator = "MLR")
+
+ri.med.long.pro.c.fit.summary <- summary(ri.med.long.pro.c.fit, standardized = TRUE, fit.measures = TRUE)
+```
+  
+### Constrained full cross-lag RI-CLPM mediation model - SES constraints
+
+Autoregressive paths are constrained to be equal across groups of SES but freed across time. 
+
+Cross lags are constrained to be equal across groups AND across time. 
+  
+```{r ri.med.long.pro.c.ses}
+ri.med.long.pro.c.ses <- ' 
+                  ###### Create random intercepts ###### 
+                  RIad =~ 1*tadhde5 + 1*tadhde7 + 1*tadhde10 + 1*tadhde12 
+                  RIsi =~ 1*sisoe5 + 1*sisoe7 + 1*sisoe10 + 1*sisoe12 
+                  RIpro =~ 1*proe5 + 1*proe7 + 1*proe10  + 1*proe12
+                
+                  ###### Create within-person variables ######
+                  ## Isolation
+                  wsi5 =~ 1*sisoe5
+                  wsi7 =~ 1*sisoe7
+                  wsi10 =~ 1*sisoe10
+                  wsi12 =~ 1*sisoe12
+                  ## ADHD
+                  wad5 =~ 1*tadhde5
+                  wad7 =~ 1*tadhde7
+                  wad10 =~ 1*tadhde10
+                  wad12 =~ 1*tadhde12
+                  ## Prosocial 
+                  wpro5 =~ 1*proe5
+                  wpro7 =~ 1*proe7
+                  wpro10 =~ 1*proe10
+                  wpro12 =~ 1*proe12
+                  
+                  ###### Autoregressive lags ######
+                  ## Isolation
+                  wsi7 ~ c(g1,g1,g1)*wsi5
+                  wsi10 ~ c(g2,g2,g2)*wsi7
+                  wsi12 ~ c(g3,g3,g3)*wsi10
+                  ## Pro social behaviour
+                  wpro7 ~ c(h1,h1,h1)*wpro5
+                  wpro10 ~ c(h2,h2,h2)*wpro7
+                  wpro12 ~ c(h3,h3,h3)*wpro10
+                  ## ADHD
+                  wad7 ~ c(i1,i1,i1)*wad5
+                  wad10 ~ c(i2,i2,i2)*wad7
+                  wad12 ~ c(i3,i3,i3)*wad10
+                  
+                  ###### Cross lag paths ######
+                  ## Isolation
+                  wad7 ~ c(e,e,e)*wsi5
+                  wad10 ~ c(e,e,e)*wsi7
+                  wad12 ~ c(e,e,e)*wsi10
+                  ## ADHD
+                  wsi7 ~ c(f,f,f)*wad5
+                  wsi10 ~ c(f,f,f)*wad7
+                  wsi12 ~ c(f,f,f)*wad10
+                  ## Prosocial
+                  wsi7 ~ c(b,b,b)*wpro5
+                  wad7 ~ c(d,d,d)*wpro5
+                  wpro12 ~ c(c,c,c)*wsi10
+                  wpro12 ~ c(a,a,a)*wad10
+                  
+                  ###### Mediation paths ######
+                  ## ADHD to Isolation
+                  wpro7 ~ c(a,a,a)*wad5 
+                  wsi10 ~ c(b,b,b)*wpro7
+                  wpro10 ~ c(a,a,a)*wad7 
+                  wsi12 ~ c(b,b,b)*wpro10
+                  ## Isolation to ADHD
+                  wpro7 ~ c(c,c,c)*wsi5
+                  wad10 ~ c(d,d,d)*wpro7
+                  wpro10 ~ c(c,c,c)*wsi7
+                  wad12 ~ c(d,d,d)*wpro10
+                  
+                  ###### Covariances ######
+                  wsi5 ~~ wpro5
+                  wpro5 ~~ wad5
+                  wsi5 ~~ wad5
+                  wsi7 ~~ wpro7
+                  wpro7 ~~ wad7
+                  wsi7 ~~ wad7
+                  wsi10 ~~ wpro10
+                  wpro10 ~~ wad10
+                  wsi10 ~~ wad10
+                  wsi12 ~~ wpro12
+                  wpro12 ~~ wad12
+                  wsi12 ~~ wad12
+                    
+                  ###### Variances ######
+                  ## Variances
+                  wad5 ~~ wad5 
+                  wsi5 ~~ wsi5 
+                  wpro5 ~~ wpro5
+                  ## Residual variances
+                  wad7 ~~ wad7 
+                  wsi7 ~~ wsi7 
+                  wpro7 ~~ wpro7
+                  wad10 ~~ wad10 
+                  wsi10 ~~ wsi10 
+                  wpro10 ~~ wpro10
+                  wad12 ~~ wad12 
+                  wsi12 ~~ wsi12
+                  wpro12 ~~ wpro12
+                  
+                  ###### Variance and covariance of random intercepts ######
+                  RIad ~~ RIad
+                  RIsi ~~ RIsi
+                  RIpro ~~ RIpro
+                  RIad ~~ RIsi
+                  RIad ~~ RIpro
+                  RIsi ~~ RIpro
+         '
+```
+  
+```{r fit ri.med.long.pro.c grouped by ses}
+ri.med.long.pro.c.ses.fit <- lavaan(ri.med.long.pro.c.ses, 
+                      data = dat, 
+                      missing = 'ML', 
+                      group = "SES",
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
+
+ri.med.long.pro.c.ses.fit.summary <- summary(ri.med.long.pro.c.ses.fit, standardized = TRUE, fit.measures = TRUE)
+```
+
+Now we see if there is a significantly worse fit when the lagged-parameters are constrained to be equal across groups. 
+
+```{r LRT for RICLPMt_inat.ses and RICLPMt_inat.ses2}
+lavTestLRT(ri.med.long.pro.c.fit, ri.med.long.pro.c.ses.fit, method = "satorra.bentler.2010")
+```
+
+## Antisocial behaviours 
+
+### Constrained full cross-lag RI-CLPM mediation model 
+
+Cross-lagged paths are constrained to be equal across time, but freely estimated across SES groups. Autoregressive paths are freely estimated across time and SES groups. 
+
+```{r ri.med.long.asb.c}
+ri.med.long.asb.c <- ' 
+                  ###### Create random intercepts ###### 
+                  RIad =~ 1*tadhde5 + 1*tadhde7 + 1*tadhde10 + 1*tadhde12 
+                  RIsi =~ 1*sisoe5 + 1*sisoe7 + 1*sisoe10 + 1*sisoe12 
+                  RIasb =~ 1*asbe5 + 1*asbe7 + 1*asbe10  + 1*asbe12
+                
+                  ###### Create within-person variables ######
+                  ## Isolation
+                  wsi5 =~ 1*sisoe5
+                  wsi7 =~ 1*sisoe7
+                  wsi10 =~ 1*sisoe10
+                  wsi12 =~ 1*sisoe12
+                  ## ADHD
+                  wad5 =~ 1*tadhde5
+                  wad7 =~ 1*tadhde7
+                  wad10 =~ 1*tadhde10
+                  wad12 =~ 1*tadhde12
+                  ## antisocial 
+                  wasb5 =~ 1*asbe5
+                  wasb7 =~ 1*asbe7
+                  wasb10 =~ 1*asbe10
+                  wasb12 =~ 1*asbe12
+                  
+                  ###### Autoregressive lags ###### 
+                  ## Isolation
+                  wsi7 ~ wsi5
+                  wsi10 ~ wsi7
+                  wsi12 ~ wsi10
+                  ## antisocial bahviour
+                  wasb7 ~ wasb5
+                  wasb10 ~ wasb7
+                  wasb12 ~ wasb10
+                  ## ADHD
+                  wad7 ~ wad5
+                  wad10 ~ wad7
+                  wad12 ~ wad10
+                  
+                  ###### Cross lag paths ######
+                  ## Isolation
+                  wad7 ~ c(e1,e2,e3)*wsi5
+                  wad10 ~ c(e1,e2,e3)*wsi7
+                  wad12 ~ c(e1,e2,e3)*wsi10
+                  ## ADHD
+                  wsi7 ~ c(f1,f2,f3)*wad5
+                  wsi10 ~ c(f1,f2,f3)*wad7
+                  wsi12 ~ c(f1,f2,f3)*wad10
+                  ## antisocial
+                  wsi7 ~ c(b1,b2,b3)*wasb5
+                  wad7 ~ c(d1,d2,d3)*wasb5
+                  wasb12 ~ c(c1,c2,c3)*wsi10
+                  wasb12 ~ c(a1,a2,a3)*wad10
+                  
+                  ###### Mediation paths ######
+                  ## ADHD to Isolation
+                  wasb7 ~ c(a1,a2,a3)*wad5 
+                  wsi10 ~ c(b1,b2,b3)*wasb7
+                  wasb10 ~ c(a1,a2,a3)*wad7 
+                  wsi12 ~ c(b1,b2,b3)*wasb10
+                  ## Isolation to ADHD
+                  wasb7 ~ c(c1,c2,c3)*wsi5
+                  wad10 ~ c(d1,d2,d3)*wasb7
+                  wasb10 ~ c(c1,c2,c3)*wsi7
+                  wad12 ~ c(d1,d2,d3)*wasb10
+                  
+                  ###### Covariances ######
+                  wsi5 ~~ wasb5
+                  wasb5 ~~ wad5
+                  wsi5 ~~ wad5
+                  wsi7 ~~ wasb7
+                  wasb7 ~~ wad7
+                  wsi7 ~~ wad7
+                  wsi10 ~~ wasb10
+                  wasb10 ~~ wad10
+                  wsi10 ~~ wad10
+                  wsi12 ~~ wasb12
+                  wasb12 ~~ wad12
+                  wsi12 ~~ wad12
+                    
+                  ###### Variances ######
+                  ## Variances
+                  wad5 ~~ wad5 
+                  wsi5 ~~ wsi5 
+                  wasb5 ~~ wasb5
+                  ## Residual variances
+                  wad7 ~~ wad7 
+                  wsi7 ~~ wsi7 
+                  wasb7 ~~ wasb7
+                  wad10 ~~ wad10 
+                  wsi10 ~~ wsi10 
+                  wasb10 ~~ wasb10
+                  wad12 ~~ wad12 
+                  wsi12 ~~ wsi12
+                  wasb12 ~~ wasb12
+                  
+                  ###### Variance and covariance of random intercepts ######
+                  RIad ~~ RIad
+                  RIsi ~~ RIsi
+                  RIasb ~~ RIasb
+                  RIad ~~ RIsi
+                  RIad ~~ RIasb
+                  RIsi ~~ RIasb
+
+                  ###### Indirect effect (a*b) ######
+                  indirect1mid := a1*b1
+                  indirect1low := a2*b2
+                  indirect1high := a3*b3
+                  indirect2mid := c1*d1
+                  indirect2low := c2*d2
+                  indirect2high := c3*d3
+         '
+```
+
+```{r fit ri.med.long.asb}
+ri.med.long.asb.c.fit <- lavaan(model = ri.med.long.asb.c, 
+                        data = dat,
+                        missing = 'ML',
+                        group = "SES",
+                        meanstructure = TRUE, 
+                        int.ov.free = TRUE,   
+                        estimator = "MLR")
+
+ri.med.long.asb.c.fit.summary <- summary(ri.med.long.asb.c.fit, standardized = TRUE, fit.measures = TRUE)
+```
+  
+### Constrained full cross-lag RI-CLPM mediation model - SES constraints
+
+Autoregressive paths are constrained to be equal across groups of SES but freed across time. 
+
+Cross lags are constrained to be equal across groups AND across time. 
+  
+```{r ri.med.long.asb.c.ses}
+ri.med.long.asb.c.ses <- ' 
+                  ###### Create random intercepts ###### 
+                  RIad =~ 1*tadhde5 + 1*tadhde7 + 1*tadhde10 + 1*tadhde12 
+                  RIsi =~ 1*sisoe5 + 1*sisoe7 + 1*sisoe10 + 1*sisoe12 
+                  RIasb =~ 1*asbe5 + 1*asbe7 + 1*asbe10  + 1*asbe12
+                
+                  ###### Create within-person variables ######
+                  ## Isolation
+                  wsi5 =~ 1*sisoe5
+                  wsi7 =~ 1*sisoe7
+                  wsi10 =~ 1*sisoe10
+                  wsi12 =~ 1*sisoe12
+                  ## ADHD
+                  wad5 =~ 1*tadhde5
+                  wad7 =~ 1*tadhde7
+                  wad10 =~ 1*tadhde10
+                  wad12 =~ 1*tadhde12
+                  ## antisocial 
+                  wasb5 =~ 1*asbe5
+                  wasb7 =~ 1*asbe7
+                  wasb10 =~ 1*asbe10
+                  wasb12 =~ 1*asbe12
+                  
+                  ###### Autoregressive lags ######
+                  ## Isolation
+                  wsi7 ~ c(g1,g1,g1)*wsi5
+                  wsi10 ~ c(g2,g2,g2)*wsi7
+                  wsi12 ~ c(g3,g3,g3)*wsi10
+                  ## antisocial behaviour
+                  wasb7 ~ c(h1,h1,h1)*wasb5
+                  wasb10 ~ c(h2,h2,h2)*wasb7
+                  wasb12 ~ c(h3,h3,h3)*wasb10
+                  ## ADHD
+                  wad7 ~ c(i1,i1,i1)*wad5
+                  wad10 ~ c(i2,i2,i2)*wad7
+                  wad12 ~ c(i3,i3,i3)*wad10
+                  
+                  ###### Cross lag paths ######
+                  ## Isolation
+                  wad7 ~ c(e,e,e)*wsi5
+                  wad10 ~ c(e,e,e)*wsi7
+                  wad12 ~ c(e,e,e)*wsi10
+                  ## ADHD
+                  wsi7 ~ c(f,f,f)*wad5
+                  wsi10 ~ c(f,f,f)*wad7
+                  wsi12 ~ c(f,f,f)*wad10
+                  ## antisocial
+                  wsi7 ~ c(b,b,b)*wasb5
+                  wad7 ~ c(d,d,d)*wasb5
+                  wasb12 ~ c(c,c,c)*wsi10
+                  wasb12 ~ c(a,a,a)*wad10
+                  
+                  ###### Mediation paths ######
+                  ## ADHD to Isolation
+                  wasb7 ~ c(a,a,a)*wad5 
+                  wsi10 ~ c(b,b,b)*wasb7
+                  wasb10 ~ c(a,a,a)*wad7 
+                  wsi12 ~ c(b,b,b)*wasb10
+                  ## Isolation to ADHD
+                  wasb7 ~ c(c,c,c)*wsi5
+                  wad10 ~ c(d,d,d)*wasb7
+                  wasb10 ~ c(c,c,c)*wsi7
+                  wad12 ~ c(d,d,d)*wasb10
+                  
+                  ###### Covariances ######
+                  wsi5 ~~ wasb5
+                  wasb5 ~~ wad5
+                  wsi5 ~~ wad5
+                  wsi7 ~~ wasb7
+                  wasb7 ~~ wad7
+                  wsi7 ~~ wad7
+                  wsi10 ~~ wasb10
+                  wasb10 ~~ wad10
+                  wsi10 ~~ wad10
+                  wsi12 ~~ wasb12
+                  wasb12 ~~ wad12
+                  wsi12 ~~ wad12
+                    
+                  ###### Variances ######
+                  ## Variances
+                  wad5 ~~ wad5 
+                  wsi5 ~~ wsi5 
+                  wasb5 ~~ wasb5
+                  ## Residual variances
+                  wad7 ~~ wad7 
+                  wsi7 ~~ wsi7 
+                  wasb7 ~~ wasb7
+                  wad10 ~~ wad10 
+                  wsi10 ~~ wsi10 
+                  wasb10 ~~ wasb10
+                  wad12 ~~ wad12 
+                  wsi12 ~~ wsi12
+                  wasb12 ~~ wasb12
+                  
+                  ###### Variance and covariance of random intercepts ######
+                  RIad ~~ RIad
+                  RIsi ~~ RIsi
+                  RIasb ~~ RIasb
+                  RIad ~~ RIsi
+                  RIad ~~ RIasb
+                  RIsi ~~ RIasb
+         '
+```
+  
+```{r fit ri.med.long.asb.c grouped by ses}
+ri.med.long.asb.c.ses.fit <- lavaan(ri.med.long.asb.c.ses, 
+                      data = dat, 
+                      missing = 'ML', 
+                      group = "SES",
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
+
+ri.med.long.asb.c.ses.fit.summary <- summary(ri.med.long.asb.c.ses.fit, standardized = TRUE, fit.measures = TRUE)
+```
+
+Now we see if there is a significantly worse fit when the lagged-parameters are constrained to be equal across groups. 
+
+```{r LRT for RICLPMt_inat.ses and RICLPMt_inat.ses2}
+lavTestLRT(ri.med.long.asb.c.fit, ri.med.long.asb.c.ses.fit, method = "satorra.bentler.2010")
+```
+
