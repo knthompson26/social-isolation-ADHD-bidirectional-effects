@@ -1,5 +1,5 @@
 ---
-title: "Random intercept cross lagged panel models for social isolation and ADHD symptoms in childhood (combined parent and teacher report)"
+title: "Combined mother and teacher report RI-CLPM for social isolation and ADHD symptoms in childhood"
 output:  
   html_document:
     df_print: paged
@@ -265,20 +265,53 @@ items <- c("tadhde5",
            "tadhde10",
            "sisoe10",
            "tadhde12",
-           "sisoe12")
+           "sisoe12",
+           "tadhdem5",
+           "sisoem5",
+           "tadhdem7",
+           "sisoem7",
+           "tadhdem10",
+           "sisoem10",
+           "tadhdem12",
+           "sisoem12",
+           "tadhdet5",
+           "sisoet5",
+           "tadhdet7",
+           "sisoet7",
+           "tadhdet10",
+           "sisoet10",
+           "tadhdet12",
+           "sisoet12")
 
 # create data frame
 items.df <- as.data.frame(dat[,items])
 is.data.frame(items.df)  #check 
 
-colnames(items.df) <- c("ADHD age 5",
-                        "Social isolation age 5",
-                        "ADHD age 7",
-                        "Social isolation age 7",
-                        "ADHD age 10",
-                        "Social isolation age 10",
-                        "ADHD age 12",
-                        "Social isolation age 12")
+colnames(items.df) <- c("Combined ADHD age 5",
+                        "Combined Social isolation age 5",
+                        "Combined ADHD age 7",
+                        "Combined Social isolation age 7",
+                        "Combined ADHD age 10",
+                        "Combined Social isolation age 10",
+                        "Combined ADHD age 12",
+                        "Combined Social isolation age 12",
+                        "Mother ADHD age 5",
+                        "Mother Social isolation age 5",
+                        "Mother ADHD age 7",
+                        "Mother Social isolation age 7",
+                        "Mother ADHD age 10",
+                        "Mother Social isolation age 10",
+                        "Mother ADHD age 12",
+                        "Mother Social isolation age 12",
+                        "Teacher ADHD age 5",
+                        "Teacher Social isolation age 5",
+                        "Teacher ADHD age 7",
+                        "Teacher Social isolation age 7",
+                        "Teacher ADHD age 10",
+                        "Teacher Social isolation age 10",
+                        "Teacher ADHD age 12",
+                        "Teacher Social isolation age 12"
+                        )
 ```
 
 ```{r correlation matrix for factor scores and sum scores}
@@ -289,9 +322,51 @@ as.data.frame(item.cor.matrix) %>% mutate_if(is.numeric, round, 2)
 
 # check they are all signficant
 item.cor.matrix.sig <- Hmisc::rcorr(as.matrix(items.df),
-                                    type = "spearman")
-item.cor.matrix.sig$P
+                                    type = "pearson")
+# item.cor.matrix.sig$P
 ```
+
+# Missingness
+
+Children that have complete data at all time points: 2078 (93.10%)
+```{r those missing both ADHD and isolation data}
+# missing isolation
+dat <- dat %>%
+  mutate(missing.isolation =
+           if_else(
+               !is.na(sisoe5) & 
+               !is.na(sisoe7) &
+               !is.na(sisoe10) &
+               !is.na(sisoe12), 
+               true = "No",
+               false = "Yes"
+           ))
+# table(dat$missing.isolation)
+
+# missing adhd
+dat <- dat %>%
+  mutate(missing.adhd =
+           if_else(
+               !is.na(tadhde5) & 
+               !is.na(tadhde7) &
+               !is.na(tadhde10) &
+               !is.na(tadhde12),
+               true = "No",
+               false = "Yes"
+           ))
+# table(dat$missing.adhd)
+
+dat <- dat %>%
+  mutate(missing.both =
+           if_else(
+               missing.isolation == "No" & 
+               missing.adhd == "No",
+               true = "No",
+               false = "Yes"
+           ))
+table(dat$missing.both)
+```
+
 
 
 # All RI-CLPM models in this script 
@@ -318,14 +393,14 @@ item.cor.matrix.sig$P
 |   RICLPMadt_inat    |  Basic RI-CLPM model using **teacher report ADHD and combined report isolation**, and **inattention** scores                      |
 |   RICLPMadt_inat2   |  RICLPMadt_inat but with fixed autoregressive and cross-lagged relations over time                                                |
 |   RICLPMadt_inat3   |  RICLPMadt_inat but with constrained grand means for AD and SI                                                                    |
-|   CLPMadm           |  Cross-lagged panel model without random intercepts using **mother report** and **total ADHD** scores                            |
-|   RICLPMadm         |  Basic RI-CLPM model using **mother report ADHD and combined report isolation**, and **total ADHD** scores                       |
+|   CLPMadm           |  Cross-lagged panel model without random intercepts using **mother report** and **total ADHD** scores                             |
+|   RICLPMadm         |  Basic RI-CLPM model using **mother report ADHD and combined report isolation**, and **total ADHD** scores                        |
 |   RICLPMadm2        |  RICLPMadm but with fixed autoregressive and cross-lagged relations over time                                                     |
 |   RICLPMadm3        |  RICLPMadm but with constrained grand means for AD and SI                                                                         |
-|   RICLPMadm_hyp     |  Basic RI-CLPM model using **mother report ADHD and combined report isolation**, and **hyperactivity** scores                    |
+|   RICLPMadm_hyp     |  Basic RI-CLPM model using **mother report ADHD and combined report isolation**, and **hyperactivity** scores                     |
 |   RICLPMadm_hyp2    |  RICLPMadm_hyp but with fixed autoregressive and cross-lagged relations over time                                                 |
 |   RICLPMadm_hyp3    |  RICLPMadm_hyp but with constrained grand means for AD and SI                                                                     |
-|   RICLPMadm_inat    |  Basic RI-CLPM model using **mother report ADHD and combined report isolation**, and **inattention** scores                      |
+|   RICLPMadm_inat    |  Basic RI-CLPM model using **mother report ADHD and combined report isolation**, and **inattention** scores                       |
 |   RICLPMadm_inat2   |  RICLPMadm_inat but with fixed autoregressive and cross-lagged relations over time                                                |
 |   RICLPMadm_inat3   |  RICLPMadm_inat but with constrained grand means for AD and SI                                                                    |
 
@@ -410,7 +485,7 @@ CLPMcomb.fit.summary.fit %>%
 
 ## Constrained cross-lagged panel model (CLPMcomb)
 
-```{r specify CLPMcomb}
+```{r specify CLPMcomb2}
 CLPMcomb2 <- '
   # Estimate the lagged effects between the observed variables - constrained
   tadhde7 ~ tadhde5 + d*sisoe5 
@@ -473,7 +548,7 @@ CLPMcomb2.fit.summary.fit %>%
   mutate_if(is.numeric, round, 2)
 ```
 
-```{r LRT for RICLPMcomb and RICLPMcomb2}
+```{r LRT for CLPMcomb and CLPMcomb2}
 lavTestLRT(CLPMcomb.fit, CLPMcomb2.fit, method = "satorra.bentler.2010")
 ```
 
@@ -1057,7 +1132,7 @@ CLPMcomb_hyp.fit.summary.fit %>%
 
 ## Constrained cross-lagged panel model (CLPMcomb_hyp)
 
-```{r specify CLPMcomb_hyp}
+```{r specify CLPMcomb_hyp2}
 CLPMcomb_hyp2 <- '
   # Estimate the lagged effects between the observed variables - constrained
   hye7 ~ hye5 + d*sisoe5 
@@ -1120,7 +1195,7 @@ CLPMcomb_hyp2.fit.summary.fit %>%
   mutate_if(is.numeric, round, 2)
 ```
 
-```{r LRT for RICLPMcomb_hyp and RICLPMcomb_hyp2}
+```{r LRT for CLPMcomb_hyp and CLPMcomb_hyp2}
 lavTestLRT(CLPMcomb_hyp.fit, CLPMcomb_hyp2.fit, method = "satorra.bentler.2010")
 ```
 
@@ -1728,7 +1803,7 @@ CLPMcomb_inat.fit.summary.fit %>%
 
 ## Constrained cross-lagged panel model (CLPMcomb_inat2)
 
-```{r specify CLPMcomb_inat}
+```{r specify CLPMcomb_inat2}
 CLPMcomb_inat2 <- '
   # Estimate the lagged effects between the observed variables - constrained
   ine7 ~ ine5 + d*sisoe5 
@@ -1791,7 +1866,7 @@ CLPMcomb_inat2.fit.summary.fit %>%
   mutate_if(is.numeric, round, 2)
 ```
 
-```{r LRT for RICLPMcomb_inat and RICLPMcomb_inat2}
+```{r LRT for CLPMcomb_inat and CLPMcomb_inat2}
 lavTestLRT(CLPMcomb_inat.fit, CLPMcomb_inat2.fit, method = "satorra.bentler.2010")
 ```
 

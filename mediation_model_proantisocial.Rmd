@@ -351,6 +351,76 @@ dat <- dat %>%
   )
 ```
 
+# Correlations between all variables
+
+```{r create data frame for correlation matrix}
+# items 
+items <- c("proe5",
+           "asbe5",
+           "proe7",
+           "asbe7",
+           "proe10",
+           "asbe10",
+           "proe12",
+           "asbe12",
+           "proem5",
+           "asbem5",
+           "proem7",
+           "asbem7",
+           "proem10",
+           "asbem10",
+           "proem12",
+           "asbem12",
+           "proet5",
+           "asbet5",
+           "proet7",
+           "asbet7",
+           "proet10",
+           "asbet10",
+           "proet12",
+           "asbet12")
+
+# create data frame
+items.df <- as.data.frame(dat[,items])
+is.data.frame(items.df)  #check 
+
+colnames(items.df) <- c("Combined Prosocial behaviour age 5",
+                        "Combined Antisocial behaviour age 5",
+                        "Combined Prosocial behaviour age 7",
+                        "Combined Antisocial behaviour age 7",
+                        "Combined Prosocial behaviour age 10",
+                        "Combined Antisocial behaviour age 10",
+                        "Combined Prosocial behaviour age 12",
+                        "Combined Antisocial behaviour age 12",
+                        "Mother Prosocial behaviour age 5",
+                        "Mother Antisocial behaviour age 5",
+                        "Mother Prosocial behaviour age 7",
+                        "Mother Antisocial behaviour age 7",
+                        "Mother Prosocial behaviour age 10",
+                        "Mother Antisocial behaviour age 10",
+                        "Mother Prosocial behaviour age 12",
+                        "Mother Antisocial behaviour age 12",
+                        "Teacher Prosocial behaviour age 5",
+                        "Teacher Antisocial behaviour age 5",
+                        "Teacher Prosocial behaviour age 7",
+                        "Teacher Antisocial behaviour age 7",
+                        "Teacher Prosocial behaviour age 10",
+                        "Teacher Antisocial behaviour age 10",
+                        "Teacher Prosocial behaviour age 12",
+                        "Teacher Antisocial behaviour age 12"
+                        )
+```
+
+```{r correlation matrix for factor scores and sum scores}
+item.cor.matrix <- cor(items.df, 
+                       method = "pearson", 
+                       use = "pairwise.complete.obs")
+
+as.data.frame(item.cor.matrix) %>% mutate_if(is.numeric, round, 2)
+
+as.data.frame(item.cor.matrix) %>% mutate_if(is.numeric, round, 2) %>% select(`Mother Antisocial behaviour age 12`)
+```
+
 # Full (four time points) longitudinal mediation - combined parent and teacher report
 
 **For each set of ADHD symptoms, we present four models for each mediator (prosocial/antisocial behvaiour):**
@@ -1044,6 +1114,9 @@ The cross-lag constraints gave a non-significant loss in model fit (p=0.3275). T
 med_hyp.long2.pro.fit.summary.fit <- table.model.fit(med_hyp.long2.pro.fit.summary)
 # Coefficients
 med_hyp.long2.pro.fit.summary.reg <- table.model.coef(model = med_hyp.long2.pro.fit.summary, step = "S2") %>% mutate_if(is.numeric, round, 3)
+
+med_hyp.long2.pro.fit.summary.reg %>%
+  select(lhs, op, rhs, label, std.all, pvalue)
 ```
 
 #### Step 3. The full RI-CLPM mediation model 
@@ -1277,6 +1350,7 @@ ri.med_hyp.long.pro.full2 <- '
                   ###### Indirect effect (a*b) ######
                   indirect1 := a*b
                   indirect2 := c*d
+                  indirect3 := d*f
          '
 ```
 
@@ -1306,6 +1380,9 @@ ri.med_hyp.long.pro.full2.fit.summary.reg <- table.model.coef(model = ri.med_hyp
 ri.med_hyp.long.pro.full2.fit.summary.reg %>%
   select(lhs, op, rhs, std.all, pvalue) %>%
   filter(lhs == "indirect1" | lhs == "indirect2")
+
+ri.med_hyp.long.pro.full2.fit.summary.reg %>%
+  select(lhs, op, rhs, label,std.all, pvalue)
 ```
 
 ### Inattention 
@@ -1507,6 +1584,9 @@ The cross-lag constraints gave a non-significant loss in model fit (p=0.3934). T
 med_inat.long2.pro.fit.summary.fit <- table.model.fit(med_inat.long2.pro.fit.summary)
 # Coefficients
 med_inat.long2.pro.fit.summary.reg <- table.model.coef(model = med_inat.long2.pro.fit.summary, step = "S2") %>% mutate_if(is.numeric, round, 3)
+
+med_inat.long2.pro.fit.summary.reg %>%
+  select(lhs, op, rhs, label, std.all, pvalue)
 ```
 
 #### Step 3. The full RI-CLPM mediation model 
@@ -1769,6 +1849,9 @@ ri.med_inat.long.pro.full2.fit.summary.reg <- table.model.coef(model = ri.med_in
 ri.med_inat.long.pro.full2.fit.summary.reg %>%
   select(lhs, op, rhs, std.all, pvalue) %>%
   filter(lhs == "indirect1" | lhs == "indirect2")
+
+ri.med_inat.long.pro.full2.fit.summary.reg %>%
+  select(lhs, op, rhs, label, std.all, pvalue)
 ```
 
 ## Antisocial behaviour
@@ -2437,7 +2520,10 @@ The cross-lag constraints gave a non-significant loss in model fit (p=0.5619). T
 # Model fit 
 med_hyp.long2.asb.fit.summary.fit <- table.model.fit(med_hyp.long2.asb.fit.summary)
 # Coefficients
-med_hyp.long2.asb.fit.summary.reg <- table.model.coef(model = med_hyp.long2.asb.fit.summary, step = "S2") %>% mutate_if(is.numeric, round, 4)
+med_hyp.long2.asb.fit.summary.reg <- table.model.coef(model = med_hyp.long2.asb.fit.summary, step = "S2") %>% mutate_if(is.numeric, round, 3)
+
+med_hyp.long2.asb.fit.summary.reg %>%
+  select(lhs, op, rhs, label, std.all, pvalue)
 ```
 
 #### Step 3. The full RI-CLPM mediation model 
@@ -2700,6 +2786,9 @@ ri.med_hyp.long.asb.full2.fit.summary.reg <- table.model.coef(model = ri.med_hyp
 ri.med_hyp.long.asb.full2.fit.summary.reg %>%
   select(lhs, op, rhs, std.all, pvalue) %>%
   filter(lhs == "indirect1" | lhs == "indirect2")
+
+ri.med_hyp.long.asb.full2.fit.summary.reg %>%
+  select(lhs, op, rhs, label, std.all, pvalue) 
 ```
 
 ### Inattention 
@@ -2901,6 +2990,9 @@ The cross-lag constraints gave a non-significant loss in model fit (p=0.2127). T
 med_inat.long2.asb.fit.summary.fit <- table.model.fit(med_inat.long2.asb.fit.summary)
 # Coefficients
 med_inat.long2.asb.fit.summary.reg <- table.model.coef(model = med_inat.long2.asb.fit.summary, step = "S2") %>% mutate_if(is.numeric, round, 3)
+
+med_inat.long2.asb.fit.summary.reg %>%
+  select(lhs, op, rhs, label, std.all, pvalue) 
 ```
 
 #### Step 3. The full RI-CLPM mediation model 
@@ -3165,6 +3257,9 @@ ri.med_inat.long.asb.full.fit.summary.reg <- table.model.coef(model = ri.med_ina
 ri.med_inat.long.asb.full.fit.summary.reg %>%
   select(lhs, op, rhs, std.all, pvalue) %>%
   filter(lhs == "indirect1" | lhs == "indirect2")
+
+ri.med_inat.long.asb.full.fit.summary.reg %>%
+  select(lhs, op, rhs, label, std.all, pvalue)
 ```
 
 

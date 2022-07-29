@@ -37,6 +37,6 @@ Analyses for this project were conducted in R (Version 4.0.3). Below names and l
 
 **Sensitivity analyses** 
 
-1. RICLPM_measurement_model_isolation_adhd.Rmd. NEEDS UPDATING. 
+1. RICLPM_measurement_model_isolation_adhd.Rmd. Using multiple group RI-CLPM to assess measurement invariance in 4 steps. Step 1: the configural model, Step 2: weak factorial invariance, Step 3: strong factorial invariance, Step 4: the latent measurement model RI-CLPM. 
 
 ***
