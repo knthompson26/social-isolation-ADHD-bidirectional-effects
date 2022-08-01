@@ -41,7 +41,7 @@ All data provided by the **Environmental Risk Longitudinal Twin (E-Risk) Study**
 ***
 ## Analysis steps 
 
-### RI-CLPM 
+### RI-CLPM - inattention, hyperactivity, and total ADHD
 
 * [RI-CLPM: combined parent and teacher reports](RICLPMcomb_isolation_adhd.html)
 
@@ -51,16 +51,9 @@ All data provided by the **Environmental Risk Longitudinal Twin (E-Risk) Study**
 * [Sex differences using multiple group RI-CLPM](RICLPM_isolation_adhd_sex.html)
 * [SES differences using multiple group RI-CLPM](RICLPM_isolation_adhd_SES.html)
 
-
-
-mediation_model_isolation_adhd.Rmd. Longitudinal mediation using 3 variable RI-CLPM to assess mediator effects of prosocial behaviour and antisocial behaviour. Combined mother and teacher report only. Longitudinal mediation computed for hyperactivity, inattention, and total ADHD symptoms. Constraint testing applied throughout.
-Sensitivity analyses
-
-RICLPM_measurement_model_isolation_adhd.Rmd. NEEDS UPDATING.
-
 ### Longitudinal mediation
 
-* [Longitudinal mediation of prosocial and antisocial behaviour](mediation_model_isolation_adhd.html)
+* [Longitudinal mediation of prosocial and antisocial behaviour](mediation_model_proantisocial.html)
 
 ### Sensitivity analyses
 

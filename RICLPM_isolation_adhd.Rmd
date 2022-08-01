@@ -1956,7 +1956,7 @@ If the grand means cannot be constrained to be invariant over time, this implies
 
 ## The basic cross-lagged panel model (CLPM) without including random intercepts 
 
-```{r specify CLPM}
+```{r specify CLPMt}
 CLPMt <- '
   # Estimate the lagged effects between the observed variables.
   tadhdet7 + sisoet7 ~ tadhdet5 + sisoet5
