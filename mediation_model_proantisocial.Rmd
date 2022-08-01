@@ -62,7 +62,7 @@ dat <- dat.raw %>%
          sisoet7, 
          sisoet10,
          sisoet12,
-         sisoe5,    # social isolation teacher report
+         sisoe5,    # social isolation combined report
          sisoe7, 
          sisoe10,
          sisoe12,
@@ -533,7 +533,7 @@ med.long.pro <- '
          '
 ```
 
-```{r  fit med.long.pro}
+```{r fit med.long.pro}
 med.long.pro.fit <- lavaan(model = med.long.pro, 
                         data = dat,
                         missing = 'ML',       
@@ -625,7 +625,7 @@ med.long2.pro <- '
          '
 ```
 
-```{r  fit med.long.pro}
+```{r  fit med.long2.pro}
 med.long2.pro.fit <- lavaan(model = med.long2.pro, 
                         data = dat,
                         missing = 'ML',       
@@ -642,7 +642,7 @@ lavTestLRT(med.long.pro.fit, med.long2.pro.fit, method = "satorra.bentler.2010")
 
 The cross-lag constraints gave a non-significant loss in model fit (p=0.5204). Therefore this model 2 will be carried forward.
 
-```{r results table for mother report prosocial and total adhd}
+```{r results table for prosocial and total adhd}
 # Model fit 
 med.long2.pro.fit.summary.fit <- table.model.fit(med.long2.pro.fit.summary)
 # Coefficients
@@ -904,7 +904,7 @@ lavTestLRT(ri.med.long.pro.full.fit, ri.med.long.pro.full2.fit, method = "satorr
 
 The cross-lag constraints gave a non-significant loss in model fit (p=0.4722). 
 
-```{r results table for random intercept mother report prosocial and total adhd}
+```{r results table for random intercept prosocial and total adhd}
 # Model fit 
 ri.med.long.pro.full2.fit.summary.fit <- table.model.fit(ri.med.long.pro.full2.fit.summary)
 # Coefficients -
@@ -1092,7 +1092,7 @@ med_hyp.long2.pro <- '
          '
 ```
 
-```{r  fit med_hyp.long.pro}
+```{r  fit med_hyp.long2.pro}
 med_hyp.long2.pro.fit <- lavaan(model = med_hyp.long2.pro, 
                         data = dat,
                         missing = 'ML',       
@@ -1109,7 +1109,7 @@ lavTestLRT(med_hyp.long.pro.fit, med_hyp.long2.pro.fit, method = "satorra.bentle
 
 The cross-lag constraints gave a non-significant loss in model fit (p=0.3275). Therefore this model 2 will be carried forward.
 
-```{r results table for mother report prosocial and total adhd}
+```{r results table for prosocial and hyperactivity adhd}
 # Model fit 
 med_hyp.long2.pro.fit.summary.fit <- table.model.fit(med_hyp.long2.pro.fit.summary)
 # Coefficients
@@ -1371,7 +1371,7 @@ lavTestLRT(ri.med_hyp.long.pro.full.fit, ri.med_hyp.long.pro.full2.fit, method =
 
 The cross-lag constraints gave a non-significant loss in model fit (p=0.4722). 
 
-```{r results table for random intercept mother report prosocial and total adhd}
+```{r results table for random intercept prosocial and hyperactivity adhd}
 # Model fit 
 ri.med_hyp.long.pro.full2.fit.summary.fit <- table.model.fit(ri.med_hyp.long.pro.full2.fit.summary)
 # Coefficients -
@@ -1562,7 +1562,7 @@ med_inat.long2.pro <- '
          '
 ```
 
-```{r  fit med_inat.long.pro}
+```{r  fit med_inat.long2.pro}
 med_inat.long2.pro.fit <- lavaan(model = med_inat.long2.pro, 
                         data = dat,
                         missing = 'ML',       
@@ -1579,7 +1579,7 @@ lavTestLRT(med_inat.long.pro.fit, med_inat.long2.pro.fit, method = "satorra.bent
 
 The cross-lag constraints gave a non-significant loss in model fit (p=0.3934). Therefore this model 2 will be carried forward.
 
-```{r results table for mother report prosocial and total adhd}
+```{r results table for combined report prosocial and total adhd}
 # Model fit 
 med_inat.long2.pro.fit.summary.fit <- table.model.fit(med_inat.long2.pro.fit.summary)
 # Coefficients
@@ -1840,7 +1840,7 @@ lavTestLRT(ri.med_inat.long.pro.full.fit, ri.med_inat.long.pro.full2.fit, method
 
 The cross-lag constraints gave a non-significant loss in model fit (p=0.2155). 
 
-```{r results table for random intercept mother report prosocial and total adhd}
+```{r results table for random intercept prosocial and inattention adhd}
 # Model fit 
 ri.med_inat.long.pro.full2.fit.summary.fit <- table.model.fit(ri.med_inat.long.pro.full2.fit.summary)
 # Coefficients -
@@ -2033,7 +2033,7 @@ med.long2.asb <- '
          '
 ```
 
-```{r  fit med.long.asb}
+```{r  fit med.long2.asb}
 med.long2.asb.fit <- lavaan(model = med.long2.asb, 
                         data = dat,
                         missing = 'ML',       
@@ -2499,7 +2499,7 @@ med_hyp.long2.asb <- '
          '
 ```
 
-```{r  fit med_hyp.long.asb}
+```{r  fit med_hyp.long2.asb}
 med_hyp.long2.asb.fit <- lavaan(model = med_hyp.long2.asb, 
                         data = dat,
                         missing = 'ML',       
@@ -2516,7 +2516,7 @@ lavTestLRT(med_hyp.long.asb.fit, med_hyp.long2.asb.fit, method = "satorra.bentle
 
 The cross-lag constraints gave a non-significant loss in model fit (p=0.5619). Therefore this model 2 will be carried forward.
 
-```{r results table for mother report asbsocial and total adhd}
+```{r results table for antisocial and hyperactivity adhd}
 # Model fit 
 med_hyp.long2.asb.fit.summary.fit <- table.model.fit(med_hyp.long2.asb.fit.summary)
 # Coefficients
@@ -2777,7 +2777,7 @@ lavTestLRT(ri.med_hyp.long.asb.full.fit, ri.med_hyp.long.asb.full2.fit, method =
 
 The cross-lag constraints gave a non-significant loss in model fit (p=0.4799). 
 
-```{r results table for random intercept mother report asbsocial and total adhd}
+```{r results table for random intercept antisocial and hyperactivity adhd}
 # Model fit 
 ri.med_hyp.long.asb.full2.fit.summary.fit <- table.model.fit(ri.med_hyp.long.asb.full2.fit.summary)
 # Coefficients -
@@ -2968,7 +2968,7 @@ med_inat.long2.asb <- '
          '
 ```
 
-```{r  fit med_inat.long.asb}
+```{r  fit med_inat.long2.asb}
 med_inat.long2.asb.fit <- lavaan(model = med_inat.long2.asb, 
                         data = dat,
                         missing = 'ML',       
@@ -2985,7 +2985,7 @@ lavTestLRT(med_inat.long.asb.fit, med_inat.long2.asb.fit, method = "satorra.bent
 
 The cross-lag constraints gave a non-significant loss in model fit (p=0.2127). Therefore this model 2 will be carried forward.
 
-```{r results table for mother report asbsocial and total adhd}
+```{r results table for antisocial and inattention adhd}
 # Model fit 
 med_inat.long2.asb.fit.summary.fit <- table.model.fit(med_inat.long2.asb.fit.summary)
 # Coefficients
@@ -3248,7 +3248,7 @@ lavTestLRT(ri.med_inat.long.asb.full.fit, ri.med_inat.long.asb.full2.fit, method
 
 The cross-lag constraints gave a non-significant loss in model fit (p=0.04084). **THIS MODEL SHOULD USE THE UNCONSTRAINED MODEL**
 
-```{r results table for random intercept mother report asbsocial and total adhd}
+```{r results table for random intercept antisocial and inattention adhd}
 # Model fit 
 ri.med_inat.long.asb.full.fit.summary.fit <- table.model.fit(ri.med_inat.long.asb.full.fit.summary)
 # Coefficients -

@@ -2077,7 +2077,7 @@ ri.med.long.pro.c.ses.fit.summary <- summary(ri.med.long.pro.c.ses.fit, standard
 
 Now we see if there is a significantly worse fit when the lagged-parameters are constrained to be equal across groups. 
 
-```{r LRT for RICLPMt_inat.ses and RICLPMt_inat.ses2}
+```{r LRT for ri.med.long.pro.c.fit and ri.med.long.pro.c.ses.fit}
 lavTestLRT(ri.med.long.pro.c.fit, ri.med.long.pro.c.ses.fit, method = "satorra.bentler.2010")
 ```
 
@@ -2339,7 +2339,7 @@ ri.med.long.asb.c.ses.fit.summary <- summary(ri.med.long.asb.c.ses.fit, standard
 
 Now we see if there is a significantly worse fit when the lagged-parameters are constrained to be equal across groups. 
 
-```{r LRT for RICLPMt_inat.ses and RICLPMt_inat.ses2}
+```{r LRT for ri.med.long.asb.c.fit and ri.med.long.asb.c.ses.fit}
 lavTestLRT(ri.med.long.asb.c.fit, ri.med.long.asb.c.ses.fit, method = "satorra.bentler.2010")
 ```
 
