@@ -36,6 +36,8 @@ library(knitr)
 library(haven)
 library(lavaan)
 library(ChiBarSq.DiffTest)
+library(janitor)
+library(tidyr)
 library(tidyverse)
 library(dplyr) #conflicts with tidyverse for e.g. rename and row_number
 ```
@@ -52,6 +54,7 @@ dat <- dat.raw %>%
   dplyr::select(id = atwinid,
          sampsex,
          seswq35,
+         sethnic,
          sisoem5,  # social isolation mother report
          sisoem7,
          sisoem10,
@@ -244,6 +247,230 @@ dat <- dat %>%
   )
 ```
 
+*** 
+
+# Descriptive tables
+
+```{r read in ACORN variable}
+dat2 <- readRDS(file = paste0(data_path2, "class_joined_preprocessed_isolation_data_full_sample.rds")) %>%
+  select(id, acorn_05)
+
+dataframes_acorn <- list(dat, dat2)
+
+dat <- plyr::join_all(
+  dataframes_acorn,
+  by = "id" 
+  )
+
+colnames(dat)
+```
+
+```{r recode sex variable}
+dat <- dat %>%
+  mutate(
+    sex = 
+      recode_factor(as_factor(sampsex),
+        "1" = "Male",
+        "2" = "Female"))
+
+table(dat$sex)
+```
+
+```{r recode SES variable}
+dat <- dat %>%
+  mutate(
+    SES = 
+      recode_factor(as_factor(seswq35),
+        "1" = "Low",
+        "2" = "Middle", 
+        "3" = "High"))
+
+table(dat$SES)
+```
+
+```{r recode ethnicity variable}
+dat <- dat %>%
+  mutate(
+    ethnicity = 
+      recode_factor(as_factor(sethnic),
+        "1" = "White",
+        "2" = "Asian", 
+        "3" = "Black",
+        "4" = "Mixed race",
+        "5" = "Other"))
+
+table(dat$ethnicity)
+```
+
+```{r create numeric isolation variables}
+dat <- dat %>%
+  mutate(
+    sisoe5.numeric = as.numeric(sisoe5),
+    sisoe7.numeric = as.numeric(sisoe7),
+    sisoe10.numeric = as.numeric(sisoe10),
+    sisoe12.numeric = as.numeric(sisoe12)
+  )
+```
+
+```{r datasets for males and males}
+data.female <- dat %>% filter(sex == "Female")
+data.male <- dat %>% filter (sex == "Male")
+```
+
+### Social isolation and ADHD at age 5 
+
+```{r descriptives for social isolation combined report - age 5}
+continuous_isolation_descriptives_raw5 <- dat %>%
+  group_by(sex) %>%
+  summarise(mean = mean(sisoe5.numeric), sd = sd(sisoe5.numeric), min = min(sisoe5.numeric), max = max(sisoe5.numeric)) %>%
+  pivot_longer(cols = c("mean", "sd", "min", "max")) %>%
+  rename(descriptive = name) %>%
+  pivot_wider(names_from = sex, values_from = value) %>%
+  mutate(Total = 
+           c(mean(dat$sisoe5.numeric), sd(dat$sisoe5.numeric), min(dat$sisoe5.numeric), max(dat$sisoe5.numeric)),
+         sd_male = c(sd(data.male$sisoe5.numeric), NA_real_, NA_real_, NA_real_),
+         sd_female = c(sd(data.female$sisoe5.numeric), NA_real_, NA_real_, NA_real_),
+         sd_total = c(sd(dat$sisoe5.numeric), NA_real_, NA_real_, NA_real_)) %>%
+  select(
+    "Descriptive" = descriptive,
+    "Male" = Male,
+    "% Male" = sd_male,
+    "Female" = Female,
+    "% Female" = sd_female,
+    "Total" = Total,
+    "% Total" = sd_total) 
+  
+continuous_isolation_descriptives5 <- continuous_isolation_descriptives_raw5[-c(2), ]
+continuous_isolation_descriptives5
+```
+
+```{r descriptives for ADHD symptoms combined report - age 5}
+continuous_adhd_descriptives_raw5 <- dat %>%
+  group_by(sex) %>%
+  summarise(mean = mean(tadhde5), sd = sd(tadhde5), min = min(tadhde5), max = max(tadhde5)) %>%
+  pivot_longer(cols = c("mean", "sd", "min", "max")) %>%
+  rename(descriptive = name) %>%
+  pivot_wider(names_from = sex, values_from = value) %>%
+  mutate(Total = 
+           c(mean(dat$tadhde5), sd(dat$tadhde5), min(dat$tadhde5), max(dat$tadhde5)),
+         sd_male = c(sd(data.male$tadhde5), NA_real_, NA_real_, NA_real_),
+         sd_female = c(sd(data.female$tadhde5), NA_real_, NA_real_, NA_real_),
+         sd_total = c(sd(dat$tadhde5), NA_real_, NA_real_, NA_real_)) %>%
+  select(
+    "Descriptive" = descriptive,
+    "Male" = Male,
+    "% Male" = sd_male,
+    "Female" = Female,
+    "% Female" = sd_female,
+    "Total" = Total,
+    "% Total" = sd_total) 
+  
+continuous_adhd_descriptives5 <- continuous_adhd_descriptives_raw5[-c(2), ]
+continuous_adhd_descriptives5
+```
+
+## Ethnicity
+
+```{r descriptives for ethnicity}
+ethnicity_descriptives.raw <- dat %>% #create object to bind later on
+  count(sex, ethnicity) %>%
+  mutate(Prop = round(n/sum(n)*100, 2)) %>%
+  pivot_wider(names_from = sex, values_from = c(n, Prop)) %>%
+  mutate(Total = n_Male + n_Female,
+         Prop_total = Prop_Male + Prop_Female) %>% 
+  select(
+    "Descriptive" = ethnicity,
+    "Male" = n_Male,
+    "% Male" = Prop_Male,
+    "Female" = n_Female,
+    "% Female" = Prop_Female,
+    "Total" = Total,
+    "% Total" = Prop_total)
+
+ethnicity_descriptives <- ethnicity_descriptives.raw[-c(7), ]
+ethnicity_descriptives
+```
+
+## Family SES
+
+```{r descriptives for fam_ses}
+fam_ses_descriptives.raw <- dat %>% #create object to bind later on
+  count(sex, SES) %>%
+  mutate(Prop = round(n/sum(n)*100, 2)) %>%
+  pivot_wider(names_from = sex, values_from = c(n, Prop)) %>%
+  mutate(Total = n_Male + n_Female,
+         Prop_total = Prop_Male + Prop_Female) %>% 
+  select(
+    "Descriptive" = SES,
+    "Male" = n_Male,
+    "% Male" = Prop_Male,
+    "Female" = n_Female,
+    "% Female" = Prop_Female,
+    "Total" = Total,
+    "% Total" = Prop_total)
+
+fam_ses_descriptives <- fam_ses_descriptives.raw[-c(7), ]
+fam_ses_descriptives
+```
+
+## Neighbourhood SES (ACORN)
+
+```{r descriptives for fam_ses}
+neigh_ses_descriptives.raw <- dat %>% #create object to bind later on
+  count(sex, acorn_05) %>%
+  mutate(Prop = round(n/sum(n)*100, 2)) %>%
+  pivot_wider(names_from = sex, values_from = c(n, Prop)) %>%
+  mutate(Total = n_Male + n_Female,
+         Prop_total = Prop_Male + Prop_Female) %>% 
+  select(
+    "Descriptive" = acorn_05,
+    "Male" = n_Male,
+    "% Male" = Prop_Male,
+    "Female" = n_Female,
+    "% Female" = Prop_Female,
+    "Total" = Total,
+    "% Total" = Prop_total)
+
+neigh_ses_descriptives <- neigh_ses_descriptives.raw[-c(7), ]
+neigh_ses_descriptives
+```
+```{r bind all descriptives together}
+descriptives <- bind_rows(
+  continuous_isolation_descriptives5,
+  continuous_adhd_descriptives5,
+  ethnicity_descriptives,
+  fam_ses_descriptives,
+  neigh_ses_descriptives
+)
+
+#add in column to show which descriptives they are
+descriptives <- descriptives %>%
+  mutate(
+    Category = 
+      c("Social isolation", "Social isolation", "Social isolation",
+        "ADHD symptoms", "ADHD symptoms", "ADHD symptoms",
+        "Ethnicity", "Ethnicity", "Ethnicity", "Ethnicity", "Ethnicity",
+        "Family SES", "Family SES", "Family SES",
+        "Neighbourhood SES", "Neighbourhood SES", "Neighbourhood SES", "Neighbourhood SES", "Neighbourhood SES", "Neighbourhood SES"),
+    Male = round(Male, 2),
+    Female = round(Female, 2),
+    Total = round(Total, 2),
+    `% Male /SD`= round(`% Male`, 2),
+    `% Female /SD`= round(`% Female`, 2),
+    `% Total`= round(`% Total`, 2)) %>%
+select(
+    Category,
+    Descriptive,
+    Male,
+    `% Male /SD`,
+    Female,
+    `% Female /SD`,
+    Total,
+    `% Total`) 
+
+#final table to be viewed in word
+kable(descriptives) 
+```
 ***
 
 The below introductory notes have been adapted from [Hamaker, Kuiper, and Grasman, 2015](https://www.researchgate.net/profile/Ellen-Hamaker/publication/274262847_A_Critique_of_the_Cross-Lagged_Panel_Model/links/5b80154c92851c1e122f351f/A-Critique-of-the-Cross-Lagged-Panel-Model.pdf)
