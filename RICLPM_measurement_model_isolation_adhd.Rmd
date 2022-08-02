@@ -1125,10 +1125,7 @@ summary(semTools::compareFit(RICLPM_multi_inat_S3.fit, RICLPM_multi_inat_S4.fit,
 
 The nonsignificant chi square implies that the current model does not have to be rejected, and we can say that there is *measurement invariance across the stable between structure and fluctuating within-structure.* If the chi-square test is significant, then we need to conclude that *these structures do not coincide, and temporal fluctuations within individuals take place on a different underlying dimension than the stable differences between units* (see Hamaker et al. (2017) for further discussion on this).
 
-From [Hamaker et al. (2017)](https://www.tandfonline.com/doi/full/10.1080/00273171.2016.1251299):
-**need to add notes here**
-
-To key points from [Hamaker et al., 2015](https://www.tandfonline.com/doi/pdf/10.1080/10705511.2020.1784738) (page 646 & 647)
+Two key points from [Hamaker et al., 2015](https://www.tandfonline.com/doi/pdf/10.1080/10705511.2020.1784738) (page 646 & 647)
 1. The disadvantage of using sum and mean scores however is that one assumes an absence of measurement error, which often is an unrealistic assumption, especially within the social sciences (Griliches & Hausman, 1986). Failing to properly account for measurement error can bias lagged-parameter estimates downward, leading to a loss of power. Also, the estimation of factor scores is difficult due to the problem of factor indeterminacy (i.e., there are multiple ways to obtain factor scores, each with their own set of advantages and disadvantages), and it is unclear how this affects the results of the RI-CLPM.
 2. The procedure described above for establishing measurement invariance relies heavily on chi-square difference testing which, as mentioned before, can have serious disadvantages such as an increased Type I and Type II error rate when the base model is misspecified (Yuan & Bentler, 2004). Alternatively, researchers can use equivalence testing **(Yuan & Chan, 2016)**, which allows researchers to explicitly specify an acceptable level of model misfit. 
 
@@ -2049,12 +2046,13 @@ summary(RICLPM_multi_adhd_S4.fit, fit.measures = TRUE, standardized = TRUE)
 
 S4 Model fit:
 (We have included here the change in CFI, TLI and RMSEA compared to the S3 model)
-Comparative Fit Index (CFI)                    0. (>0.95)    Change in CFI:   0.0 (decrease) - worse fit 
-Tucker-Lewis Index (TLI)                       0. (>0.95)    Change in TLI:   0.0 (decrease) - worse fit 
-RMSEA                                          0. (≤ 0.06)   Change in RMSEA: 0.0 (increase) - worse fit
-90 Percent confidence interval - lower         0. 
-90 Percent confidence interval - upper         0.       
-SRMR                                           0. (≤ 0.08)   Change in SRMR: 0.0 (increase)  - worse fit 
+Comparative Fit Index (CFI)                    0.890 (>0.95)    Change in CFI:   0.058 (decrease) - worse fit 
+Tucker-Lewis Index (TLI)                       0.888 (>0.95)    Change in TLI:   0.095 (decrease) - worse fit 
+RMSEA                                          0.042 (≤ 0.06)   Change in RMSEA: 0.025 (increase) - worse fit
+90 Percent confidence interval - lower         0.042 
+90 Percent confidence interval - upper         0.043       
+SRMR                                           0.081 (≤ 0.08)   Change in SRMR: 0.043 (increase)  - worse fit 
+
 
 ```{r compare fit RICLPM_multi_adhd_S3 and RICLPM_multi_adhd_S4}
 # summary(semTools::compareFit(RICLPM_multi_adhd_S3.fit, RICLPM_multi_adhd_S4.fit, nested = TRUE)) #† indicates the best fitting model
@@ -2369,12 +2367,12 @@ RICLPMt_multi_inat_S3.fit.summary <- summary(RICLPMt_multi_inat_S3.fit, fit.meas
 
 S3 Model fit (no robust se):
 (We have included here the change in CFI, TLI and RMSEA compared to the S1 model)
-Comparative Fit Index (CFI)                    0.995 (>0.95)    Change in CFI:   0.000 (decrease)
-Tucker-Lewis Index (TLI)                       0.994 (>0.95)    Change in TLI:   0.000 (decrease)
-RMSEA                                          0.013 (≤ 0.06)   Change in RMSEA: 0.000 (increase)
+Comparative Fit Index (CFI)                    0.995 (>0.95)    Change in CFI:   0.000 (same fit)
+Tucker-Lewis Index (TLI)                       0.994 (>0.95)    Change in TLI:   0.000 (same fit)
+RMSEA                                          0.013 (≤ 0.06)   Change in RMSEA: 0.000 (same fit)
 90 Percent confidence interval - lower         0.011 
 90 Percent confidence interval - upper         0.014       
-SRMR                                           0.052 (≤ 0.08)   Change in SRMR:  0.000 
+SRMR                                           0.052 (≤ 0.08)   Change in SRMR:  0.000 (same fit)
 
 ```{r LRT for RICLPMt_multi_inat_S2 and RICLPMt_multi_inat_S3}
 #lavTestLRT(RICLPMt_multi_inat_S2.fit, RICLPMt_multi_inat_S3.fit)
@@ -2981,12 +2979,12 @@ summary(RICLPMt_multi_hyp_S4.fit, fit.measures = TRUE, standardized = TRUE)
 
 S4 Model fit:
 (We have included here the change in CFI, TLI and RMSEA compared to the S3 model)
-Comparative Fit Index (CFI)                    0.956 (>0.95)    Change in CFI:   0. (decrease) - worse fit 
-Tucker-Lewis Index (TLI)                       0.955 (>0.95)    Change in TLI:   0. (decrease) - worse fit 
-RMSEA                                          0. (≤ 0.06)   Change in RMSEA: 0. (increase) - worse fit
-90 Percent confidence interval - lower         0. 
-90 Percent confidence interval - upper         0.       
-SRMR                                           0. (≤ 0.08)   Change in SRMR: 0. (increase)  - worse fit 
+Comparative Fit Index (CFI)                    0.956 (>0.95)    Change in CFI:   0.035 (decrease) - worse fit 
+Tucker-Lewis Index (TLI)                       0.955 (>0.95)    Change in TLI:   0.035 (decrease) - worse fit 
+RMSEA                                          0.034 (≤ 0.06)   Change in RMSEA: 0.018 (increase) - worse fit
+90 Percent confidence interval - lower         0.033 
+90 Percent confidence interval - upper         0.035       
+SRMR                                           0.099 (≤ 0.08)   Change in SRMR: 0.039 (increase)  - worse fit 
 
 Now we need to conduct a Likelihood ratio test to see if the constrained model is a significantly worse fit than the free loading model. By constraining the factor loadings over time we can assume that the items load onto the same construct in the same way at each time point. We use the compareFit command which gives the LRT with the comparison in model fit for the two models. 
 
