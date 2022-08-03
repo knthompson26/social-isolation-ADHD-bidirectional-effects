@@ -914,9 +914,9 @@ RICLPM.lag.c.fit.summary <- summary(RICLPM.lag.c.fit,
 #Table of model fit 
 RICLPM.lag.c.fit.summary.fit <- table.model.fit(RICLPM.lag.c.fit.summary)
 #Table of regression coefficients and covariances for females and males separately
-RICLPM.lag.c.fit.summary.reg.low <- table.model.coef(model = RICLPM.lag.c.fit.summary, ses = "Low")
-RICLPM.lag.c.fit.summary.reg.mid <- table.model.coef(model = RICLPM.lag.c.fit.summary, ses = "Middle")
-RICLPM.lag.c.fit.summary.reg.high <- table.model.coef(model = RICLPM.lag.c.fit.summary, ses = "High")
+RICLPM.lag.c.fit.summary.reg.low <- table.model.coef(model = RICLPM.lag.c.fit.summary, ses = "Low")[c(2,3,6,7,10,11),c(1,2,3,8,7)]
+RICLPM.lag.c.fit.summary.reg.mid <- table.model.coef(model = RICLPM.lag.c.fit.summary, ses = "Middle")[c(2,3,6,7,10,11),c(1,2,3,8,7)]
+RICLPM.lag.c.fit.summary.reg.high <- table.model.coef(model = RICLPM.lag.c.fit.summary, ses = "High")[c(2,3,6,7,10,11),c(1,2,3,8,7)]
 ```
 
 Now we want to apply constraints over time to test if lagged parameters are invariant across groups, if the chi square is significant then the lagged effects for boys and girls are different.  
@@ -1075,9 +1075,9 @@ RICLPM_hyp.lag.c.fit.summary <- summary(RICLPM_hyp.lag.c.fit,
 #Table of model fit 
 RICLPM_hyp.lag.c.fit.summary.fit <- table.model.fit(RICLPM_hyp.lag.c.fit.summary)
 #Table of regression coefficients and covariances for females and males separately
-RICLPM_hyp.lag.c.fit.summary.reg.low <- table.model.coef(model = RICLPM_hyp.lag.c.fit.summary, ses = "Low")
-RICLPM_hyp.lag.c.fit.summary.reg.mid <- table.model.coef(model = RICLPM_hyp.lag.c.fit.summary, ses = "Middle")
-RICLPM_hyp.lag.c.fit.summary.reg.high <- table.model.coef(model = RICLPM_hyp.lag.c.fit.summary, ses = "High")
+RICLPM_hyp.lag.c.fit.summary.reg.low <- table.model.coef(model = RICLPM_hyp.lag.c.fit.summary, ses = "Low")[c(2,3,6,7,10,11),c(1,2,3,8,7)]
+RICLPM_hyp.lag.c.fit.summary.reg.mid <- table.model.coef(model = RICLPM_hyp.lag.c.fit.summary, ses = "Middle")[c(2,3,6,7,10,11),c(1,2,3,8,7)]
+RICLPM_hyp.lag.c.fit.summary.reg.high <- table.model.coef(model = RICLPM_hyp.lag.c.fit.summary, ses = "High")[c(2,3,6,7,10,11),c(1,2,3,8,7)]
 ```
 
 Now we want to apply constraints over time to test if lagged parameters are invariant across groups, if the chi square is significant then the lagged effects for boys and girls are different.  
@@ -1236,9 +1236,9 @@ RICLPM_inat.lag.c.fit.summary <- summary(RICLPM_inat.lag.c.fit,
 #Table of model fit 
 RICLPM_inat.lag.c.fit.summary.fit <- table.model.fit(RICLPM_inat.lag.c.fit.summary)
 #Table of regression coefficients and covariances for females and males separately
-RICLPM_inat.lag.c.fit.summary.reg.low <- table.model.coef(model = RICLPM_inat.lag.c.fit.summary, ses = "Low")
-RICLPM_inat.lag.c.fit.summary.reg.mid <- table.model.coef(model = RICLPM_inat.lag.c.fit.summary, ses = "Middle")
-RICLPM_inat.lag.c.fit.summary.reg.high <- table.model.coef(model = RICLPM_inat.lag.c.fit.summary, ses = "High")
+RICLPM_inat.lag.c.fit.summary.reg.low <- table.model.coef(model = RICLPM_inat.lag.c.fit.summary, ses = "Low")[c(2,3,6,7,10,11),c(1,2,3,8,7)]
+RICLPM_inat.lag.c.fit.summary.reg.mid <- table.model.coef(model = RICLPM_inat.lag.c.fit.summary, ses = "Middle")[c(2,3,6,7,10,11),c(1,2,3,8,7)]
+RICLPM_inat.lag.c.fit.summary.reg.high <- table.model.coef(model = RICLPM_inat.lag.c.fit.summary, ses = "High")[c(2,3,6,7,10,11),c(1,2,3,8,7)]
 ```
 
 Now we want to apply constraints over time to test if lagged parameters are invariant across groups, if the chi square is significant then the lagged effects for boys and girls are different.  
@@ -1401,9 +1401,9 @@ RICLPMt.lag.c.fit.summary <- summary(RICLPMt.lag.c.fit,
 #Table of model fit 
 RICLPMt.lag.c.fit.summary.fit <- table.model.fit(RICLPMt.lag.c.fit.summary)
 #Table of regression coefficients and covariances for females and males separately
-RICLPMt.lag.c.fit.summary.reg.low <- table.model.coef(model = RICLPMt.lag.c.fit.summary, ses = "Low")
-RICLPMt.lag.c.fit.summary.reg.mid <- table.model.coef(model = RICLPMt.lag.c.fit.summary, ses = "Middle")
-RICLPMt.lag.c.fit.summary.reg.high <- table.model.coef(model = RICLPMt.lag.c.fit.summary, ses = "High")
+RICLPMt.lag.c.fit.summary.reg.low <- table.model.coef(model = RICLPMt.lag.c.fit.summary, ses = "Low")[c(2,3,6,7,10,11),c(1,2,3,8,7)]
+RICLPMt.lag.c.fit.summary.reg.mid <- table.model.coef(model = RICLPMt.lag.c.fit.summary, ses = "Middle")[c(2,3,6,7,10,11),c(1,2,3,8,7)]
+RICLPMt.lag.c.fit.summary.reg.high <- table.model.coef(model = RICLPMt.lag.c.fit.summary, ses = "High")[c(2,3,6,7,10,11),c(1,2,3,8,7)]
 ```
 
 Now we want to apply constraints over time to test if lagged parameters are invariant across groups, if the chi square is significant then the lagged effects for boys and girls are different.  
@@ -1563,9 +1563,9 @@ RICLPMt_hyp.lag.c.fit.summary <- summary(RICLPMt_hyp.lag.c.fit,
 #Table of model fit 
 RICLPMt_hyp.lag.c.fit.summary.fit <- table.model.fit(RICLPMt_hyp.lag.c.fit.summary)
 #Table of regression coefficients and covariances for females and males separately
-RICLPMt_hyp.lag.c.fit.summary.reg.low <- table.model.coef(model = RICLPMt_hyp.lag.c.fit.summary, ses = "Low")
-RICLPMt_hyp.lag.c.fit.summary.reg.mid <- table.model.coef(model = RICLPMt_hyp.lag.c.fit.summary, ses = "Middle")
-RICLPMt_hyp.lag.c.fit.summary.reg.high <- table.model.coef(model = RICLPMt_hyp.lag.c.fit.summary, ses = "High")
+RICLPMt_hyp.lag.c.fit.summary.reg.low <- table.model.coef(model = RICLPMt_hyp.lag.c.fit.summary, ses = "Low")[c(2,3,6,7,10,11),c(1,2,3,8,7)]
+RICLPMt_hyp.lag.c.fit.summary.reg.mid <- table.model.coef(model = RICLPMt_hyp.lag.c.fit.summary, ses = "Middle")[c(2,3,6,7,10,11),c(1,2,3,8,7)]
+RICLPMt_hyp.lag.c.fit.summary.reg.high <- table.model.coef(model = RICLPMt_hyp.lag.c.fit.summary, ses = "High")[c(2,3,6,7,10,11),c(1,2,3,8,7)]
 ```
 
 Now we want to apply constraints over time to test if lagged parameters are invariant across groups, if the chi square is significant then the lagged effects for boys and girls are different.  
@@ -1725,9 +1725,9 @@ RICLPMt_inat.lag.c.fit.summary <- summary(RICLPMt_inat.lag.c.fit,
 #Table of model fit 
 RICLPMt_inat.lag.c.fit.summary.fit <- table.model.fit(RICLPMt_inat.lag.c.fit.summary)
 #Table of regression coefficients and covariances for females and males separately
-RICLPMt_inat.lag.c.fit.summary.reg.low <- table.model.coef(model = RICLPMt_inat.lag.c.fit.summary, ses = "Low")
-RICLPMt_inat.lag.c.fit.summary.reg.mid <- table.model.coef(model = RICLPMt_inat.lag.c.fit.summary, ses = "Middle")
-RICLPMt_inat.lag.c.fit.summary.reg.high <- table.model.coef(model = RICLPMt_inat.lag.c.fit.summary, ses = "High")
+RICLPMt_inat.lag.c.fit.summary.reg.low <- table.model.coef(model = RICLPMt_inat.lag.c.fit.summary, ses = "Low")[c(2,3,6,7,10,11),c(1,2,3,8,7)]
+RICLPMt_inat.lag.c.fit.summary.reg.mid <- table.model.coef(model = RICLPMt_inat.lag.c.fit.summary, ses = "Middle")[c(2,3,6,7,10,11),c(1,2,3,8,7)]
+RICLPMt_inat.lag.c.fit.summary.reg.high <- table.model.coef(model = RICLPMt_inat.lag.c.fit.summary, ses = "High")[c(2,3,6,7,10,11),c(1,2,3,8,7)]
 ```
 
 Now we want to apply constraints over time to test if lagged parameters are invariant across groups, if the chi square is significant then the lagged effects for boys and girls are different.  

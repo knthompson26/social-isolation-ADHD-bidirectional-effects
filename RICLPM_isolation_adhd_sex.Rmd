@@ -368,8 +368,8 @@ RICLPMcomb.lag.c.fit.summary <- summary(RICLPMcomb.lag.c.fit,
 #Table of model fit 
 RICLPMcomb.lag.c.fit.summary.fit <- table.model.fit(RICLPMcomb.lag.c.fit.summary)
 # Table of regression and correlation (standardised covariances) coefficients
-RICLPMcomb.lag.c.fit.summary.reg.female <- table.model.coef(RICLPMcomb.lag.c.fit.summary, sex = "Female", constraints = "Yes")
-RICLPMcomb.lag.c.fit.summary.reg.male <- table.model.coef(RICLPMcomb.lag.c.fit.summary, sex = "Male", constraints = "Yes")
+RICLPMcomb.lag.c.fit.summary.reg.female <- table.model.coef(RICLPMcomb.lag.c.fit.summary, sex = "Female", constraints = "Yes")[c(2,3,6,7,10,11),c(1,2,3,8,7)]
+RICLPMcomb.lag.c.fit.summary.reg.male <- table.model.coef(RICLPMcomb.lag.c.fit.summary, sex = "Male", constraints = "Yes")[c(2,3,6,7,10,11),c(1,2,3,8,7)]
 ```
 
 ```{r specify RICLPMcomb.sex.lag.c, class.source = 'fold-show'}
@@ -514,8 +514,8 @@ RICLPMcomb_hyp.lag.c.fit.summary <- summary(RICLPMcomb_hyp.lag.c.fit,
 #Table of model fit 
 RICLPMcomb_hyp.lag.c.fit.summary.fit <- table.model.fit(RICLPMcomb_hyp.lag.c.fit.summary)
 # Table of regression and correlation (standardised covariances) coefficients
-RICLPMcomb_hyp.lag.c.fit.summary.reg.female <- table.model.coef(RICLPMcomb_hyp.lag.c.fit.summary, sex = "Female", constraints = "Yes")
-RICLPMcomb_hyp.lag.c.fit.summary.reg.male <- table.model.coef(RICLPMcomb_hyp.lag.c.fit.summary, sex = "Male", constraints = "Yes")
+RICLPMcomb_hyp.lag.c.fit.summary.reg.female <- table.model.coef(RICLPMcomb_hyp.lag.c.fit.summary, sex = "Female", constraints = "Yes")[c(2,3,6,7,10,11),c(1,2,3,8,7)]
+RICLPMcomb_hyp.lag.c.fit.summary.reg.male <- table.model.coef(RICLPMcomb_hyp.lag.c.fit.summary, sex = "Male", constraints = "Yes")[c(2,3,6,7,10,11),c(1,2,3,8,7)]
 ```
 
 ```{r specify RICLPMcomb_hyp.sex.lag.c, class.source = 'fold-show'}
@@ -798,6 +798,16 @@ RICLPM.lag.c.fit <- lavaan(RICLPM.lag.c,
                       se = "robust",
                       estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
                       ) 
+
+RICLPM.lag.c.fit.summary <- summary(RICLPM.lag.c.fit,
+                                          fit.measures = TRUE,
+                                          standardized = TRUE)
+
+#Table of model fit 
+RICLPM.lag.c.fit.summary.fit <- table.model.fit(RICLPM.lag.c.fit.summary)
+# Table of regression and correlation (standardised covariances) coefficients
+RICLPM.lag.c.fit.summary.reg.female <- table.model.coef(RICLPM.lag.c.fit.summary, sex = "Female", constraints = "Yes")[c(2,3,6,7,10,11),c(1,2,3,8,7)]
+RICLPM.lag.c.fit.summary.reg.male <- table.model.coef(RICLPM.lag.c.fit.summary, sex = "Male", constraints = "Yes")[c(2,3,6,7,10,11),c(1,2,3,8,7)]
 ```
 
 ```{r specify RICLPM.sex.lag.c, class.source = 'fold-show'}
@@ -942,8 +952,8 @@ RICLPM_hyp.lag.c.fit.summary <- summary(RICLPM_hyp.lag.c.fit,
 #Table of model fit 
 RICLPM_hyp.lag.c.fit.summary.fit <- table.model.fit(RICLPM_hyp.lag.c.fit.summary)
 # Table of regression and correlation (standardised covariances) coefficients
-RICLPM_hyp.lag.c.fit.summary.reg.female <- table.model.coef(RICLPM_hyp.lag.c.fit.summary, sex = "Female", constraints = "Yes")
-RICLPM_hyp.lag.c.fit.summary.reg.male <- table.model.coef(RICLPM_hyp.lag.c.fit.summary, sex = "Male", constraints = "Yes")
+RICLPM_hyp.lag.c.fit.summary.reg.female <- table.model.coef(RICLPM_hyp.lag.c.fit.summary, sex = "Female", constraints = "Yes")[c(2,3,6,7,10,11),c(1,2,3,8,7)]
+RICLPM_hyp.lag.c.fit.summary.reg.male <- table.model.coef(RICLPM_hyp.lag.c.fit.summary, sex = "Male", constraints = "Yes")[c(2,3,6,7,10,11),c(1,2,3,8,7)]
 ```
 
 ```{r specify RICLPM_hyp.sex.lag.c, class.source = 'fold-show'}
@@ -1080,6 +1090,16 @@ RICLPM_inat.lag.c.fit <- lavaan(RICLPM_inat.lag.c,
                       se = "robust",
                       estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
                       ) 
+
+RICLPM_inat.lag.c.fit.summary <- summary(RICLPM_inat.lag.c.fit,
+                                          fit.measures = TRUE,
+                                          standardized = TRUE)
+
+#Table of model fit 
+RICLPM_inat.lag.c.fit.summary.fit <- table.model.fit(RICLPM_inat.lag.c.fit.summary)
+# Table of regression and correlation (standardised covariances) coefficients
+RICLPM_inat.lag.c.fit.summary.reg.female <- table.model.coef(RICLPM_inat.lag.c.fit.summary, sex = "Female", constraints = "Yes")[c(2,3,6,7,10,11),c(1,2,3,8,7)]
+RICLPM_inat.lag.c.fit.summary.reg.male <- table.model.coef(RICLPM_inat.lag.c.fit.summary, sex = "Male", constraints = "Yes")[c(2,3,6,7,10,11),c(1,2,3,8,7)]
 ```
 
 ```{r specify RICLPM_inat.sex.lag.c, class.source = 'fold-show'}
@@ -1220,6 +1240,16 @@ RICLPMt.lag.c.fit <- lavaan(RICLPMt.lag.c,
                       se = "robust",
                       estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
                       ) 
+
+RICLPMt.lag.c.fit.summary <- summary(RICLPMt.lag.c.fit,
+                                          fit.measures = TRUE,
+                                          standardized = TRUE)
+
+#Table of model fit 
+RICLPMt.lag.c.fit.summary.fit <- table.model.fit(RICLPMt.lag.c.fit.summary)
+# Table of regression and correlation (standardised covariances) coefficients
+RICLPMt.lag.c.fit.summary.reg.female <- table.model.coef(RICLPMt.lag.c.fit.summary, sex = "Female", constraints = "Yes")[c(2,3,6,7,10,11),c(1,2,3,8,7)]
+RICLPMt.lag.c.fit.summary.reg.male <- table.model.coef(RICLPMt.lag.c.fit.summary, sex = "Male", constraints = "Yes")[c(2,3,6,7,10,11),c(1,2,3,8,7)]
 ```
 
 ```{r specify RICLPMt.sex.lag.c, class.source = 'fold-show'}
@@ -1364,8 +1394,8 @@ RICLPMt_hyp.lag.c.fit.summary <- summary(RICLPMt_hyp.lag.c.fit,
 #Table of model fit 
 RICLPMt_hyp.lag.c.fit.summary.fit <- table.model.fit(RICLPMt_hyp.lag.c.fit.summary)
 # Table of regression and correlation (standardised covariances) coefficients
-RICLPMt_hyp.lag.c.fit.summary.reg.female <- table.model.coef(RICLPMt_hyp.lag.c.fit.summary, sex = "Female", constraints = "Yes")
-RICLPMt_hyp.lag.c.fit.summary.reg.male <- table.model.coef(RICLPMt_hyp.lag.c.fit.summary, sex = "Male", constraints = "Yes")
+RICLPMt_hyp.lag.c.fit.summary.reg.female <- table.model.coef(RICLPMt_hyp.lag.c.fit.summary, sex = "Female", constraints = "Yes")[c(2,3,6,7,10,11),c(1,2,3,8,7)]
+RICLPMt_hyp.lag.c.fit.summary.reg.male <- table.model.coef(RICLPMt_hyp.lag.c.fit.summary, sex = "Male", constraints = "Yes")[c(2,3,6,7,10,11),c(1,2,3,8,7)]
 ```
 
 ```{r specify RICLPMt_hyp.sex.lag.c, class.source = 'fold-show'}
@@ -1502,6 +1532,16 @@ RICLPMt_inat.lag.c.fit <- lavaan(RICLPMt_inat.lag.c,
                       se = "robust",
                       estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
                       ) 
+
+RICLPMt_inat.lag.c.fit.summary <- summary(RICLPMt_inat.lag.c.fit,
+                                          fit.measures = TRUE,
+                                          standardized = TRUE)
+
+#Table of model fit 
+RICLPMt_inat.lag.c.fit.summary.fit <- table.model.fit(RICLPMt_inat.lag.c.fit.summary)
+# Table of regression and correlation (standardised covariances) coefficients
+RICLPMt_inat.lag.c.fit.summary.reg.female <- table.model.coef(RICLPMt_inat.lag.c.fit.summary, sex = "Female", constraints = "Yes")[c(2,3,6,7,10,11),c(1,2,3,8,7)]
+RICLPMt_inat.lag.c.fit.summary.reg.male <- table.model.coef(RICLPMt_inat.lag.c.fit.summary, sex = "Male", constraints = "Yes")[c(2,3,6,7,10,11),c(1,2,3,8,7)]
 ```
 
 ```{r specify RICLPMt_inat.sex.lag.c, class.source = 'fold-show'}

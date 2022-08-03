@@ -415,7 +415,7 @@ fam_ses_descriptives
 
 ## Neighbourhood SES (ACORN)
 
-```{r descriptives for fam_ses}
+```{r descriptives for neigh_ses}
 neigh_ses_descriptives.raw <- dat %>% #create object to bind later on
   count(sex, acorn_05) %>%
   mutate(Prop = round(n/sum(n)*100, 2)) %>%
@@ -568,7 +568,31 @@ dat <- dat %>%
                true = "No",
                false = "Yes"
            ))
-# table(dat$missing.isolation)
+table(dat$missing.isolation)
+
+dat <- dat %>%
+  mutate(missing.isolation.mother =
+           if_else(
+               !is.na(sisoem5) & 
+               !is.na(sisoem7) &
+               !is.na(sisoem10) &
+               !is.na(sisoem12), 
+               true = "No",
+               false = "Yes"
+           ))
+table(dat$missing.isolation.mother)
+
+dat <- dat %>%
+  mutate(missing.isolation.teacher =
+           if_else(
+               !is.na(sisoet5) & 
+               !is.na(sisoet7) &
+               !is.na(sisoet10) &
+               !is.na(sisoet12), 
+               true = "No",
+               false = "Yes"
+           ))
+table(dat$missing.isolation.teacher)
 
 # missing adhd
 dat <- dat %>%
@@ -581,8 +605,33 @@ dat <- dat %>%
                true = "No",
                false = "Yes"
            ))
-# table(dat$missing.adhd)
+table(dat$missing.adhd)
 
+dat <- dat %>%
+  mutate(missing.adhd.mother =
+           if_else(
+               !is.na(tadhdem5) & 
+               !is.na(tadhdem7) &
+               !is.na(tadhdem10) &
+               !is.na(tadhdem12),
+               true = "No",
+               false = "Yes"
+           ))
+table(dat$missing.adhd.mother)
+
+dat <- dat %>%
+  mutate(missing.adhd.teacher =
+           if_else(
+               !is.na(tadhdet5) & 
+               !is.na(tadhdet7) &
+               !is.na(tadhdet10) &
+               !is.na(tadhdet12),
+               true = "No",
+               false = "Yes"
+           ))
+table(dat$missing.adhd.teacher)
+
+# both 
 dat <- dat %>%
   mutate(missing.both =
            if_else(
