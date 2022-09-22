@@ -5,11 +5,11 @@ April, 2022
 
 ***
 
-This repository holds code for for manuscript titled "Bidirectional associations between childhood social isolation and ADHD". Analyses include random intercept cross-lagged panel models (RI‐CLPM) of social isolation and ADHD symptoms at ages 5, 7, 10 and 12. Sex, SES, and informant differences were exminaed using multiple group RI-CLPM. Longitudinal mediation analyses were conducted to see if prosocial or antisocial behaviours mediated the association between ADHD and social isolation. All data from the E-Risk Study. 
+This repository holds code for for manuscript titled "Bidirectional associations between childhood social isolation and ADHD". Analyses include random intercept cross-lagged panel models (RI‐CLPM) of social isolation and ADHD symptoms at ages 5, 7, 10 and 12. Sex, SES, and informant differences were exmined using multiple group RI-CLPM. Longitudinal mediation analyses were conducted to see if prosocial or antisocial behaviours mediated the association between ADHD and social isolation. All data from the E-Risk Study. 
 
-For greater clarity when reviewing the code and results for this manuscript, this repository has been converted into an R pages website. **The website can be accessed here: ** 
+For greater clarity when reviewing the code and results for this manuscript, this repository has been converted into an R pages website. **The website can be accessed here: https://knthompson26.github.io/social-isolation-ADHD-bidirectional-effects/** 
 
-Analyses for this project were conducted in R (Version 4.0.3). Below names and locations for all  scripts are listed, with a brief explanation of what each script entails, for more detail please go to the [website](). 
+Analyses for this project were conducted in R (Version 4.0.3). Below names and locations for all  scripts are listed, with a brief explanation of what each script entails, for more detail please go to the [website](https://knthompson26.github.io/social-isolation-ADHD-bidirectional-effects/). 
 
 
 ***
