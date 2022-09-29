@@ -34,7 +34,7 @@ This websites holds analysis code and results for the manuscript titled: **Do ch
 
 Authors: Katherine N. Thompson, Jessica C. Agnew-Blais, Bridget T. Bryan, Andrea Danese,  Candice L. Odgers, Timothy Matthews, and Louise Arseneault
 
-All code written by Katherine N Thompson and reviewed by XXX. Analyses for this project were conducted in R studio version 4.0.3 using lavaan.  
+All code written by Katherine N Thompson and reviewed by Andrea Allegrini. Analyses for this project were conducted in R studio version 4.0.3 using lavaan.  
 
 All data provided by the **Environmental Risk Longitudinal Twin (E-Risk) Study**.
 
