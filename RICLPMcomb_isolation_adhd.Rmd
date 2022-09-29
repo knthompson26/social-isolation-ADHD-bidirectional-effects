@@ -1433,7 +1433,7 @@ lavTestLRT(RICLPMcomb2c.fit, RICLPMcomb4.fit, method = "satorra.bentler.2010") #
 lavTestLRT(RICLPMcomb2d.fit, RICLPMcomb4.fit, method = "satorra.bentler.2010") #comparing to other best fitting model
 ```
 
-RICLPMcomb4 is *NOT* significantly worse fit (just) compared to RICLPMcomb2c (p = 0.06916) or RICLPM2d (p = . The parameter estimates also didn't change very much comapred to the RICLPMcomb2d model. 
+RICLPMcomb4 is *NOT* significantly worse fit (just) compared to RICLPMcomb2c (p = 0.06916) or RICLPM2d (p = 0.05154). The RICLPMcomb4 parameter estimates did not change very much compared to  RICLPMcomb2d. 
 
 ## Comparison of CLPM and RI-CLPM using the chi squre bar test
 

@@ -3250,15 +3250,15 @@ The cross-lag constraints gave a non-significant loss in model fit (p=0.04084). 
 
 ```{r results table for random intercept antisocial and inattention adhd}
 # Model fit 
-ri.med_inat.long.asb.full.fit.summary.fit <- table.model.fit(ri.med_inat.long.asb.full.fit.summary)
+ri.med_inat.long.asb.full2.fit.summary.fit <- table.model.fit(ri.med_inat.long.asb.full2.fit.summary)
 # Coefficients -
-ri.med_inat.long.asb.full.fit.summary.reg <- table.model.coef(model = ri.med_inat.long.asb.full.fit.summary, step = "S3") %>% mutate_if(is.numeric, round, 3)
+ri.med_inat.long.asb.full2.fit.summary.reg <- table.model.coef(model = ri.med_inat.long.asb.full2.fit.summary, step = "S3") %>% mutate_if(is.numeric, round, 3)
 
-ri.med_inat.long.asb.full.fit.summary.reg %>%
+ri.med_inat.long.asb.full2.fit.summary.reg %>%
   select(lhs, op, rhs, std.all, pvalue) %>%
   filter(lhs == "indirect1" | lhs == "indirect2")
 
-ri.med_inat.long.asb.full.fit.summary.reg %>%
+ri.med_inat.long.asb.full2.fit.summary.reg %>%
   select(lhs, op, rhs, label, std.all, pvalue)
 ```
 
