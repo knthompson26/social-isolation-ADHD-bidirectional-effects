@@ -2059,6 +2059,22 @@ med.long2.asb.fit.summary.reg <- table.model.coef(model = med.long2.asb.fit.summ
 med.long2.asb.fit.summary.reg %>%
   select(lhs, op, rhs, label, std.all, pvalue)
 ```
+Regressions to double check overall association between antisocial behaviour, social isolation, and ADHD symptoms. 
+
+```{r regressions to double check the overall associations with asb, si, and adhd}
+# 5 to 7
+reg.si.adhd.asb57 <- lm(sisoe7 ~ tadhde5 + asbe5, data = dat)
+summary(reg.si.adhd.asb57)
+
+# 7 to 10
+reg.si.adhd.asb710 <- lm(sisoe10 ~ tadhde7 + asbe7, data = dat)
+summary(reg.si.adhd.asb710)
+
+# 10 to 12
+reg.si.adhd.asb1012 <- lm(sisoe12 ~ tadhde10 + asbe10, data = dat)
+summary(reg.si.adhd.asb710)
+```
+
 
 #### Step 3. The full RI-CLPM mediation model 
 

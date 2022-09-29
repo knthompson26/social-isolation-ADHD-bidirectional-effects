@@ -1236,7 +1236,7 @@ RICLPMcomb2d <- '
   # Estimate the (residual) variance of the within-person centered variables 
   wad5 ~~ wad5 # Variances
   wsi5 ~~ wsi5 
-  wad7 ~~ vad*wad7 # Residual variances
+  wad7 ~~ *wad7 # Residual variances
   wsi7 ~~ wsi7 
   wad10 ~~ wad10 
   wsi10 ~~ wsi10 
@@ -1353,6 +1353,8 @@ If the grand means cannot be constrained to be invariant over time, this implies
 
 *This makes sense as we have shown variation in social isolation over time and other literature has shown variation in ADHD over time.*
 
+***
+
 ### Constrained (co)variances of within-person variables (RICLPMcomb4)
 
 ```{r specify RICLPMcomb4}
@@ -1435,7 +1437,7 @@ lavTestLRT(RICLPMcomb2d.fit, RICLPMcomb4.fit, method = "satorra.bentler.2010") #
 
 RICLPMcomb4 is *NOT* significantly worse fit (just) compared to RICLPMcomb2c (p = 0.06916) or RICLPM2d (p = 0.05154). The RICLPMcomb4 parameter estimates did not change very much compared to  RICLPMcomb2d. 
 
-## Comparison of CLPM and RI-CLPM using the chi squre bar test
+## Comparison of CLPM and RI-CLPM using the chi bsqure bar test
 
 When constraints are placed on the bound of the parameter space, we should use the chi-bar-square test (χ¯2-test) (Stoel et al. 2006 to compare CLPM and RI-CLPM.  
 
