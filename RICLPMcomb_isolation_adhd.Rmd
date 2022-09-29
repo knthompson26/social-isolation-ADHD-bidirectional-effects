@@ -1223,25 +1223,25 @@ RICLPMcomb2d <- '
   # Estimate the covariance between the within-person centered variables at the first wave
   wad5 ~~ wsi5 # Covariance
   
-  # Estimate the covariances between the residuals of the within-person centered variables (the innovations) - constrained to be equal
-  wad7 ~~ cov*wsi7
-  wad10 ~~ cov*wsi10
-  wad12 ~~ cov*wsi12 
+  # Estimate the covariances between the residuals of the within-person centered variables (the innovations) 
+  wad7 ~~ wsi7
+  wad10 ~~ wsi10
+  wad12 ~~ wsi12 
   
   # Estimate the variance and covariance of the random intercepts
   RIad ~~ RIad
   RIsi ~~ RIsi
   RIad ~~ RIsi
   
-  # Estimate the (residual) variance of the within-person centered variables - constrained to be equal
+  # Estimate the (residual) variance of the within-person centered variables 
   wad5 ~~ wad5 # Variances
   wsi5 ~~ wsi5 
-  wad7 ~~ vad*wad7 # Residual variances - constrain the ad and si variables to have the same variance (not at first time point)
-  wsi7 ~~ vsi*wsi7 
-  wad10 ~~ vad*wad10 
-  wsi10 ~~ vsi*wsi10 
-  wad12 ~~ vad*wad12 
-  wsi12 ~~ vsi*wsi12
+  wad7 ~~ vad*wad7 # Residual variances
+  wsi7 ~~ wsi7 
+  wad10 ~~ wad10 
+  wsi10 ~~ wsi10 
+  wad12 ~~ wad12 
+  wsi12 ~~ wsi12
 '
 ```
 
@@ -1353,6 +1353,88 @@ If the grand means cannot be constrained to be invariant over time, this implies
 
 *This makes sense as we have shown variation in social isolation over time and other literature has shown variation in ADHD over time.*
 
+### Constrained (co)variances of within-person variables (RICLPMcomb4)
+
+```{r specify RICLPMcomb4}
+RICLPMcomb4 <- '
+  # Create between components (random intercepts treated as factors here)
+  RIad =~ 1*tadhde5 + 1*tadhde7 + 1*tadhde10 + 1*tadhde12 #x
+  RIsi =~ 1*sisoe5 + 1*sisoe7 + 1*sisoe10 + 1*sisoe12 #y
+
+  # Create within-person centered variables
+  wad5 =~ 1*tadhde5
+  wad7 =~ 1*tadhde7
+  wad10 =~ 1*tadhde10 
+  wad12 =~ 1*tadhde12
+  wsi5 =~ 1*sisoe5
+  wsi7 =~ 1*sisoe7
+  wsi10 =~ 1*sisoe10
+  wsi12 =~ 1*sisoe12
+  
+  # Constrained lagged effects between the within-person centered variables. 
+  wad7 ~ wad5 + d*wsi5 
+  wsi7 ~ c*wad5 + wsi5
+  
+  wad10 ~ wad7 + d*wsi7
+  wsi10 ~ c*wad7 + wsi7
+  
+  wad12 ~ wad10 + d*wsi10
+  wsi12 ~ c*wad10 + wsi10
+  
+  # Estimate the covariance between the within-person centered variables at the first wave
+  wad5 ~~ wsi5 # Covariance
+  
+  # Estimate the covariances between the residuals of the within-person centered variables (the innovations) - constrained to be equal
+  wad7 ~~ cov*wsi7
+  wad10 ~~ cov*wsi10
+  wad12 ~~ cov*wsi12 
+  
+  # Estimate the variance and covariance of the random intercepts
+  RIad ~~ RIad
+  RIsi ~~ RIsi
+  RIad ~~ RIsi
+  
+  # Estimate the (residual) variance of the within-person centered variables - constrained to be equal
+  wad5 ~~ wad5 # Variances
+  wsi5 ~~ wsi5 
+  wad7 ~~ vad*wad7 # Residual variances - constrain the ad and si variables to have the same variance (not at first time point)
+  wsi7 ~~ vsi*wsi7 
+  wad10 ~~ vad*wad10 
+  wsi10 ~~ vsi*wsi10 
+  wad12 ~~ vad*wad12 
+  wsi12 ~~ vsi*wsi12
+'
+```
+
+```{r fit RICLPMcomb4}
+RICLPMcomb4.fit <- lavaan(RICLPMcomb4, 
+                      data = dat, 
+                      missing = 'ML', 
+                      meanstructure = TRUE, 
+                      int.ov.free = TRUE,
+                      se = "robust",
+                      estimator = "MLR" #maximum likelihood with robust (Huber-White) standard errors and a scaled (Yuan-Bentler) and robust test statistic
+                      ) 
+
+RICLPMcomb4.fit.summary <- summary(RICLPMcomb4.fit, 
+                                fit.measures = TRUE,
+                                standardized = TRUE)
+
+#Table of model fit 
+RICLPMcomb4.fit.summary.fit <- table.model.fit(RICLPMcomb4.fit.summary)
+RICLPMcomb4.fit.summary.fit
+#Table of regression coefficients and covariances (concurrent associations)
+RICLPMcomb4.fit.summary.reg <- table.model.coef(model = RICLPMcomb4.fit.summary, type = "RICLPM", constraints = "Yes")
+RICLPMcomb4.fit.summary.reg %>% select(lhs, op, rhs, std.all, pvalue)  %>% mutate_if(is.numeric, round, 3)
+```
+
+```{r LRT for RICLPMcomb2c and RICLPMcomb4}
+lavTestLRT(RICLPMcomb2c.fit, RICLPMcomb4.fit, method = "satorra.bentler.2010") #comparing to other best fitting model
+lavTestLRT(RICLPMcomb2d.fit, RICLPMcomb4.fit, method = "satorra.bentler.2010") #comparing to other best fitting model
+```
+
+RICLPMcomb4 is *NOT* significantly worse fit (just) compared to RICLPMcomb2c (p = 0.06916) or RICLPM2d (p = . The parameter estimates also didn't change very much comapred to the RICLPMcomb2d model. 
+
 ## Comparison of CLPM and RI-CLPM using the chi squre bar test
 
 When constraints are placed on the bound of the parameter space, we should use the chi-bar-square test (χ¯2-test) (Stoel et al. 2006 to compare CLPM and RI-CLPM.  
@@ -1417,6 +1499,8 @@ CLPMcombRI0.fit <- lavaan(CLPMcombRI0,
                       )
 ```
 
+According to the Chi bar square test, this is very significant, so this means the RI-CLPM fits the data significantly worse than the CLPM? But all the fit statistics say otherwise? 
+
 ```{r chi square bar test comb}
 library(ChiBarSq.DiffTest)
 
@@ -1438,7 +1522,7 @@ df_riclpm <- summary(RICLPMcomb.fit, fit.measures = TRUE)[1]$FIT[c("df")] # Extr
 # Step 4
 ## Run function to do chi-bar-square test (and also obtain Chi-bar-square weigths)
 ChiBar2DiffTest <- ChiBarSq.DiffTest(q, S, Chi2_clpm, Chi2_riclpm, df_clpm, df_riclpm)
-ChiBar2DiffTest
+summary(ChiBar2DiffTest, digits = 10)
 round(ChiBar2DiffTest$p_value, 4)
 ```
 
